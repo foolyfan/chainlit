@@ -1,4 +1,5 @@
 export type IElement =
+  | IHtmlElement
   | IImageElement
   | ITextElement
   | IPdfElement
@@ -10,6 +11,7 @@ export type IElement =
   | IPlotlyElement;
 
 export type IMessageElement =
+  | IHtmlElement
   | IImageElement
   | ITextElement
   | IPdfElement
@@ -34,6 +36,13 @@ interface TElement<T> {
 interface TMessageElement<T> extends TElement<T> {
   name: string;
   display: 'inline' | 'side' | 'page';
+}
+
+export interface IHtmlElement extends TMessageElement<'html'> {
+  size?: IElementSize;
+  src: string;
+  width?: number;
+  height?: number;
 }
 
 export interface IImageElement extends TMessageElement<'image'> {

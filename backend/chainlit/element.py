@@ -20,7 +20,16 @@ mime_types = {
 }
 
 ElementType = Literal[
-    "image", "avatar", "text", "pdf", "tasklist", "audio", "video", "file", "plotly"
+    "image",
+    "avatar",
+    "text",
+    "pdf",
+    "tasklist",
+    "audio",
+    "video",
+    "file",
+    "plotly",
+    "html",
 ]
 ElementDisplay = Literal["inline", "side", "page"]
 ElementSize = Literal["small", "medium", "large"]
@@ -32,6 +41,9 @@ class ElementDict(TypedDict):
     type: ElementType
     chainlitKey: Optional[str]
     url: Optional[str]
+    src: Optional[str]
+    height: Optional[int]
+    width: Optional[int]
     objectKey: Optional[str]
     name: str
     display: ElementDisplay
@@ -54,6 +66,12 @@ class Element:
     chainlit_key: Optional[str] = None
     # The URL of the element if already hosted somehwere else.
     url: Optional[str] = None
+    # The src of the element if already has content somehwere else.
+    src: Optional[str] = None
+    # The height of the element
+    height: Optional[int] = None
+    # The width of the element
+    width: Optional[int] = None
     # The S3 object key.
     object_key: Optional[str] = None
     # The local path of the element.
@@ -87,6 +105,9 @@ class Element:
                 "threadId": self.thread_id,
                 "type": self.type,
                 "url": self.url,
+                "src": self.src,
+                "height": self.height,
+                "width": self.width,
                 "chainlitKey": self.chainlit_key,
                 "name": self.name,
                 "display": self.display,
@@ -206,6 +227,16 @@ class Pdf(Element):
     mime: str = "application/pdf"
     page: Optional[int] = None
     type: ClassVar[ElementType] = "pdf"
+
+
+@dataclass
+class Html(Element):
+    """Useful to send a html to the UI."""
+
+    src: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    type: ClassVar[ElementType] = "html"
 
 
 @dataclass

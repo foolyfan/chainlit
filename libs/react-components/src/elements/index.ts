@@ -10,6 +10,7 @@ export { PDFElement } from './PDF';
 export { PlotlyElement } from './Plotly';
 export { TextElement } from './Text';
 export { VideoElement } from './Video';
+export { HtmlElement } from './Html';
 
 // Inlined
 export { InlinedAudioList } from './InlinedAudioList';
@@ -20,3 +21,4 @@ export { InlinedPDFList } from './InlinedPDFList';
 export { InlinedPlotlyList } from './InlinedPlotlyList';
 export { InlinedTextList } from './InlinedTextList';
 export { InlinedVideoList } from './InlinedVideoList';
+export { InlinedHtmlList } from './InlinedHtmlList';

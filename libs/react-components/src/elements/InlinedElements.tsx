@@ -4,6 +4,7 @@ import type { ElementType, IMessageElement } from 'client-types/';
 
 import { InlinedAudioList } from './InlinedAudioList';
 import { InlinedFileList } from './InlinedFileList';
+import { InlinedHtmlList } from './InlinedHtmlList';
 import { InlinedImageList } from './InlinedImageList';
 import { InlinedPDFList } from './InlinedPDFList';
 import { InlinedPlotlyList } from './InlinedPlotlyList';
@@ -63,6 +64,9 @@ const InlinedElements = ({ elements }: Props) => {
       ) : null}
       {elementsByType.plotly?.length ? (
         <InlinedPlotlyList items={elementsByType.plotly} />
+      ) : null}
+      {elementsByType.html?.length ? (
+        <InlinedHtmlList items={elementsByType.html} />
       ) : null}
     </Stack>
   );
