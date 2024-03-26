@@ -140,6 +140,7 @@ const useChatSession = () => {
       });
 
       socket.on('new_message', (message: IStep) => {
+        console.log('new_message', message);
         setMessages((oldMessages) => addMessage(oldMessages, message));
       });
 
@@ -148,12 +149,16 @@ const useChatSession = () => {
       });
 
       socket.on('update_message', (message: IStep) => {
+        console.log('update_message', message);
+
         setMessages((oldMessages) =>
           updateMessageById(oldMessages, message.id, message)
         );
       });
 
       socket.on('delete_message', (message: IStep) => {
+        console.log('delete_message', message);
+
         setMessages((oldMessages) =>
           deleteMessageById(oldMessages, message.id)
         );
@@ -170,6 +175,8 @@ const useChatSession = () => {
       });
 
       socket.on('ask', ({ msg, spec }, callback) => {
+        console.log('ask', msg, spec);
+
         setAskUser({ spec, callback });
         setMessages((oldMessages) => addMessage(oldMessages, msg));
 
@@ -212,6 +219,8 @@ const useChatSession = () => {
       });
 
       socket.on('element', (element: IElement) => {
+        console.log('element', element);
+
         if (!element.url && element.chainlitKey) {
           element.url = client.getElementUrl(element.chainlitKey, sessionId);
         }
@@ -247,6 +256,8 @@ const useChatSession = () => {
       });
 
       socket.on('remove_element', (remove: { id: string }) => {
+        console.log('remove_element', remove);
+
         setElements((old) => {
           return old.filter((e) => e.id !== remove.id);
         });
@@ -259,6 +270,7 @@ const useChatSession = () => {
       });
 
       socket.on('action', (action: IAction) => {
+        console.log('action', action);
         setActions((old) => [...old, action]);
       });
 

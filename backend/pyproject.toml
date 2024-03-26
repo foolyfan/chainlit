@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "chainlit"
-version = "1.0.401"
+version = "1.0.401c"
 keywords = ['LLM', 'Agents', 'gen ai', 'chat ui', 'chatbot ui', 'openai', 'copilot', 'langchain', 'conversational ai']
 description = "Build Conversational AI."
 authors = ["Chainlit"]
 license = "Apache-2.0 license"
-repository = "https://github.com/Chainlit/chainlit"
+repository = "https://github.com/foolyfan/chainlit"
 readme = "README.md"
 exclude = [
     "**/frontend/**/*",

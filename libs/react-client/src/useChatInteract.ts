@@ -61,7 +61,7 @@ const useChatInteract = () => {
   const sendMessage = useCallback(
     (message: IStep, fileReferences?: IFileRef[]) => {
       setMessages((oldMessages) => addMessage(oldMessages, message));
-
+      console.log('emit ui_message', message);
       session?.socket.emit('ui_message', { message, fileReferences });
     },
     [session?.socket]
@@ -71,6 +71,7 @@ const useChatInteract = () => {
     (message: IStep) => {
       if (askUser) {
         setMessages((oldMessages) => addMessage(oldMessages, message));
+        console.log('reply message');
         askUser.callback(message);
       }
     },

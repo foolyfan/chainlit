@@ -140,7 +140,9 @@ def get_build_dir(local_target: str, packaged_target: str):
     local_build_dir = os.path.join(PACKAGE_ROOT, local_target, "dist")
     packaged_build_dir = os.path.join(BACKEND_ROOT, packaged_target, "dist")
 
-    if config.ui.custom_build and os.path.exists(os.path.join(APP_ROOT, config.ui.custom_build, packaged_target, "dist")):
+    if config.ui.custom_build and os.path.exists(
+        os.path.join(APP_ROOT, config.ui.custom_build, packaged_target, "dist")
+    ):
         return os.path.join(APP_ROOT, config.ui.custom_build, packaged_target, "dist")
     elif os.path.exists(local_build_dir):
         return local_build_dir
@@ -511,6 +513,9 @@ async def project_settings(
     # Load translation based on the provided language
     translation = config.load_translation(language)
 
+    # Load the markdown file based on the provided language
+    markdown = get_markdown_str(config.root, language)
+
     profiles = []
     if config.code.set_chat_profiles:
         chat_profiles = await config.code.set_chat_profiles(current_user)
@@ -523,7 +528,7 @@ async def project_settings(
             "userEnv": config.project.user_env,
             "dataPersistence": get_data_layer() is not None,
             "threadResumable": bool(config.code.on_chat_resume),
-            "markdown": get_markdown_str(config.root),
+            "markdown": markdown,
             "chatProfiles": profiles,
             "translation": translation,
         }
