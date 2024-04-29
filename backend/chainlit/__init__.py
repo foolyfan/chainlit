@@ -41,6 +41,8 @@ from chainlit.element import (
     Text,
     Video,
 )
+from chainlit.extensions.choiceaction import ChoiceAction
+from chainlit.extensions.message import AskUserChoiceMessage
 from chainlit.logger import logger
 from chainlit.message import (
     AskActionMessage,
@@ -339,6 +341,7 @@ __all__ = [
     "input_widget",
     "Message",
     "ErrorMessage",
+    "AskUserChoiceMessage",
     "AskUserMessage",
     "AskActionMessage",
     "AskFileMessage",
@@ -353,6 +356,7 @@ __all__ = [
     "on_chat_resume",
     "on_stop",
     "action_callback",
+    "choice_action_callback",
     "author_rename",
     "on_settings_update",
     "password_auth_callback",

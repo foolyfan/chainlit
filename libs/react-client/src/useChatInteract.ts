@@ -17,7 +17,7 @@ import {
   threadIdToResumeState,
   tokenCountState
 } from 'src/state';
-import { IAction, IFileRef, IStep } from 'src/types';
+import { IAction, IChoiceAction, IFileRef, IStep } from 'src/types';
 import { addMessage } from 'src/utils/message';
 
 import { ChainlitAPI } from './api';
@@ -116,6 +116,32 @@ const useChatInteract = () => {
     [session?.socket]
   );
 
+  const callChoiceAction = useCallback(
+    (action: IChoiceAction) => {
+      const socket = session?.socket;
+      if (!socket) return;
+
+      const promise = new Promise<{
+        id: string;
+        status: boolean;
+        response?: string;
+      }>((resolve, reject) => {
+        socket.once('choice_action_response', (response) => {
+          if (response.status) {
+            resolve(response);
+          } else {
+            reject(response);
+          }
+        });
+      });
+
+      socket.emit('choice_action_call', action);
+
+      return promise;
+    },
+    [session?.socket]
+  );
+
   const uploadFile = useCallback(
     (
       client: ChainlitAPI,
@@ -130,6 +156,7 @@ const useChatInteract = () => {
   return {
     uploadFile,
     callAction,
+    callChoiceAction,
     clear,
     replyMessage,
     sendMessage,

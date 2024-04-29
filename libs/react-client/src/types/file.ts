@@ -1,5 +1,5 @@
-import { IAction } from './action';
-import { IStep } from './step';
+import { IAction, IChoiceAction } from './action';
+import { IChoiceLayout, IStep } from './step';
 
 export interface FileSpec {
   accept?: string[] | Record<string, string[]>;
@@ -11,15 +11,20 @@ export interface ActionSpec {
   keys?: string[];
 }
 
+export interface ChoiceActionSpec extends ActionSpec {
+  layout?: IChoiceLayout[];
+}
+
 export interface IFileRef {
   id: string;
 }
 
 export interface IAsk {
-  callback: (payload: IStep | IFileRef[] | IAction) => void;
+  callback: (payload: IStep | IFileRef[] | IAction | IChoiceAction) => void;
   spec: {
-    type: 'text' | 'file' | 'action';
+    type: 'text' | 'file' | 'action' | 'choice_action';
     timeout: number;
   } & FileSpec &
-    ActionSpec;
+    ActionSpec &
+    ChoiceActionSpec;
 }

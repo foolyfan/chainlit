@@ -9,6 +9,13 @@ export interface IAction {
   collapsed: boolean;
 }
 
+export interface IChoiceAction {
+  forId: string;
+  id: string;
+  onClick: () => void;
+  data: any;
+}
+
 export interface ICallFn {
   callback: (payload: Record<string, any>) => void;
   name: string;

@@ -3,27 +3,37 @@ import { memo, useEffect, useRef } from 'react';
 
 import Box from '@mui/material/Box';
 
-import type { IAction, IMessageElement, IStep } from 'client-types/';
+import type {
+  IAction,
+  IChoiceAction,
+  ILayout,
+  IMessageElement,
+  IStep
+} from 'client-types/';
 import { IMessageContext } from 'types/messageContext';
 
 import { Messages } from './Messages';
 
 interface Props {
   actions: IAction[];
+  choiceActions: IChoiceAction[];
   autoScroll?: boolean;
   context: IMessageContext;
   elements: IMessageElement[];
   messages: IStep[];
+  layout?: ILayout;
   setAutoScroll?: (autoScroll: boolean) => void;
 }
 
 const MessageContainer = memo(
   ({
     actions,
+    choiceActions,
     autoScroll,
     context,
     elements,
     messages,
+    layout,
     setAutoScroll
   }: Props) => {
     const ref = useRef<HTMLDivElement>();
@@ -61,6 +71,8 @@ const MessageContainer = memo(
             messages={messages}
             elements={elements}
             actions={actions}
+            choiceActions={choiceActions}
+            layout={layout}
           />
         </Box>
       </MessageContext.Provider>

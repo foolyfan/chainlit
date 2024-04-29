@@ -36,3 +36,10 @@ export interface IStep {
   //legacy
   indent?: number;
 }
+
+export type IChoiceLayout = {
+  field: string;
+  width: number;
+};
+
+export type ILayout = IChoiceLayout[];

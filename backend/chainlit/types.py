@@ -55,7 +55,7 @@ class AskSpec(DataClassJsonMixin):
     """Specification for asking the user."""
 
     timeout: int
-    type: Literal["text", "file", "action"]
+    type: Literal["text", "file", "action", "choice_action"]
 
 
 @dataclass

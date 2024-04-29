@@ -10,9 +10,16 @@ import { AUTHOR_BOX_WIDTH, Author } from './components/Author';
 import { DetailsButton } from './components/DetailsButton';
 import { MessageActions } from './components/MessageActions';
 import { MessageButtons } from './components/MessageButtons';
+import { MessageChoiceActions } from './components/MessageChoiceActions';
 import { MessageContent } from './components/MessageContent';
 
-import type { IAction, IMessageElement, IStep } from 'client-types/';
+import type {
+  IAction,
+  IChoiceAction,
+  ILayout,
+  IMessageElement,
+  IStep
+} from 'client-types/';
 
 import { Messages } from './Messages';
 
@@ -20,11 +27,13 @@ interface Props {
   message: IStep;
   elements: IMessageElement[];
   actions: IAction[];
+  choiceActions: IChoiceAction[];
   indent: number;
   showAvatar?: boolean;
   showBorder?: boolean;
   isRunning?: boolean;
   isLast?: boolean;
+  layout?: ILayout;
 }
 
 const Message = memo(
@@ -32,11 +41,13 @@ const Message = memo(
     message,
     elements,
     actions,
+    choiceActions,
     indent,
     showAvatar,
     showBorder,
     isRunning,
-    isLast
+    isLast,
+    layout
   }: Props) => {
     const {
       expandAll,
@@ -121,6 +132,13 @@ const Message = memo(
                 {actions?.length ? (
                   <MessageActions message={message} actions={actions} />
                 ) : null}
+                {choiceActions?.length ? (
+                  <MessageChoiceActions
+                    layout={layout}
+                    message={message}
+                    choiceActions={choiceActions}
+                  />
+                ) : null}
                 <MessageButtons message={message} />
               </Stack>
             </Author>
@@ -130,6 +148,7 @@ const Message = memo(
           <Messages
             messages={message.steps}
             actions={actions}
+            choiceActions={choiceActions}
             elements={elements}
             indent={indent + 1}
             isRunning={isRunning}

@@ -7,6 +7,7 @@ import {
   IAction,
   IAsk,
   IAvatarElement,
+  IChoiceAction,
   IFeedback,
   IFunction,
   IMessageElement,
@@ -26,6 +27,7 @@ import { settingsState } from 'state/settings';
 interface Props {
   loading: boolean;
   actions: IAction[];
+  choiceActions: IChoiceAction[];
   elements: IMessageElement[];
   avatars: IAvatarElement[];
   messages: IStep[];
@@ -37,6 +39,7 @@ interface Props {
     feedback: IFeedback
   ) => void;
   callAction?: (action: IAction) => void;
+  callChoiceAction?: (action: IChoiceAction) => void;
   setAutoScroll?: (autoScroll: boolean) => void;
 }
 
@@ -46,11 +49,13 @@ const MessageContainer = memo(
     loading,
     avatars,
     actions,
+    choiceActions,
     autoScroll,
     elements,
     messages,
     onFeedbackUpdated,
     callAction,
+    callChoiceAction,
     setAutoScroll
   }: Props) => {
     const appSettings = useRecoilValue(settingsState);
@@ -143,6 +148,23 @@ const MessageContainer = memo(
       [actions]
     );
 
+    const messageChoiceActions = useMemo(
+      () =>
+        choiceActions.map((action) => ({
+          ...action,
+          onClick: async () => {
+            try {
+              callChoiceAction?.(action);
+            } catch (err) {
+              if (err instanceof Error) {
+                toast.error(err.message);
+              }
+            }
+          }
+        })),
+      [choiceActions]
+    );
+
     const onError = useCallback((error: string) => toast.error(error), [toast]);
 
     // Memoize the context object since it's created on each render.
@@ -186,6 +208,8 @@ const MessageContainer = memo(
     return (
       <CMessageContainer
         actions={messageActions}
+        choiceActions={messageChoiceActions}
+        layout={askUser?.spec.layout}
         elements={elements}
         messages={messages}
         autoScroll={autoScroll}

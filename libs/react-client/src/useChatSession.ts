@@ -15,6 +15,7 @@ import {
   chatProfileState,
   chatSettingsInputsState,
   chatSettingsValueState,
+  choiceActionState,
   elementState,
   firstUserInteraction,
   loadingState,
@@ -28,6 +29,7 @@ import {
 import {
   IAction,
   IAvatarElement,
+  IChoiceAction,
   IElement,
   IMessageElement,
   IStep,
@@ -60,6 +62,7 @@ const useChatSession = () => {
   const setAvatars = useSetRecoilState(avatarState);
   const setTasklists = useSetRecoilState(tasklistState);
   const setActions = useSetRecoilState(actionState);
+  const setChoiceActions = useSetRecoilState(choiceActionState);
   const setChatSettingsInputs = useSetRecoilState(chatSettingsInputsState);
   const setTokenCount = useSetRecoilState(tokenCountState);
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
@@ -175,8 +178,7 @@ const useChatSession = () => {
       });
 
       socket.on('ask', ({ msg, spec }, callback) => {
-        console.log('ask', msg, spec);
-
+        console.log('ask', msg, spec, callback);
         setAskUser({ spec, callback });
         setMessages((oldMessages) => addMessage(oldMessages, msg));
 
@@ -276,6 +278,19 @@ const useChatSession = () => {
 
       socket.on('remove_action', (action: IAction) => {
         setActions((old) => {
+          const index = old.findIndex((a) => a.id === action.id);
+          if (index === -1) return old;
+          return [...old.slice(0, index), ...old.slice(index + 1)];
+        });
+      });
+
+      socket.on('choice_action', (action: IChoiceAction) => {
+        console.log('choice_action', action);
+        setChoiceActions((old) => [...old, action]);
+      });
+
+      socket.on('remove_choice_action', (action: IChoiceAction) => {
+        setChoiceActions((old) => {
           const index = old.findIndex((a) => a.id === action.id);
           if (index === -1) return old;
           return [...old.slice(0, index), ...old.slice(index + 1)];

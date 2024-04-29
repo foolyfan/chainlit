@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import {
   IAction,
+  IChoiceAction,
   IFeedback,
   IStep,
   accessTokenState,
@@ -33,9 +34,11 @@ const Messages = ({
   projectSettings,
   setAutoScroll
 }: MessagesProps): JSX.Element => {
-  const { elements, askUser, avatars, loading, actions } = useChatData();
+  const { elements, askUser, avatars, loading, actions, choiceActions } =
+    useChatData();
+
   const { messages } = useChatMessages();
-  const { callAction } = useChatInteract();
+  const { callAction, callChoiceAction } = useChatInteract();
   const { idToResume } = useChatSession();
   const accessToken = useRecoilValue(accessTokenState);
   const setMessages = useSetRecoilState(messagesState);
@@ -73,6 +76,34 @@ const Messages = ({
       }
     },
     [callAction]
+  );
+
+  const callChoiceActionWithToast = useCallback(
+    (action: IChoiceAction) => {
+      const promise = callChoiceAction(action);
+      if (promise) {
+        toast.promise(promise, {
+          loading: `${t('components.organisms.chat.Messages.index.running')}`,
+          success: (res) => {
+            if (res.response) {
+              return res.response;
+            } else {
+              return `${t(
+                'components.organisms.chat.Messages.index.executedSuccessfully'
+              )}`;
+            }
+          },
+          error: (res) => {
+            if (res.response) {
+              return res.response;
+            } else {
+              return `${t('components.organisms.chat.Messages.index.failed')}`;
+            }
+          }
+        });
+      }
+    },
+    [callChoiceAction]
   );
 
   const onFeedbackUpdated = useCallback(
@@ -121,11 +152,13 @@ const Messages = ({
       loading={loading}
       askUser={askUser}
       actions={actions}
+      choiceActions={choiceActions}
       elements={elements}
       messages={messages}
       autoScroll={autoScroll}
       onFeedbackUpdated={onFeedbackUpdated}
       callAction={callActionWithToast}
+      callChoiceAction={callChoiceActionWithToast}
       setAutoScroll={setAutoScroll}
     />
   );
