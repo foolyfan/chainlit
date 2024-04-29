@@ -10,7 +10,7 @@ from chainlit import logger
 
 @dataclass
 class ChoiceActionSpec(ActionSpec):
-    layout: List[typing.Dict[Literal["field", "name"], dict]]
+    layout: List[typing.Dict[Literal["field", "width"], dict]]
 
 
 @dataclass

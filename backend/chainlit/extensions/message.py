@@ -28,7 +28,7 @@ class AskUserChoiceMessage(AskMessageBase):
         self,
         datadef: str,
         choiceActions: List[ChoiceAction],
-        layout: List[typing.Dict[Literal["field", "name"], typing.Any]],
+        layout: List[typing.Dict[Literal["field", "width"], typing.Any]],
         callback: Callable[[str, List], Awaitable[str]],
         author=config.ui.name,
         disable_feedback=False,
