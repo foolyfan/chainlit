@@ -18,7 +18,12 @@ const ActionButton = ({ action, margin, onClick }: ActionProps) => {
   const isDisabled = isAskingAction && !askUser?.spec.keys?.includes(action.id);
   const handleClick = () => {
     if (isAskingAction) {
-      askUser?.callback(action);
+      askUser?.callback({
+        id: action.id,
+        forId: action.forId,
+        value: action.id,
+        type: 'click'
+      });
     } else {
       action.onClick();
       onClick?.();

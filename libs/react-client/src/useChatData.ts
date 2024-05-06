@@ -36,12 +36,13 @@ const useChatData = () => {
   );
 
   const connected = session?.socket.connected && !session?.error;
-  const disabled =
+  // 用户输入框状态：禁用、多输入方式
+  const disabled = !connected || loading || askUser?.spec.type === 'file';
+  const multiInput =
     !connected ||
     loading ||
-    askUser?.spec.type === 'file' ||
-    askUser?.spec.type === 'action';
-  askUser?.spec.type === 'choice_action';
+    askUser?.spec.type === 'action' ||
+    askUser?.spec.type === 'choice_action';
 
   return {
     actions,
@@ -53,6 +54,7 @@ const useChatData = () => {
     chatSettingsValue,
     connected,
     disabled,
+    multiInput,
     elements,
     error: session?.error,
     loading,

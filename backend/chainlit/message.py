@@ -1,9 +1,11 @@
 import asyncio
 import json
 import time
+import typing
 import uuid
 from abc import ABC
-from typing import Dict, List, Optional, Union, cast
+from dataclasses import dataclass
+from typing import Awaitable, Callable, Dict, List, Optional, Union, cast
 
 from chainlit.action import Action
 from chainlit.config import config
@@ -14,11 +16,11 @@ from chainlit.logger import logger
 from chainlit.step import StepDict
 from chainlit.telemetry import trace_event
 from chainlit.types import (
-    AskActionResponse,
     AskActionSpec,
     AskFileResponse,
     AskFileSpec,
     AskSpec,
+    AskUserResponse,
     FileDict,
 )
 from literalai import BaseGeneration
@@ -491,13 +493,17 @@ class AskActionMessage(AskMessageBase):
         self,
         content: str,
         actions: List[Action],
+        choiceHook: Callable[[AskUserResponse, List[Action]], Awaitable[typing.Any]],
+        actiondef: str,
         author=config.ui.name,
         disable_feedback=False,
         timeout=90,
         raise_on_timeout=False,
     ):
+        self.actiondef = actiondef
         self.content = content
         self.actions = actions
+        self.choiceHook = choiceHook
         self.author = author
         self.disable_feedback = disable_feedback
         self.timeout = timeout
@@ -505,7 +511,7 @@ class AskActionMessage(AskMessageBase):
 
         super().__post_init__()
 
-    async def send(self) -> Union[AskActionResponse, None]:
+    async def send(self) -> Union[typing.Any, None]:
         """
         Sends the question to ask to the UI and waits for the reply
         """
@@ -533,17 +539,18 @@ class AskActionMessage(AskMessageBase):
         spec = AskActionSpec(type="action", timeout=self.timeout, keys=action_keys)
 
         res = cast(
-            Union[AskActionResponse, None],
+            Union[AskUserResponse, None],
             await context.emitter.send_ask_user(step_dict, spec, self.raise_on_timeout),
         )
 
         for action in self.actions:
             await action.remove()
         if res is None:
-            self.content = "Timed out: no action was taken"
+            self.content = f"{self.actiondef}任务超时"
         else:
-            self.content = f'**Selected:** {res["label"]}'
-
+            choiceHookRes = await self.choiceHook(res, self.actions)
+            self.content = choiceHookRes.label
+            res = choiceHookRes
         self.wait_for_answer = False
 
         await self.update()

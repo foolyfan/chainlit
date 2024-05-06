@@ -4,13 +4,14 @@ from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 from chainlit.data import get_data_layer
 from chainlit.element import Element, File
+from chainlit.extensions.message import AskUserResponse
 from chainlit.logger import logger
 from chainlit.message import Message
 from chainlit.session import BaseSession, WebsocketSession
 from chainlit.step import StepDict
 from chainlit.types import (
-    AskActionResponse,
     AskSpec,
+    AskUserResponse,
     FileDict,
     FileReference,
     ThreadDict,
@@ -73,7 +74,7 @@ class BaseChainlitEmitter:
 
     async def send_ask_user(
         self, step_dict: StepDict, spec: AskSpec, raise_on_timeout=False
-    ) -> Optional[Union["StepDict", "AskActionResponse", List["FileDict"]]]:
+    ) -> Optional[Union["StepDict", "AskUserResponse", List["FileDict"]]]:
         """Stub method to send a prompt to the UI and wait for a response."""
         pass
 
@@ -238,13 +239,13 @@ class ChainlitEmitter(BaseChainlitEmitter):
             # Send the prompt to the UI
             user_res = await self.emit_call(
                 "ask", {"msg": step_dict, "spec": spec.to_dict()}, spec.timeout
-            )  # type: Optional[Union["StepDict", "AskActionResponse", List["FileReference"]]]
+            )  # type: Optional[Union["StepDict", "AskUserResponse", List["FileReference"]]]
 
             # End the task temporarily so that the User can answer the prompt
             await self.task_end()
 
             final_res: Optional[
-                Union["StepDict", "AskActionResponse", List["FileDict"]]
+                Union["StepDict", "AskUserResponse", List["FileDict"]]
             ] = None
 
             if user_res:
@@ -278,11 +279,11 @@ class ChainlitEmitter(BaseChainlitEmitter):
                         ]
                         await asyncio.gather(*coros)
                 elif spec.type == "action":
-                    action_res = cast(AskActionResponse, user_res)
+                    action_res = cast(AskUserResponse, user_res)
                     final_res = action_res
                     interaction = action_res["value"]
                 elif spec.type == "choice_action":
-                    action_res = cast(AskActionResponse, user_res)
+                    action_res = cast(AskUserResponse, user_res)
                     final_res = action_res
                     interaction = action_res["value"]
 

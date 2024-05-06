@@ -17,7 +17,13 @@ import {
   threadIdToResumeState,
   tokenCountState
 } from 'src/state';
-import { IAction, IChoiceAction, IFileRef, IStep } from 'src/types';
+import {
+  IAction,
+  IAskResponse,
+  IChoiceAction,
+  IFileRef,
+  IStep
+} from 'src/types';
 import { addMessage } from 'src/utils/message';
 
 import { ChainlitAPI } from './api';
@@ -71,8 +77,20 @@ const useChatInteract = () => {
     (message: IStep) => {
       if (askUser) {
         setMessages((oldMessages) => addMessage(oldMessages, message));
-        console.log('reply message');
-        askUser.callback(message);
+        let responseMessage: IAskResponse | undefined = undefined;
+        if (
+          askUser.spec.type == 'choice_action' ||
+          askUser.spec.type == 'action'
+        ) {
+          responseMessage = {
+            id: message.id,
+            type: 'text',
+            forId: '',
+            value: message.output
+          };
+        }
+        console.log('reply message', responseMessage || message);
+        askUser.callback(responseMessage || message);
       }
     },
     [askUser]

@@ -21,3 +21,10 @@ export interface ICallFn {
   name: string;
   args: Record<string, any>;
 }
+
+export interface IAskResponse {
+  value: string;
+  type: 'click' | 'text';
+  forId: string;
+  id: string;
+}

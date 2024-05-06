@@ -1,5 +1,5 @@
 import { MessageContext } from 'contexts/MessageContext';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { List, ListItemButton, ListItemText } from '@mui/material';
 
@@ -11,13 +11,26 @@ interface Props {
   layout?: IChoiceLayout[];
 }
 
-const MessageChoiceActions = ({ message, choiceActions, layout }: Props) => {
-  const scopedActions = choiceActions.filter((a) => {
-    if (a.forId) {
-      return a.forId === message.id;
-    }
-    return true;
-  });
+export const MessageChoiceActions = ({
+  message,
+  choiceActions,
+  layout
+}: Props) => {
+  const [scopedActions, setScopedActions] = useState<IChoiceAction[]>([]);
+  useEffect(() => {
+    console.log('创建');
+    setScopedActions(
+      choiceActions.filter((a) => {
+        if (a.forId) {
+          return a.forId === message.id;
+        }
+        return true;
+      })
+    );
+    return () => {
+      console.log('销毁');
+    };
+  }, []);
 
   const show = scopedActions;
 
@@ -33,15 +46,16 @@ const MessageChoiceActions = ({ message, choiceActions, layout }: Props) => {
     rowNum: number;
   }) => {
     const { askUser, loading } = useContext(MessageContext);
-
     const isAskingAction = askUser?.spec.type === 'choice_action';
     const isDisabled =
       isAskingAction && !askUser?.spec.keys?.includes(action.id);
-    const handleClick = (rowNum: number) => {
+    const handleClick = () => {
       if (isAskingAction) {
         askUser?.callback({
-          ...action,
-          value: `选择第${rowNum}条数据`
+          id: action.id,
+          forId: action.forId,
+          type: 'click',
+          value: action.id
         });
       } else {
         action.onClick();
@@ -51,7 +65,7 @@ const MessageChoiceActions = ({ message, choiceActions, layout }: Props) => {
       <ListItemButton
         divider
         sx={{ bgcolor: 'white' }}
-        onClick={() => handleClick(rowNum)}
+        onClick={handleClick}
         disabled={loading || isDisabled}
       >
         <ListItemText primary={rowNum} sx={{ width: `10%`, flexGrow: 0 }} />
@@ -64,6 +78,7 @@ const MessageChoiceActions = ({ message, choiceActions, layout }: Props) => {
       </ListItemButton>
     );
   };
+
   return (
     <List sx={{ width: '100%' }}>
       {scopedActions.map((action, index) => {
@@ -72,5 +87,3 @@ const MessageChoiceActions = ({ message, choiceActions, layout }: Props) => {
     </List>
   );
 };
-
-export { MessageChoiceActions };

@@ -1,3 +1,4 @@
+import typing
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, TypedDict, Union
 
@@ -94,14 +95,11 @@ class AskFileResponse:
     type: str
 
 
-class AskActionResponse(TypedDict):
-    name: str
+class AskUserResponse(TypedDict):
     value: str
-    label: str
-    description: str
     forId: str
     id: str
-    collapsed: bool
+    type: Literal["click", "text"]
 
 
 class GenerationRequest(BaseModel):

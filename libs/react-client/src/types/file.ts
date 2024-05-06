@@ -1,4 +1,4 @@
-import { IAction, IChoiceAction } from './action';
+import { IAskResponse } from './action';
 import { IChoiceLayout, IStep } from './step';
 
 export interface FileSpec {
@@ -20,7 +20,7 @@ export interface IFileRef {
 }
 
 export interface IAsk {
-  callback: (payload: IStep | IFileRef[] | IAction | IChoiceAction) => void;
+  callback: (payload: IStep | IFileRef[] | IAskResponse) => void;
   spec: {
     type: 'text' | 'file' | 'action' | 'choice_action';
     timeout: number;

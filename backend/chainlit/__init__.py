@@ -41,7 +41,6 @@ from chainlit.element import (
     Text,
     Video,
 )
-from chainlit.extensions.choiceaction import ChoiceAction
 from chainlit.extensions.message import AskUserChoiceMessage
 from chainlit.logger import logger
 from chainlit.message import (

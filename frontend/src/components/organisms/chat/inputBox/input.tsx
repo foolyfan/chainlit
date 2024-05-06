@@ -46,9 +46,9 @@ const Input = memo(
 
     const ref = useRef<HTMLDivElement>(null);
     const {
-      loading,
       askUser,
       chatSettingsInputs,
+      multiInput,
       disabled: _disabled
     } = useChatData();
 
@@ -88,12 +88,6 @@ const Input = memo(
         input.removeEventListener('paste', pasteEvent);
       };
     }, []);
-
-    useEffect(() => {
-      if (ref.current && !loading && !disabled) {
-        ref.current.focus();
-      }
-    }, [loading, disabled]);
 
     const submit = useCallback(() => {
       if (value === '' || disabled) {
@@ -141,9 +135,12 @@ const Input = memo(
 
     const startAdornment = (
       <>
-        <HistoryButton disabled={disabled} onClick={onHistoryClick} />
+        <HistoryButton
+          disabled={disabled || multiInput}
+          onClick={onHistoryClick}
+        />
         <UploadButton
-          disabled={disabled}
+          disabled={disabled || multiInput}
           fileSpec={fileSpec}
           onFileUploadError={onFileUploadError}
           onFileUpload={onFileUpload}
@@ -162,7 +159,7 @@ const Input = memo(
           <SpeechButton
             onSpeech={(transcript) => setValue((text) => text + transcript)}
             language={pSettings.features?.speech_to_text?.language}
-            disabled={disabled}
+            disabled={disabled && !multiInput}
           />
         ) : null}
       </>
@@ -209,7 +206,7 @@ const Input = memo(
           placeholder={t(
             'components.organisms.chat.inputBox.input.placeholder'
           )}
-          disabled={disabled}
+          disabled={disabled && !multiInput}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onCompositionStart={() => setIsComposing(true)}
@@ -227,7 +224,10 @@ const Input = memo(
               </InputAdornment>
             ),
             endAdornment: (
-              <SubmitButton onSubmit={submit} disabled={disabled || !value} />
+              <SubmitButton
+                onSubmit={submit}
+                disabled={(disabled && !multiInput) || !value}
+              />
             )
           }}
         />

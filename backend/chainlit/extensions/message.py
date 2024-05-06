@@ -1,5 +1,6 @@
 import typing
-from typing import Awaitable, Callable, List, Literal, TypedDict, Union, cast
+from dataclasses import dataclass
+from typing import Awaitable, Callable, List, Literal, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
@@ -7,15 +8,8 @@ from chainlit.extensions.choiceaction import ChoiceAction
 from chainlit.extensions.types import AskChoiceActionSpec
 from chainlit.message import AskMessageBase
 from chainlit.telemetry import trace_event
-from chainlit.types import AskActionResponse
+from chainlit.types import AskUserResponse
 from literalai.helper import utc_now
-
-
-class AskChoiceActionResponse(TypedDict):
-    value: str
-    forId: str
-    id: str
-    collapsed: bool
 
 
 class AskUserChoiceMessage(AskMessageBase):
@@ -29,7 +23,9 @@ class AskUserChoiceMessage(AskMessageBase):
         datadef: str,
         choiceActions: List[ChoiceAction],
         layout: List[typing.Dict[Literal["field", "width"], typing.Any]],
-        callback: Callable[[str, List], Awaitable[str]],
+        choiceHook: Callable[
+            [AskUserResponse, List[ChoiceAction]], Awaitable[typing.Any]
+        ],
         author=config.ui.name,
         disable_feedback=False,
         timeout=90,
@@ -40,13 +36,13 @@ class AskUserChoiceMessage(AskMessageBase):
         self.layout = layout
         self.author = author
         self.disable_feedback = disable_feedback
-        self.callback = callback
+        self.choiceHook = choiceHook
         self.timeout = timeout
         self.raise_on_timeout = raise_on_timeout
         self.choiceActions = choiceActions
         super().__post_init__()
 
-    async def send(self) -> Union[AskChoiceActionResponse, None]:
+    async def send(self) -> Union[typing.Any, None]:
         """
         Sends the question to ask to the UI and waits for the reply
         """
@@ -78,23 +74,16 @@ class AskUserChoiceMessage(AskMessageBase):
         )
 
         res = cast(
-            Union[AskChoiceActionResponse, None],
+            Union[AskUserResponse, None],
             await context.emitter.send_ask_user(step_dict, spec, self.raise_on_timeout),
         )
 
         for action in self.choiceActions:
             await action.remove()
         if res is None:
-            self.content = "完成选择任务超时"
+            self.content = f"选择{self.datadef}任务超时"
+            self.wait_for_answer = False
+            await self.update()
         else:
-            choices = []
-            for item in self.choiceActions:
-                choices.append(item.data)
-            choice = await self.callback(res["value"], choices)
-            self.content = f"根据您的要求，我将使用以下数据：\n{choice}\n作为选择{self.datadef}的结果。"
-
-        self.wait_for_answer = False
-
-        await self.update()
-
+            res = await self.choiceHook(res, self.choiceActions)
         return res

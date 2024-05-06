@@ -1,9 +1,11 @@
 # This is a simple example of a chainlit app.
 
-from chainlit.extensions import choice_action_callback
+from typing import List
+
 from chainlit.extensions.choiceaction import ChoiceAction
 from chainlit.extensions.message import AskUserChoiceMessage
 from chainlit.logger import logger
+from chainlit.types import AskUserResponse
 
 from chainlit import (
     Action,
@@ -12,23 +14,31 @@ from chainlit import (
     Task,
     TaskList,
     TaskStatus,
-    on_chat_start,
     on_message,
     sleep,
 )
 
 
-async def choiceFirst(res, choices):
+async def choiceFirst(res, choices: List[ChoiceAction]):
     logger.info(f"用户选择结果：{res}")
     logger.info(f"默认选择第一条")
-    return f"姓名：{choices[0]['name']}\n账号：{choices[0]['accNo']}"
+    return choices[0]
+
+
+async def choiceResultConfirm(res: AskUserResponse, actions):
+    logger.info(f"用户确认结果：{res}")
+    if res["type"] == "text":
+        logger.info("调用AI选择")
+        return actions[1]
+    else:
+        return actions[0]
 
 
 @on_message
 async def main(message: Message):
     if message.content == "1":
         res = await AskUserChoiceMessage(
-            timeout=180,
+            timeout=30,
             datadef="收款人",
             layout=[{"field": "name", "width": 20}, {"field": "accNo", "width": 50}],
             choiceActions=[
@@ -36,21 +46,33 @@ async def main(message: Message):
                 ChoiceAction(data={"accNo": "652154155582", "name": "李四"}),
                 ChoiceAction(data={"accNo": "652154155578", "name": "王五"}),
             ],
-            callback=choiceFirst,
+            choiceHook=choiceFirst,
         ).send()
+        if res is not None:
+            await Message(
+                content=f"根据您的要求，我将使用以下数据：\n姓名：{res.data['name']}\n账号：{res.data['accNo']}\n作为选择收款人的结果。"
+            ).send()
+            res = await AskActionMessage(
+                actiondef="确认",
+                content="请确认以上收款人信息",
+                actions=[
+                    Action(name="continue", value="continue", label="确认"),
+                    Action(name="cancel", value="cancel", label="取消"),
+                ],
+                choiceHook=choiceResultConfirm,
+                timeout=30,
+            ).send()
+
     if message.content == "2":
         res = await AskActionMessage(
+            actiondef="确认",
             content="Pick an action!",
             actions=[
                 Action(name="continue", value="continue", label="✅ Continue"),
                 Action(name="cancel", value="cancel", label="❌ Cancel"),
             ],
+            choiceHook=choiceResultConfirm,
         ).send()
-
-        if res and res.get("value") == "continue":
-            await Message(
-                content="Continue!",
-            ).send()
     if message.content == "3":
         # Create the TaskList
         task_list = TaskList()
