@@ -41,6 +41,7 @@ from chainlit.element import (
     Text,
     Video,
 )
+from chainlit.extensions.choiceaction import ChoiceAction
 from chainlit.extensions.message import AskUserChoiceMessage
 from chainlit.logger import logger
 from chainlit.message import (
@@ -54,7 +55,7 @@ from chainlit.oauth_providers import get_configured_oauth_providers
 from chainlit.step import Step, step
 from chainlit.sync import make_async, run_sync
 from chainlit.telemetry import trace
-from chainlit.types import ChatProfile, ThreadDict
+from chainlit.types import AskUserResponse, ChatProfile, ThreadDict
 from chainlit.user import PersistedUser, User
 from chainlit.user_session import user_session
 from chainlit.utils import make_module_getattr, wrap_user_function
@@ -320,6 +321,8 @@ __getattr__ = make_module_getattr(
 __all__ = [
     "user_session",
     "CopilotFunction",
+    "ChoiceAction",
+    "AskUserResponse",
     "Action",
     "User",
     "PersistedUser",
