@@ -7,6 +7,7 @@ import { Alert, Box, Button, Skeleton, Stack } from '@mui/material';
 
 import {
   IAction,
+  IChoiceAction,
   IFeedback,
   IMessageElement,
   IStep,
@@ -110,6 +111,7 @@ const Thread = ({ thread, error, isLoading }: Props) => {
 
   const elements = thread.elements;
   const actions: IAction[] = [];
+  const choiceActions: IChoiceAction[] = [];
   const messages = nestMessages(steps);
 
   return (
@@ -147,6 +149,7 @@ const Thread = ({ thread, error, isLoading }: Props) => {
         <MessageContainer
           loading={false}
           avatars={[]}
+          choiceActions={choiceActions}
           actions={actions}
           elements={(elements || []) as IMessageElement[]}
           onFeedbackUpdated={onFeedbackUpdated}
