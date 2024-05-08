@@ -42,6 +42,7 @@ from chainlit.element import (
     Video,
 )
 from chainlit.extensions.choiceaction import ChoiceAction
+from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.message import AskUserChoiceMessage
 from chainlit.logger import logger
 from chainlit.message import (
@@ -373,6 +374,8 @@ __all__ = [
     "LlamaIndexCallbackHandler",
     "HaystackAgentCallbackHandler",
     "instrument_openai",
+    "DataItem",
+    "PreviewInfoGroup",
 ]
 
 

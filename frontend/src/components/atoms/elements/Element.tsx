@@ -5,6 +5,7 @@ import { FileElement } from './File';
 import { ImageElement } from './Image';
 import { PDFElement } from './PDF';
 import { PlotlyElement } from './Plotly';
+import { PreviewInfoGroupElement } from './PreviewInfoGroup';
 import { TextElement } from './Text';
 import { VideoElement } from './Video';
 
@@ -28,6 +29,8 @@ const Element = ({ element }: ElementProps): JSX.Element | null => {
       return <VideoElement element={element} />;
     case 'plotly':
       return <PlotlyElement element={element} />;
+    case 'previewinfogroup':
+      return <PreviewInfoGroupElement element={element} />;
     default:
       return null;
   }

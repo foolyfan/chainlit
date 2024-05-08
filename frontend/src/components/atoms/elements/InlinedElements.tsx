@@ -8,6 +8,7 @@ import { InlinedHtmlList } from './InlinedHtmlList';
 import { InlinedImageList } from './InlinedImageList';
 import { InlinedPDFList } from './InlinedPDFList';
 import { InlinedPlotlyList } from './InlinedPlotlyList';
+import { InlinedPreviewInfoGroupList } from './InlinedPreviewInfoGroupList';
 import { InlinedTextList } from './InlinedTextList';
 import { InlinedVideoList } from './InlinedVideoList';
 
@@ -67,6 +68,9 @@ const InlinedElements = ({ elements }: Props) => {
       ) : null}
       {elementsByType.html?.length ? (
         <InlinedHtmlList items={elementsByType.html} />
+      ) : null}
+      {elementsByType.previewinfogroup?.length ? (
+        <InlinedPreviewInfoGroupList items={elementsByType.previewinfogroup} />
       ) : null}
     </Stack>
   );

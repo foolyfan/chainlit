@@ -30,6 +30,7 @@ ElementType = Literal[
     "file",
     "plotly",
     "html",
+    "previewinfogroup",
 ]
 ElementDisplay = Literal["inline", "side", "page"]
 ElementSize = Literal["small", "medium", "large"]

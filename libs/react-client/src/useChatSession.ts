@@ -221,7 +221,7 @@ const useChatSession = () => {
       });
 
       socket.on('element', (element: IElement) => {
-        console.log('element', element);
+        console.log('message element', element);
 
         if (!element.url && element.chainlitKey) {
           element.url = client.getElementUrl(element.chainlitKey, sessionId);

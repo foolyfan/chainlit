@@ -2,7 +2,9 @@
 
 from typing import List
 
+from chainlit.element import Text
 from chainlit.extensions.choiceaction import ChoiceAction
+from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.message import AskUserChoiceMessage
 from chainlit.logger import logger
 from chainlit.types import AskUserResponse
@@ -10,6 +12,7 @@ from chainlit.types import AskUserResponse
 from chainlit import (
     Action,
     AskActionMessage,
+    AskUserMessage,
     Message,
     Task,
     TaskList,
@@ -26,6 +29,15 @@ async def choiceFirst(res, choices: List[ChoiceAction]):
 
 
 async def choiceResultConfirm(res: AskUserResponse, actions):
+    logger.info(f"用户确认结果：{res}")
+    if res["type"] == "text":
+        logger.info("调用AI选择")
+        return actions[1]
+    else:
+        return actions[0]
+
+
+async def confirmTradePreviewInfo(res: AskUserResponse, actions):
     logger.info(f"用户确认结果：{res}")
     if res["type"] == "text":
         logger.info("调用AI选择")
@@ -100,3 +112,69 @@ async def main(message: Message):
         task2.status = TaskStatus.FAILED
         task_list.status = "Failed"
         await task_list.send()
+    if message.content == "4":
+        res = await AskUserMessage(content="你好，请录入你的姓名!", timeout=10).send()
+    if message.content == "5":
+        text_content = "Hello, this is a text element."
+        elements = [Text(name="simple_text", content=text_content, display="inline")]
+
+        await Message(
+            content="Check out this text element!",
+            elements=elements,
+            actions=[
+                Action(name="update", value="update", label="修改"),
+                Action(name="continue", value="continue", label="确认"),
+            ],
+        ).send()
+    if message.content == "6":
+        elements = [
+            PreviewInfoGroup(
+                name="付款账户信息",
+                items=[
+                    DataItem(label="户名", value="张三"),
+                    DataItem(label="账号", value="651541544514215", width="all"),
+                ],
+            ),
+            PreviewInfoGroup(
+                name="收款账户信息",
+                items=[
+                    DataItem(label="户名", value="李四"),
+                    DataItem(label="账号", value="651545466455215", width="all"),
+                    DataItem(label="银行", value="中国银行"),
+                ],
+            ),
+            PreviewInfoGroup(
+                name="转账信息",
+                items=[
+                    DataItem(label="金额", value="10,000.00 壹万元整", width="all"),
+                    DataItem(
+                        label="费用",
+                        value="0.00",
+                    ),
+                    DataItem(label="附言", value="转账"),
+                ],
+            ),
+        ]
+        await Message(
+            content="请核对以下转账信息符合您的预期。",
+            elements=elements,
+        ).send()
+        res = await AskActionMessage(
+            actiondef="确认",
+            actions=[
+                Action(name="update", value="update", label="修改"),
+                Action(name="submit", value="submit", label="确认"),
+            ],
+            content="选择确认后系统将进行转账操作；若不符合，请指出错误",
+            timeout=30,
+            choiceHook=confirmTradePreviewInfo,
+        ).send()
+        if res is not None:
+            if res.value == "update":
+                res = await AskUserMessage(content="请描述错误", timeout=20).send()
+            if res is not None:
+                logger.info("AI识别修改信息，进行修改流程")
+                await Message(content="正在进行修改").send()
+                await Message(content="修改完成").send()
+            else:
+                await Message(content="交易成功").send()
