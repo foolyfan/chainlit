@@ -192,3 +192,9 @@ async def main(message: Message):
     if message.content == "9":
         res = await GatherCommand(action="face_recognition", timeout=10).send()
         logger.info(f"人脸识别 {res}")
+    if message.content == "10":
+        res = await GatherCommand(action="custom_card", timeout=10).send()
+        logger.info(f"定制卡面 {res}")
+    if message.content == "11":
+        res = await GatherCommand(action="password", timeout=90).send()
+        logger.info(f"密码 {res}")

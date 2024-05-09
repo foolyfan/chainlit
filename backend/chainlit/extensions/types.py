@@ -18,7 +18,9 @@ class AskChoiceActionSpec(ChoiceActionSpec, AskSpec, DataClassJsonMixin):
     """Specification for asking the user an choice_action"""
 
 
-GatherCommandType = Literal["capture_idcard", "face_recognition"]
+GatherCommandType = Literal[
+    "capture_idcard", "face_recognition", "password", "custom_card"
+]
 
 
 @dataclass
