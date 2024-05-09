@@ -19,7 +19,7 @@ class AskChoiceActionSpec(ChoiceActionSpec, AskSpec, DataClassJsonMixin):
 
 
 GatherCommandType = Literal[
-    "capture_idcard", "face_recognition", "password", "custom_card"
+    "capture_idcard", "face_recognition", "password", "custom_card", "scan"
 ]
 
 

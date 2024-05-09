@@ -1,3 +1,4 @@
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import { Box, Grid, TextField } from '@mui/material';
 
 import CardBackImg from 'assets/cardback.png';
@@ -67,6 +68,8 @@ const CommandContainer = ({ gatherCommand }: Props) => {
             {gridItems}
           </Grid>
         );
+      case 'scan':
+        return <DocumentScannerIcon sx={{ fontSize: 200 }} color="primary" />;
       default:
         return null;
     }

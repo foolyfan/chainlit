@@ -46,6 +46,10 @@ async def confirmTradePreviewInfo(res: AskUserResponse, actions):
         return actions[0]
 
 
+async def choiceBranch(res, choices: List[ChoiceAction]):
+    return choices[0]
+
+
 @on_message
 async def main(message: Message):
     if message.content == "1":
@@ -198,3 +202,47 @@ async def main(message: Message):
     if message.content == "11":
         res = await GatherCommand(action="password", timeout=90).send()
         logger.info(f"密码 {res}")
+    if message.content == "12":
+        res = await AskUserChoiceMessage(
+            timeout=60,
+            datadef="开户网点",
+            layout=[
+                {"field": "name", "width": 30},
+                {"field": "address", "width": 30},
+                {"field": "workData", "width": 30},
+            ],
+            choiceActions=[
+                ChoiceAction(
+                    data={
+                        "name": "北京分行营业部",
+                        "address": "北京市东城区朝阳门北大街8号富华大厦E座1楼",
+                        "workData": "周一至周日:\n09:00-17:00",
+                    }
+                ),
+                ChoiceAction(
+                    data={
+                        "name": "北京国际大厦支行",
+                        "address": "北京市朝阳区建外街道建国门外大街19号",
+                        "workData": "周一至周日:\n09:00-17:00",
+                    }
+                ),
+            ],
+            choiceHook=choiceFirst,
+        ).send()
+        if res is not None:
+            await Message(
+                content=f"根据您的要求，我将使用以下数据：\n网点名称：{res.data['name']}\n网点地址：{res.data['address']}\n作为选择开户机构的结果。"
+            ).send()
+            res = await AskActionMessage(
+                actiondef="确认",
+                content="请确认以上开户机构信息",
+                actions=[
+                    Action(name="continue", value="continue", label="确认"),
+                    Action(name="cancel", value="cancel", label="取消"),
+                ],
+                choiceHook=choiceResultConfirm,
+                timeout=30,
+            ).send()
+    if message.content == "13":
+        res = await GatherCommand(action="scan", timeout=90).send()
+        logger.info(f"扫一扫 {res}")

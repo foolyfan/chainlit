@@ -30,7 +30,12 @@ export interface IAsk {
 }
 
 export interface GatherCommandSpec {
-  type: 'capture_idcard' | 'face_recognition' | 'password' | 'custom_card';
+  type:
+    | 'capture_idcard'
+    | 'face_recognition'
+    | 'password'
+    | 'custom_card'
+    | 'scan';
   timeout: number;
 }
 
