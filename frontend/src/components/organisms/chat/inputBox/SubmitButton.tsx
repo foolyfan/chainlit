@@ -14,10 +14,14 @@ interface SubmitButtonProps {
 }
 
 const SubmitButton = ({ disabled, onSubmit }: SubmitButtonProps) => {
-  const { loading } = useChatData();
+  const { loading, gatherCommand } = useChatData();
   const { stopTask } = useChatInteract();
 
   const handleClick = () => {
+    if (gatherCommand) {
+      onSubmit();
+      return;
+    }
     stopTask();
   };
 

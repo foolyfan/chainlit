@@ -2,11 +2,16 @@ import typing
 from dataclasses import dataclass
 from typing import Awaitable, Callable, List, Literal, Union, cast
 
+from chainlit.action import Action
 from chainlit.config import config
 from chainlit.context import context
 from chainlit.extensions.choiceaction import ChoiceAction
-from chainlit.extensions.types import AskChoiceActionSpec
-from chainlit.message import AskMessageBase
+from chainlit.extensions.types import (
+    AskChoiceActionSpec,
+    GatherCommandSpec,
+    GatherCommandType,
+)
+from chainlit.message import AskActionMessage, AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
 from chainlit.types import AskUserResponse
 from literalai.helper import utc_now
@@ -86,4 +91,44 @@ class AskUserChoiceMessage(AskMessageBase):
             await self.update()
         else:
             res = await self.choiceHook(res, self.choiceActions)
+        return res
+
+
+class GatherCommand(MessageBase):
+
+    def __init__(
+        self,
+        action: GatherCommandType,
+        timeout=90,
+        author=config.ui.name,
+    ):
+        self.timeout = timeout
+        self.author = author
+        self.action = action
+        super().__post_init__()
+
+    async def send(self) -> Union[GatherCommandSpec, None]:
+        """
+        Sends the question to ask to the UI and waits for the reply
+        """
+        trace_event("gather_command")
+
+        if not self.created_at:
+            self.created_at = utc_now()
+
+        if self.streaming:
+            self.streaming = False
+
+        if config.code.author_rename:
+            self.author = await config.code.author_rename(self.author)
+
+        self.wait_for_answer = True
+        step_dict = await self._create()
+        spec = GatherCommandSpec(
+            type=self.action,
+            timeout=self.timeout,
+        )
+
+        res = await context.emitter.gather_command(step_dict, spec, False)
+
         return res

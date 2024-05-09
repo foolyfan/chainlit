@@ -16,3 +16,14 @@ class ChoiceActionSpec(ActionSpec):
 @dataclass
 class AskChoiceActionSpec(ChoiceActionSpec, AskSpec, DataClassJsonMixin):
     """Specification for asking the user an choice_action"""
+
+
+GatherCommandType = Literal["capture_idcard", "face_recognition"]
+
+
+@dataclass
+class GatherCommandSpec(DataClassJsonMixin):
+    """Specification for asking the user an choice_action"""
+
+    timeout: int
+    type: GatherCommandType

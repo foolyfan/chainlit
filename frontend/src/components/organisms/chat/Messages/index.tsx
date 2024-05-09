@@ -17,6 +17,8 @@ import {
   useChatSession
 } from '@chainlit/react-client';
 
+import { CommandContainer } from 'components/molecules/command/CommandContainer';
+
 import { apiClientState } from 'state/apiClient';
 import { IProjectSettings } from 'state/project';
 
@@ -43,6 +45,7 @@ const Messages = ({
   const accessToken = useRecoilValue(accessTokenState);
   const setMessages = useSetRecoilState(messagesState);
   const apiClient = useRecoilValue(apiClientState);
+  const { gatherCommand } = useChatData();
 
   const { t } = useTranslation();
 
@@ -146,6 +149,8 @@ const Messages = ({
       allowHtml={projectSettings?.features?.unsafe_allow_html}
       latex={projectSettings?.features?.latex}
     />
+  ) : gatherCommand ? (
+    <CommandContainer gatherCommand={gatherCommand} />
   ) : (
     <MessageContainer
       avatars={avatars}

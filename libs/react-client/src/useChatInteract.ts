@@ -9,6 +9,7 @@ import {
   chatSettingsValueState,
   elementState,
   firstUserInteraction,
+  gatherCommandState,
   loadingState,
   messagesState,
   sessionIdState,
@@ -32,6 +33,7 @@ const useChatInteract = () => {
   const accessToken = useRecoilValue(accessTokenState);
   const session = useRecoilValue(sessionState);
   const askUser = useRecoilValue(askUserState);
+  const gatherCommand = useRecoilValue(gatherCommandState);
   const sessionId = useRecoilValue(sessionIdState);
 
   const resetChatSettings = useResetRecoilState(chatSettingsInputsState);
@@ -92,8 +94,11 @@ const useChatInteract = () => {
         console.log('reply message', responseMessage || message);
         askUser.callback(responseMessage || message);
       }
+      if (gatherCommand) {
+        gatherCommand.callback(gatherCommand.spec);
+      }
     },
-    [askUser]
+    [askUser, gatherCommand]
   );
 
   const updateChatSettings = useCallback(

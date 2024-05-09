@@ -2,10 +2,10 @@
 
 from typing import List
 
-from chainlit.element import Text
+from chainlit.element import Image, Text
 from chainlit.extensions.choiceaction import ChoiceAction
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
-from chainlit.extensions.message import AskUserChoiceMessage
+from chainlit.extensions.message import AskUserChoiceMessage, GatherCommand
 from chainlit.logger import logger
 from chainlit.types import AskUserResponse
 
@@ -178,3 +178,17 @@ async def main(message: Message):
                 await Message(content="修改完成").send()
             else:
                 await Message(content="交易成功").send()
+    if message.content == "7":
+        image = Image(path="./voucher.png", name="image1", display="inline")
+
+        # Attach the image to the message
+        await Message(
+            content="This message has an image!",
+            elements=[image],
+        ).send()
+    if message.content == "8":
+        res = await GatherCommand(action="capture_idcard", timeout=90).send()
+        logger.info(f"身份证正反面 {res}")
+    if message.content == "9":
+        res = await GatherCommand(action="face_recognition", timeout=10).send()
+        logger.info(f"人脸识别 {res}")

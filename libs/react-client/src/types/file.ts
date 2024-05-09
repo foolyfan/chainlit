@@ -28,3 +28,17 @@ export interface IAsk {
     ActionSpec &
     ChoiceActionSpec;
 }
+
+export interface GatherCommandSpec {
+  type: 'capture_idcard' | 'face_recognition';
+  timeout: number;
+}
+
+export interface ICaptureIdCard {
+  imageIds?: string[];
+}
+
+export interface IGatherCommand {
+  callback: (payload: GatherCommandSpec & ICaptureIdCard) => void;
+  spec: GatherCommandSpec;
+}

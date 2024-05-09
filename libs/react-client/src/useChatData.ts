@@ -9,6 +9,7 @@ import {
   chatSettingsValueState,
   choiceActionState,
   elementState,
+  gatherCommandState,
   loadingState,
   sessionState,
   tasklistState
@@ -29,6 +30,7 @@ const useChatData = () => {
   const choiceActions = useRecoilValue(choiceActionState);
   const session = useRecoilValue(sessionState);
   const askUser = useRecoilValue(askUserState);
+  const gatherCommand = useRecoilValue(gatherCommandState);
   const chatSettingsInputs = useRecoilValue(chatSettingsInputsState);
   const chatSettingsValue = useRecoilValue(chatSettingsValueState);
   const chatSettingsDefaultValue = useRecoilValue(
@@ -58,7 +60,8 @@ const useChatData = () => {
     elements,
     error: session?.error,
     loading,
-    tasklists
+    tasklists,
+    gatherCommand
   };
 };
 

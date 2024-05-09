@@ -120,7 +120,7 @@ async def connect(sid, environ, auth):
         return socket.emit(event, data, to=sid)
 
     # Session scoped function to emit to the client and wait for a response
-    def emit_call_fn(event: Literal["ask", "call_fn"], data, timeout):
+    def emit_call_fn(event: Literal["ask", "call_fn", "gather_command"], data, timeout):
         if session := WebsocketSession.get(sid):
             if session.should_stop:
                 session.should_stop = False
@@ -162,6 +162,7 @@ async def connection_successful(sid):
 
     await context.emitter.task_end()
     await context.emitter.clear("clear_ask")
+    await context.emitter.clear("clear_gather_command")
     await context.emitter.clear("clear_call_fn")
 
     if context.session.thread_id_to_resume and config.code.on_chat_resume:

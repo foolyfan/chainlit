@@ -18,6 +18,7 @@ import {
   choiceActionState,
   elementState,
   firstUserInteraction,
+  gatherCommandState,
   loadingState,
   messagesState,
   sessionIdState,
@@ -56,6 +57,7 @@ const useChatSession = () => {
   const setLoading = useSetRecoilState(loadingState);
   const setMessages = useSetRecoilState(messagesState);
   const setAskUser = useSetRecoilState(askUserState);
+  const setGatherCommand = useSetRecoilState(gatherCommandState);
   const setCallFn = useSetRecoilState(callFnState);
 
   const setElements = useSetRecoilState(elementState);
@@ -190,8 +192,22 @@ const useChatSession = () => {
         setLoading(false);
       });
 
+      socket.on('gather_command_timeout', () => {
+        setGatherCommand(undefined);
+      });
+
+      socket.on('gather_command', ({ msg, spec }, callback) => {
+        console.log('gather_command', msg, spec, callback);
+        setGatherCommand({ spec, callback });
+      });
+
       socket.on('clear_ask', () => {
         setAskUser(undefined);
+      });
+
+      socket.on('clear_gather_command', () => {
+        console.log('clear_gather_command');
+        setGatherCommand(undefined);
       });
 
       socket.on('call_fn', ({ name, args }, callback) => {

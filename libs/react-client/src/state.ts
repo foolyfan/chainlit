@@ -9,6 +9,7 @@ import {
   IAvatarElement,
   ICallFn,
   IChoiceAction,
+  IGatherCommand,
   IMessageElement,
   IStep,
   ITasklistElement,
@@ -78,6 +79,11 @@ export const loadingState = atom<boolean>({
 
 export const askUserState = atom<IAsk | undefined>({
   key: 'AskUser',
+  default: undefined
+});
+
+export const gatherCommandState = atom<IGatherCommand | undefined>({
+  key: 'GatherCommand',
   default: undefined
 });
 

@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Literal, Optional, Union, cast
 from chainlit.data import get_data_layer
 from chainlit.element import Element, File
 from chainlit.extensions.message import AskUserResponse
+from chainlit.extensions.types import GatherCommandSpec
 from chainlit.logger import logger
 from chainlit.message import Message
 from chainlit.session import BaseSession, WebsocketSession
@@ -58,11 +59,15 @@ class BaseChainlitEmitter:
         """Stub method to delete a message in the UI."""
         pass
 
-    def send_timeout(self, event: Literal["ask_timeout", "call_fn_timeout"]):
+    def send_timeout(
+        self, event: Literal["ask_timeout", "gather_command_timeout", "call_fn_timeout"]
+    ):
         """Stub method to send a timeout to the UI."""
         pass
 
-    def clear(self, event: Literal["clear_ask", "clear_call_fn"]):
+    def clear(
+        self, event: Literal["clear_ask", "clear_gather_command", "clear_call_fn"]
+    ):
         pass
 
     async def init_thread(self, interaction: str):
@@ -106,6 +111,11 @@ class BaseChainlitEmitter:
 
     async def set_chat_settings(self, settings: dict):
         """Stub method to set chat settings."""
+        pass
+
+    async def gather_command(
+        self, step_dict: StepDict, spec: GatherCommandSpec, raise_on_timeout=False
+    ):
         pass
 
     async def send_action_response(
@@ -169,10 +179,14 @@ class ChainlitEmitter(BaseChainlitEmitter):
         """Delete a message in the UI."""
         return self.emit("delete_message", step_dict)
 
-    def send_timeout(self, event: Literal["ask_timeout", "call_fn_timeout"]):
+    def send_timeout(
+        self, event: Literal["ask_timeout", "gather_command_timeout", "call_fn_timeout"]
+    ):
         return self.emit(event, {})
 
-    def clear(self, event: Literal["clear_ask", "clear_call_fn"]):
+    def clear(
+        self, event: Literal["clear_ask", "clear_gather_command", "clear_call_fn"]
+    ):
         return self.emit(event, {})
 
     async def flush_thread_queues(self, interaction: str):
@@ -323,6 +337,26 @@ class ChainlitEmitter(BaseChainlitEmitter):
         """Update the token count for the UI."""
 
         return self.emit("token_usage", count)
+
+    async def gather_command(
+        self, step_dict: StepDict, spec: GatherCommandSpec, raise_on_timeout=False
+    ):
+        try:
+            # Send the prompt to the UI
+            user_res = await self.emit_call(
+                "gather_command",
+                {"msg": step_dict, "spec": spec.to_dict()},
+                spec.timeout,
+            )
+
+            final_res = cast(Union["GatherCommandSpec"], user_res)
+            await self.clear("clear_gather_command")
+            return final_res
+        except TimeoutError as e:
+            await self.send_timeout("gather_command_timeout")
+
+            if raise_on_timeout:
+                raise e
 
     def task_start(self):
         """

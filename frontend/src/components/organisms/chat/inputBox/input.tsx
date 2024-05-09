@@ -49,7 +49,8 @@ const Input = memo(
       askUser,
       chatSettingsInputs,
       multiInput,
-      disabled: _disabled
+      disabled: _disabled,
+      gatherCommand
     } = useChatData();
 
     const disabled = _disabled || !!attachments.find((a) => !a.uploaded);
@@ -90,6 +91,10 @@ const Input = memo(
     }, []);
 
     const submit = useCallback(() => {
+      if (gatherCommand) {
+        onReply(value);
+        return;
+      }
       if (value === '' || disabled) {
         return;
       }
@@ -107,7 +112,8 @@ const Input = memo(
       askUser,
       attachments,
       setAttachments,
-      onSubmit
+      onSubmit,
+      gatherCommand
     ]);
 
     const handleKeyDown = useCallback(
