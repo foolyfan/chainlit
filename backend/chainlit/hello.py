@@ -201,33 +201,9 @@ async def main(message: Message):
         res = await GatherCommand(action="password", timeout=90).send()
         logger.info(f"密码 {res}")
     if message.content == "12":
-        res = await AskUserChoiceMessage(
-            timeout=60,
-            choiceContent="请选择开户网点：",
-            layout=[
-                {"field": "name", "width": 30},
-                {"field": "address", "width": 30},
-                {"field": "workData", "width": 30},
-            ],
-            choiceActions=[
-                ChoiceAction(
-                    data={
-                        "name": "北京分行营业部",
-                        "address": "北京市东城区朝阳门北大街8号富华大厦E座1楼",
-                        "workData": "周一至周日:\n09:00-17:00",
-                    }
-                ),
-                ChoiceAction(
-                    data={
-                        "name": "北京国际大厦支行",
-                        "address": "北京市朝阳区建外街道建国门外大街19号",
-                        "workData": "周一至周日:\n09:00-17:00",
-                    }
-                ),
-                ExternalAction(display=True, label="新增网点"),
-            ],
-            choiceHook=choiceBranch,
-        ).send()
+        res = await GatherCommand(action="scan", timeout=90).send()
+        logger.info(f"扫一扫 {res}")
+    if message.content == "13":
         if res is not None:
             await Message(
                 content=f"根据您的要求，我将使用以下数据：\n网点名称：{res.data['name']}\n网点地址：{res.data['address']}\n作为选择开户机构的结果。"
@@ -241,6 +217,3 @@ async def main(message: Message):
                 choiceHook=choiceResultConfirm,
                 timeout=30,
             ).send()
-    if message.content == "13":
-        res = await GatherCommand(action="scan", timeout=90).send()
-        logger.info(f"扫一扫 {res}")

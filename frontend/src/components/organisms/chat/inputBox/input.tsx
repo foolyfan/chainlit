@@ -48,9 +48,9 @@ const Input = memo(
     const {
       askUser,
       chatSettingsInputs,
-      multiInput,
       disabled: _disabled,
-      gatherCommand
+      gatherCommand,
+      loading
     } = useChatData();
 
     const disabled = _disabled || !!attachments.find((a) => !a.uploaded);
@@ -93,6 +93,7 @@ const Input = memo(
     const submit = useCallback(() => {
       if (gatherCommand) {
         onReply(value);
+        setValue('');
         return;
       }
       if (value === '' || disabled) {
@@ -142,11 +143,11 @@ const Input = memo(
     const startAdornment = (
       <>
         <HistoryButton
-          disabled={disabled || multiInput}
+          disabled={disabled && !loading}
           onClick={onHistoryClick}
         />
         <UploadButton
-          disabled={disabled || multiInput}
+          disabled={disabled && !loading}
           fileSpec={fileSpec}
           onFileUploadError={onFileUploadError}
           onFileUpload={onFileUpload}
@@ -165,7 +166,7 @@ const Input = memo(
           <SpeechButton
             onSpeech={(transcript) => setValue((text) => text + transcript)}
             language={pSettings.features?.speech_to_text?.language}
-            disabled={disabled && !multiInput}
+            disabled={disabled && !loading}
           />
         ) : null}
       </>
@@ -212,7 +213,7 @@ const Input = memo(
           placeholder={t(
             'components.organisms.chat.inputBox.input.placeholder'
           )}
-          disabled={disabled && !multiInput}
+          disabled={disabled && !loading}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onCompositionStart={() => setIsComposing(true)}
@@ -230,10 +231,7 @@ const Input = memo(
               </InputAdornment>
             ),
             endAdornment: (
-              <SubmitButton
-                onSubmit={submit}
-                disabled={(disabled && !multiInput) || !value}
-              />
+              <SubmitButton onSubmit={submit} disabled={disabled || !value} />
             )
           }}
         />
