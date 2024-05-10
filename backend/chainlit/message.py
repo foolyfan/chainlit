@@ -494,13 +494,12 @@ class AskActionMessage(AskMessageBase):
         content: str,
         actions: List[Action],
         choiceHook: Callable[[AskUserResponse, List[Action]], Awaitable[typing.Any]],
-        actiondef: str,
+        timeoutContent: str = "任务超时",
         author=config.ui.name,
         disable_feedback=False,
         timeout=90,
         raise_on_timeout=False,
     ):
-        self.actiondef = actiondef
         self.content = content
         self.actions = actions
         self.choiceHook = choiceHook
@@ -508,6 +507,7 @@ class AskActionMessage(AskMessageBase):
         self.disable_feedback = disable_feedback
         self.timeout = timeout
         self.raise_on_timeout = raise_on_timeout
+        self.timeoutContent = timeoutContent
 
         super().__post_init__()
 
@@ -546,7 +546,7 @@ class AskActionMessage(AskMessageBase):
         for action in self.actions:
             await action.remove()
         if res is None:
-            self.content = f"{self.actiondef}任务超时"
+            self.content = self.timeoutContent
         else:
             choiceHookRes = await self.choiceHook(res, self.actions)
             self.content = choiceHookRes.label

@@ -4,6 +4,7 @@ import { memo, useContext } from 'react';
 import type {
   IAction,
   IChoiceAction,
+  IExternalAction,
   ILayout,
   IMessageElement,
   IStep
@@ -15,7 +16,7 @@ interface Props {
   messages: IStep[];
   elements: IMessageElement[];
   actions: IAction[];
-  choiceActions: IChoiceAction[];
+  choiceActions: (IChoiceAction | IExternalAction)[];
   indent: number;
   isRunning?: boolean;
   layout?: ILayout;

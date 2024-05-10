@@ -9,6 +9,7 @@ import {
   IAvatarElement,
   ICallFn,
   IChoiceAction,
+  IExternalAction,
   IGatherCommand,
   IMessageElement,
   IStep,
@@ -56,7 +57,7 @@ export const actionState = atom<IAction[]>({
   default: []
 });
 
-export const choiceActionState = atom<IChoiceAction[]>({
+export const choiceActionState = atom<Array<IChoiceAction | IExternalAction>>({
   key: 'ChoiceActions',
   default: []
 });

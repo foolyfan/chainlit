@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import field
 from typing import Optional
 
 from chainlit.context import context
@@ -28,3 +29,12 @@ class ChoiceAction(DataClassJsonMixin):
     async def remove(self):
         trace_event(f"remove {self.__class__.__name__}")
         await context.emitter.emit("remove_choice_action", self.to_dict())
+
+
+@dataclass
+class ExternalAction(ChoiceAction):
+    data: dict = field(default_factory=dict)
+    # 前端区分action类型使用
+    external: bool = True
+    display: bool = False
+    label: str = "新增"

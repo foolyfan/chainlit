@@ -8,6 +8,7 @@ import {
   IAsk,
   IAvatarElement,
   IChoiceAction,
+  IExternalAction,
   IFeedback,
   IFunction,
   IMessageElement,
@@ -27,7 +28,7 @@ import { settingsState } from 'state/settings';
 interface Props {
   loading: boolean;
   actions: IAction[];
-  choiceActions: IChoiceAction[];
+  choiceActions: (IChoiceAction | IExternalAction)[];
   elements: IMessageElement[];
   avatars: IAvatarElement[];
   messages: IStep[];

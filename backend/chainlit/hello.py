@@ -3,7 +3,7 @@
 from typing import List
 
 from chainlit.element import Image, Text
-from chainlit.extensions.choiceaction import ChoiceAction
+from chainlit.extensions.choiceaction import ChoiceAction, ExternalAction
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.message import AskUserChoiceMessage, GatherCommand
 from chainlit.logger import logger
@@ -47,6 +47,7 @@ async def confirmTradePreviewInfo(res: AskUserResponse, actions):
 
 
 async def choiceBranch(res, choices: List[ChoiceAction]):
+    logger.info(f"用户选择机构结果 {res}")
     return choices[0]
 
 
@@ -55,7 +56,7 @@ async def main(message: Message):
     if message.content == "1":
         res = await AskUserChoiceMessage(
             timeout=30,
-            datadef="收款人",
+            choiceContent="请在以下收款人数据中做出选择：",
             layout=[{"field": "name", "width": 20}, {"field": "accNo", "width": 50}],
             choiceActions=[
                 ChoiceAction(data={"name": "张三", "accNo": "652154155112"}),
@@ -69,7 +70,6 @@ async def main(message: Message):
                 content=f"根据您的要求，我将使用以下数据：\n姓名：{res.data['name']}\n账号：{res.data['accNo']}\n作为选择收款人的结果。"
             ).send()
             res = await AskActionMessage(
-                actiondef="确认",
                 content="请确认以上收款人信息",
                 actions=[
                     Action(name="continue", value="continue", label="确认"),
@@ -81,7 +81,6 @@ async def main(message: Message):
 
     if message.content == "2":
         res = await AskActionMessage(
-            actiondef="确认",
             content="Pick an action!",
             actions=[
                 Action(name="continue", value="continue", label="✅ Continue"),
@@ -164,7 +163,6 @@ async def main(message: Message):
             elements=elements,
         ).send()
         res = await AskActionMessage(
-            actiondef="确认",
             actions=[
                 Action(name="update", value="update", label="修改"),
                 Action(name="submit", value="submit", label="确认"),
@@ -205,7 +203,7 @@ async def main(message: Message):
     if message.content == "12":
         res = await AskUserChoiceMessage(
             timeout=60,
-            datadef="开户网点",
+            choiceContent="请选择开户网点：",
             layout=[
                 {"field": "name", "width": 30},
                 {"field": "address", "width": 30},
@@ -226,15 +224,15 @@ async def main(message: Message):
                         "workData": "周一至周日:\n09:00-17:00",
                     }
                 ),
+                ExternalAction(display=True, label="新增网点"),
             ],
-            choiceHook=choiceFirst,
+            choiceHook=choiceBranch,
         ).send()
         if res is not None:
             await Message(
                 content=f"根据您的要求，我将使用以下数据：\n网点名称：{res.data['name']}\n网点地址：{res.data['address']}\n作为选择开户机构的结果。"
             ).send()
             res = await AskActionMessage(
-                actiondef="确认",
                 content="请确认以上开户机构信息",
                 actions=[
                     Action(name="continue", value="continue", label="确认"),

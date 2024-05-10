@@ -5,8 +5,6 @@ from typing import List, Literal
 from chainlit.types import ActionSpec, AskSpec
 from dataclasses_json import DataClassJsonMixin
 
-from chainlit import logger
-
 
 @dataclass
 class ChoiceActionSpec(ActionSpec):

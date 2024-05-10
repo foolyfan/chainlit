@@ -16,6 +16,12 @@ export interface IChoiceAction {
   data: any;
 }
 
+export interface IExternalAction extends IChoiceAction {
+  display: boolean;
+  label: string;
+  external: boolean;
+}
+
 export interface ICallFn {
   callback: (payload: Record<string, any>) => void;
   name: string;

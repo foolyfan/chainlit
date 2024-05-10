@@ -1,17 +1,15 @@
 import typing
-from dataclasses import dataclass
 from typing import Awaitable, Callable, List, Literal, Union, cast
 
-from chainlit.action import Action
 from chainlit.config import config
 from chainlit.context import context
-from chainlit.extensions.choiceaction import ChoiceAction
+from chainlit.extensions.choiceaction import ChoiceAction, ExternalAction
 from chainlit.extensions.types import (
     AskChoiceActionSpec,
     GatherCommandSpec,
     GatherCommandType,
 )
-from chainlit.message import AskActionMessage, AskMessageBase, MessageBase
+from chainlit.message import AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
 from chainlit.types import AskUserResponse
 from literalai.helper import utc_now
@@ -25,24 +23,26 @@ class AskUserChoiceMessage(AskMessageBase):
 
     def __init__(
         self,
-        datadef: str,
-        choiceActions: List[ChoiceAction],
+        choiceActions: List[Union[ChoiceAction, ExternalAction]],
         layout: List[typing.Dict[Literal["field", "width"], typing.Any]],
         choiceHook: Callable[
-            [AskUserResponse, List[ChoiceAction]], Awaitable[typing.Any]
+            [AskUserResponse, List[Union[ChoiceAction, ExternalAction]]],
+            Awaitable[typing.Any],
         ],
+        choiceContent: str = "请在以下数据中做出选择：",
+        timeoutContent: str = "选择任务超时",
         author=config.ui.name,
         disable_feedback=False,
         timeout=90,
         raise_on_timeout=False,
     ):
-        self.datadef = datadef
-        self.content = f"请在以下{datadef}数据中做出选择："
+        self.content = choiceContent
         self.layout = layout
         self.author = author
         self.disable_feedback = disable_feedback
         self.choiceHook = choiceHook
         self.timeout = timeout
+        self.timeoutContent = timeoutContent
         self.raise_on_timeout = raise_on_timeout
         self.choiceActions = choiceActions
         super().__post_init__()
@@ -86,7 +86,7 @@ class AskUserChoiceMessage(AskMessageBase):
         for action in self.choiceActions:
             await action.remove()
         if res is None:
-            self.content = f"选择{self.datadef}任务超时"
+            self.content = self.timeoutContent
             self.wait_for_answer = False
             await self.update()
         else:

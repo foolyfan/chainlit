@@ -22,6 +22,7 @@ import {
   IAction,
   IAskResponse,
   IChoiceAction,
+  IExternalAction,
   IFileRef,
   IStep
 } from 'src/types';
@@ -140,7 +141,7 @@ const useChatInteract = () => {
   );
 
   const callChoiceAction = useCallback(
-    (action: IChoiceAction) => {
+    (action: IChoiceAction | IExternalAction) => {
       const socket = session?.socket;
       if (!socket) return;
 

@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import type {
   IAction,
   IChoiceAction,
+  IExternalAction,
   ILayout,
   IMessageElement,
   IStep
@@ -16,7 +17,7 @@ import { Messages } from './Messages';
 
 interface Props {
   actions: IAction[];
-  choiceActions: IChoiceAction[];
+  choiceActions: (IChoiceAction | IExternalAction)[];
   autoScroll?: boolean;
   context: IMessageContext;
   elements: IMessageElement[];

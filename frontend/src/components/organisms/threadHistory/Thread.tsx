@@ -8,6 +8,7 @@ import { Alert, Box, Button, Skeleton, Stack } from '@mui/material';
 import {
   IAction,
   IChoiceAction,
+  IExternalAction,
   IFeedback,
   IMessageElement,
   IStep,
@@ -111,7 +112,7 @@ const Thread = ({ thread, error, isLoading }: Props) => {
 
   const elements = thread.elements;
   const actions: IAction[] = [];
-  const choiceActions: IChoiceAction[] = [];
+  const choiceActions: (IChoiceAction | IExternalAction)[] = [];
   const messages = nestMessages(steps);
 
   return (

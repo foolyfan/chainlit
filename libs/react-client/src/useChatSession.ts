@@ -32,6 +32,7 @@ import {
   IAvatarElement,
   IChoiceAction,
   IElement,
+  IExternalAction,
   IMessageElement,
   IStep,
   ITasklistElement,
@@ -300,18 +301,21 @@ const useChatSession = () => {
         });
       });
 
-      socket.on('choice_action', (action: IChoiceAction) => {
+      socket.on('choice_action', (action: IChoiceAction | IExternalAction) => {
         console.log('choice_action', action);
         setChoiceActions((old) => [...old, action]);
       });
 
-      socket.on('remove_choice_action', (action: IChoiceAction) => {
-        setChoiceActions((old) => {
-          const index = old.findIndex((a) => a.id === action.id);
-          if (index === -1) return old;
-          return [...old.slice(0, index), ...old.slice(index + 1)];
-        });
-      });
+      socket.on(
+        'remove_choice_action',
+        (action: IChoiceAction | IExternalAction) => {
+          setChoiceActions((old) => {
+            const index = old.findIndex((a) => a.id === action.id);
+            if (index === -1) return old;
+            return [...old.slice(0, index), ...old.slice(index + 1)];
+          });
+        }
+      );
 
       socket.on('token_usage', (count: number) => {
         setTokenCount((old) => old + count);

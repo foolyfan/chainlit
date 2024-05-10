@@ -16,6 +16,7 @@ import { MessageContent } from './components/MessageContent';
 import type {
   IAction,
   IChoiceAction,
+  IExternalAction,
   ILayout,
   IMessageElement,
   IStep
@@ -27,7 +28,7 @@ interface Props {
   message: IStep;
   elements: IMessageElement[];
   actions: IAction[];
-  choiceActions: IChoiceAction[];
+  choiceActions: (IChoiceAction | IExternalAction)[];
   indent: number;
   showAvatar?: boolean;
   showBorder?: boolean;
