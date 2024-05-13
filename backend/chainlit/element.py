@@ -162,7 +162,6 @@ class Element:
             self.chainlit_key = file_dict["id"]
 
         self.persisted = True
-
         return True
 
     async def remove(self):

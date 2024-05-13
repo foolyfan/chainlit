@@ -30,6 +30,7 @@ import {
 import {
   IAction,
   IAvatarElement,
+  IChoiceImageAction,
   IElement,
   IListAction,
   IMessageElement,
@@ -302,6 +303,16 @@ const useChatSession = () => {
 
       socket.on('list_action', (action: IListAction) => {
         console.log('list_action', action);
+        if (action.type == 'image') {
+          const imageAction = action as IChoiceImageAction;
+          if (!imageAction.url && imageAction.chainlitKey) {
+            imageAction.url = client.getElementUrl(
+              imageAction.chainlitKey,
+              sessionId
+            );
+          }
+        }
+
         setListActions((old) => [...old, action]);
       });
 

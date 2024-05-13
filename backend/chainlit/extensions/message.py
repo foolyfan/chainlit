@@ -3,7 +3,7 @@ from typing import Awaitable, Callable, List, Literal, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
-from chainlit.extensions.listaction import LA
+from chainlit.extensions.listaction import LA, ChoiceImageAction
 from chainlit.extensions.types import (
     AskListActionSpec,
     GatherCommandSpec,
@@ -46,6 +46,12 @@ class AskUserChoiceMessage(AskMessageBase):
         self.raise_on_timeout = raise_on_timeout
         self.choiceActions = choiceActions
         super().__post_init__()
+
+    async def _create(self):
+        for listAction in self.choiceActions:
+            if isinstance(listAction, ChoiceImageAction):
+                await listAction._create()
+        return await super()._create()
 
     async def send(self) -> Union[typing.Any, None]:
         """

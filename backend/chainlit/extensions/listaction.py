@@ -2,6 +2,7 @@ import uuid
 from dataclasses import field
 from typing import Literal, Optional, TypeVar
 
+import filetype
 from chainlit.context import context
 from chainlit.telemetry import trace_event
 from dataclasses_json import DataClassJsonMixin
@@ -56,3 +57,19 @@ class ChoiceImageAction(ListAction):
     type: ListActionType = "image"
     display: str = "inline"
     imageName: str = "默认"
+    # 前端访问资源路径在链路中有多个转发节点，只能使用key的方式进行访问
+    chainlitKey: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if not self.url and not self.path:
+            raise ValueError("Must provide url or path to instantiate action")
+
+    async def _create(self):
+        # 如果action为本地静态资源（图片、文件），则创建临时文件
+        if not self.url and not self.chainlitKey:
+            file_dict = await context.session.persist_file(
+                name=self.name,
+                path=self.path,
+                mime=filetype.guess_mime(self.path) or "",
+            )
+            self.chainlitKey = file_dict["id"]

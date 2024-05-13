@@ -5,6 +5,7 @@ from typing import List
 from chainlit.element import Image, Text
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.listaction import (
+    LA,
     ChoiceAction,
     ChoiceImageAction,
     ExternalAction,
@@ -50,7 +51,7 @@ async def confirmTradePreviewInfo(res: AskUserResponse, actions):
         return actions[0]
 
 
-async def choiceBranch(res, choices: List[ChoiceAction]):
+async def choiceBranch(res, choices: List[LA]):
     logger.info(f"用户选择机构结果 {res}")
     return choices[0]
 
@@ -186,12 +187,10 @@ async def main(message: Message):
                 await Message(content="交易成功").send()
     if message.content == "7":
         image1 = Image(path="./voucher.png", name="image1", display="inline")
-        image2 = Image(path="./voucher.png", name="image1", display="inline")
-        image3 = Image(path="./voucher.png", name="image1", display="inline")
         # Attach the image to the message
         await Message(
             content="This message has an image!",
-            elements=[image1, image2, image3],
+            elements=[image1],
         ).send()
     if message.content == "8":
         res = await GatherCommand(action="capture_idcard", timeout=90).send()
@@ -209,7 +208,6 @@ async def main(message: Message):
         res = await GatherCommand(action="scan", timeout=90).send()
         logger.info(f"扫一扫 {res}")
     if message.content == "13":
-        add = ExternalAction(label="新增网点")
         res = await AskUserChoiceMessage(
             timeout=60,
             choiceContent="请选择开户网点：",
@@ -233,8 +231,12 @@ async def main(message: Message):
                         "workData": "周一至周日:\n09:00-17:00",
                     }
                 ),
-                add,
-                ChoiceImageAction(),
+                ExternalAction(label="新增网点"),
+                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
+                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
+                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
+                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
+                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
             ],
             choiceHook=choiceBranch,
         ).send()

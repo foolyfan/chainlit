@@ -12,6 +12,8 @@ import {
   useChatData
 } from '@chainlit/react-client';
 
+import { ListWithSize } from './ListWithSize';
+import { MessageImageAction } from './MessageImageAction';
 import { DataListAction } from './listactions/DataListAction';
 
 interface Props {
@@ -90,7 +92,17 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
           {externalAction.label}
         </Button>
       ) : null}
-      {choiceImageActions.length ? <div>图片</div> : null}
+      {choiceImageActions.length ? (
+        <ListWithSize
+          elements={choiceImageActions}
+          renderElement={(ctx) => (
+            <MessageImageAction
+              element={ctx.element}
+              onClick={() => handleClick(ctx.element)}
+            />
+          )}
+        />
+      ) : null}
     </>
   );
 };

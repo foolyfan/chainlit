@@ -28,6 +28,7 @@ export interface IChoiceImageAction extends IListAction {
   url: string;
   display: string;
   imageName: string;
+  chainlitKey?: string;
 }
 
 export interface ICallFn {
