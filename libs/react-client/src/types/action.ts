@@ -8,18 +8,26 @@ export interface IAction {
   value: string;
   collapsed: boolean;
 }
-
-export interface IChoiceAction {
+export interface IListAction {
+  type: 'data' | 'external' | 'image';
+  name: string;
   forId: string;
   id: string;
   onClick: () => void;
+}
+
+export interface IChoiceAction extends IListAction {
   data: any;
 }
 
-export interface IExternalAction extends IChoiceAction {
-  display: boolean;
+export interface IExternalAction extends IListAction {
   label: string;
-  external: boolean;
+}
+
+export interface IChoiceImageAction extends IListAction {
+  url: string;
+  display: string;
+  imageName: string;
 }
 
 export interface ICallFn {

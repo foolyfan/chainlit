@@ -9,6 +9,8 @@ dist
 
 poetry.lock
 
+voucher.png
+
 venv
 .venv
 .DS_Store

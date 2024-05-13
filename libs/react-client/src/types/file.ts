@@ -11,7 +11,7 @@ export interface ActionSpec {
   keys?: string[];
 }
 
-export interface ChoiceActionSpec extends ActionSpec {
+export interface ListActionSpec extends ActionSpec {
   layout?: IChoiceLayout[];
 }
 
@@ -22,11 +22,11 @@ export interface IFileRef {
 export interface IAsk {
   callback: (payload: IStep | IFileRef[] | IAskResponse) => void;
   spec: {
-    type: 'text' | 'file' | 'action' | 'choice_action';
+    type: 'text' | 'file' | 'action' | 'list_action';
     timeout: number;
   } & FileSpec &
     ActionSpec &
-    ChoiceActionSpec;
+    ListActionSpec;
 }
 
 export interface GatherCommandSpec {

@@ -124,10 +124,10 @@ class BaseChainlitEmitter:
         """Send an action response to the UI."""
         pass
 
-    async def send_choice_action_response(
+    async def send_list_action_response(
         self, id: str, status: bool, response: Optional[str] = None
     ):
-        """Send an choice_action response to the UI."""
+        """Send an list_action response to the UI."""
         pass
 
 
@@ -296,7 +296,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
                     action_res = cast(AskUserResponse, user_res)
                     final_res = action_res
                     interaction = action_res["value"]
-                elif spec.type == "choice_action":
+                elif spec.type == "list_action":
                     action_res = cast(AskUserResponse, user_res)
                     final_res = action_res
                     interaction = action_res["value"]
@@ -391,9 +391,9 @@ class ChainlitEmitter(BaseChainlitEmitter):
             "action_response", {"id": id, "status": status, "response": response}
         )
 
-    def send_choice_action_response(
+    def send_list_action_response(
         self, id: str, status: bool, response: Optional[str] = None
     ):
         return self.emit(
-            "choice_action_response", {"id": id, "status": status, "response": response}
+            "list_action_response", {"id": id, "status": status, "response": response}
         )

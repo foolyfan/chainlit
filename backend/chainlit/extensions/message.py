@@ -3,9 +3,9 @@ from typing import Awaitable, Callable, List, Literal, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
-from chainlit.extensions.choiceaction import ChoiceAction, ExternalAction
+from chainlit.extensions.listaction import LA
 from chainlit.extensions.types import (
-    AskChoiceActionSpec,
+    AskListActionSpec,
     GatherCommandSpec,
     GatherCommandType,
 )
@@ -23,10 +23,10 @@ class AskUserChoiceMessage(AskMessageBase):
 
     def __init__(
         self,
-        choiceActions: List[Union[ChoiceAction, ExternalAction]],
+        choiceActions: List[LA],
         layout: List[typing.Dict[Literal["field", "width"], typing.Any]],
         choiceHook: Callable[
-            [AskUserResponse, List[Union[ChoiceAction, ExternalAction]]],
+            [AskUserResponse, List[LA]],
             Awaitable[typing.Any],
         ],
         choiceContent: str = "请在以下数据中做出选择：",
@@ -71,8 +71,8 @@ class AskUserChoiceMessage(AskMessageBase):
         for action in self.choiceActions:
             action_keys.append(action.id)
             await action.send(for_id=str(step_dict["id"]))
-        spec = AskChoiceActionSpec(
-            type="choice_action",
+        spec = AskListActionSpec(
+            type="list_action",
             timeout=self.timeout,
             keys=action_keys,
             layout=self.layout,

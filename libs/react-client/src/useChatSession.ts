@@ -30,9 +30,8 @@ import {
 import {
   IAction,
   IAvatarElement,
-  IChoiceAction,
   IElement,
-  IExternalAction,
+  IListAction,
   IMessageElement,
   IStep,
   ITasklistElement,
@@ -65,7 +64,7 @@ const useChatSession = () => {
   const setAvatars = useSetRecoilState(avatarState);
   const setTasklists = useSetRecoilState(tasklistState);
   const setActions = useSetRecoilState(actionState);
-  const setChoiceActions = useSetRecoilState(choiceActionState);
+  const setListActions = useSetRecoilState(choiceActionState);
   const setChatSettingsInputs = useSetRecoilState(chatSettingsInputsState);
   const setTokenCount = useSetRecoilState(tokenCountState);
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
@@ -301,21 +300,18 @@ const useChatSession = () => {
         });
       });
 
-      socket.on('choice_action', (action: IChoiceAction | IExternalAction) => {
-        console.log('choice_action', action);
-        setChoiceActions((old) => [...old, action]);
+      socket.on('list_action', (action: IListAction) => {
+        console.log('list_action', action);
+        setListActions((old) => [...old, action]);
       });
 
-      socket.on(
-        'remove_choice_action',
-        (action: IChoiceAction | IExternalAction) => {
-          setChoiceActions((old) => {
-            const index = old.findIndex((a) => a.id === action.id);
-            if (index === -1) return old;
-            return [...old.slice(0, index), ...old.slice(index + 1)];
-          });
-        }
-      );
+      socket.on('remove_list_action', (action: IListAction) => {
+        setListActions((old) => {
+          const index = old.findIndex((a) => a.id === action.id);
+          if (index === -1) return old;
+          return [...old.slice(0, index), ...old.slice(index + 1)];
+        });
+      });
 
       socket.on('token_usage', (count: number) => {
         setTokenCount((old) => old + count);

@@ -5,8 +5,8 @@ import { toast } from 'sonner';
 
 import {
   IAction,
-  IChoiceAction,
   IFeedback,
+  IListAction,
   IStep,
   accessTokenState,
   messagesState,
@@ -36,11 +36,11 @@ const Messages = ({
   projectSettings,
   setAutoScroll
 }: MessagesProps): JSX.Element => {
-  const { elements, askUser, avatars, loading, actions, choiceActions } =
+  const { elements, askUser, avatars, loading, actions, listActions } =
     useChatData();
 
   const { messages } = useChatMessages();
-  const { callAction, callChoiceAction } = useChatInteract();
+  const { callAction, callListAction } = useChatInteract();
   const { idToResume } = useChatSession();
   const accessToken = useRecoilValue(accessTokenState);
   const setMessages = useSetRecoilState(messagesState);
@@ -81,9 +81,9 @@ const Messages = ({
     [callAction]
   );
 
-  const callChoiceActionWithToast = useCallback(
-    (action: IChoiceAction) => {
-      const promise = callChoiceAction(action);
+  const callListActionWithToast = useCallback(
+    (action: IListAction) => {
+      const promise = callListAction(action);
       if (promise) {
         toast.promise(promise, {
           loading: `${t('components.organisms.chat.Messages.index.running')}`,
@@ -106,7 +106,7 @@ const Messages = ({
         });
       }
     },
-    [callChoiceAction]
+    [callListAction]
   );
 
   const onFeedbackUpdated = useCallback(
@@ -157,13 +157,13 @@ const Messages = ({
       loading={loading}
       askUser={askUser}
       actions={actions}
-      choiceActions={choiceActions}
+      listActions={listActions}
       elements={elements}
       messages={messages}
       autoScroll={autoScroll}
       onFeedbackUpdated={onFeedbackUpdated}
       callAction={callActionWithToast}
-      callChoiceAction={callChoiceActionWithToast}
+      callListAction={callListActionWithToast}
       setAutoScroll={setAutoScroll}
     />
   );

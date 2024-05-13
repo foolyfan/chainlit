@@ -7,10 +7,9 @@ import {
   IAction,
   IAsk,
   IAvatarElement,
-  IChoiceAction,
-  IExternalAction,
   IFeedback,
   IFunction,
+  IListAction,
   IMessageElement,
   IStep,
   ITool,
@@ -28,7 +27,7 @@ import { settingsState } from 'state/settings';
 interface Props {
   loading: boolean;
   actions: IAction[];
-  choiceActions: (IChoiceAction | IExternalAction)[];
+  listActions: IListAction[];
   elements: IMessageElement[];
   avatars: IAvatarElement[];
   messages: IStep[];
@@ -40,7 +39,7 @@ interface Props {
     feedback: IFeedback
   ) => void;
   callAction?: (action: IAction) => void;
-  callChoiceAction?: (action: IChoiceAction) => void;
+  callListAction?: (action: IListAction) => void;
   setAutoScroll?: (autoScroll: boolean) => void;
 }
 
@@ -50,13 +49,13 @@ const MessageContainer = memo(
     loading,
     avatars,
     actions,
-    choiceActions,
+    listActions,
     autoScroll,
     elements,
     messages,
     onFeedbackUpdated,
     callAction,
-    callChoiceAction,
+    callListAction,
     setAutoScroll
   }: Props) => {
     const appSettings = useRecoilValue(settingsState);
@@ -149,13 +148,13 @@ const MessageContainer = memo(
       [actions]
     );
 
-    const messageChoiceActions = useMemo(
+    const messageListActions = useMemo(
       () =>
-        choiceActions.map((action) => ({
+        listActions.map((action) => ({
           ...action,
           onClick: async () => {
             try {
-              callChoiceAction?.(action);
+              callListAction?.(action);
             } catch (err) {
               if (err instanceof Error) {
                 toast.error(err.message);
@@ -163,7 +162,7 @@ const MessageContainer = memo(
             }
           }
         })),
-      [choiceActions]
+      [listActions]
     );
 
     const onError = useCallback((error: string) => toast.error(error), [toast]);
@@ -209,7 +208,7 @@ const MessageContainer = memo(
     return (
       <CMessageContainer
         actions={messageActions}
-        choiceActions={messageChoiceActions}
+        listActions={messageListActions}
         layout={askUser?.spec.layout}
         elements={elements}
         messages={messages}

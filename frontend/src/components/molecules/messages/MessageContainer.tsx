@@ -5,9 +5,8 @@ import Box from '@mui/material/Box';
 
 import type {
   IAction,
-  IChoiceAction,
-  IExternalAction,
   ILayout,
+  IListAction,
   IMessageElement,
   IStep
 } from 'client-types/';
@@ -17,7 +16,7 @@ import { Messages } from './Messages';
 
 interface Props {
   actions: IAction[];
-  choiceActions: (IChoiceAction | IExternalAction)[];
+  listActions: IListAction[];
   autoScroll?: boolean;
   context: IMessageContext;
   elements: IMessageElement[];
@@ -29,7 +28,7 @@ interface Props {
 const MessageContainer = memo(
   ({
     actions,
-    choiceActions,
+    listActions,
     autoScroll,
     context,
     elements,
@@ -72,7 +71,7 @@ const MessageContainer = memo(
             messages={messages}
             elements={elements}
             actions={actions}
-            choiceActions={choiceActions}
+            listActions={listActions}
             layout={layout}
           />
         </Box>

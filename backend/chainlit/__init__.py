@@ -41,8 +41,13 @@ from chainlit.element import (
     Text,
     Video,
 )
-from chainlit.extensions.choiceaction import ChoiceAction
+from chainlit.extensions import list_action_callback
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
+from chainlit.extensions.listaction import (
+    ChoiceAction,
+    ChoiceImageAction,
+    ExternalAction,
+)
 from chainlit.extensions.message import AskUserChoiceMessage
 from chainlit.logger import logger
 from chainlit.message import (
@@ -359,7 +364,7 @@ __all__ = [
     "on_chat_resume",
     "on_stop",
     "action_callback",
-    "choice_action_callback",
+    "list_action_callback",
     "author_rename",
     "on_settings_update",
     "password_auth_callback",
@@ -376,6 +381,8 @@ __all__ = [
     "instrument_openai",
     "DataItem",
     "PreviewInfoGroup",
+    "ChoiceImageAction",
+    "ExternalAction",
 ]
 
 

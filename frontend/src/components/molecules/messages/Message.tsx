@@ -10,14 +10,13 @@ import { AUTHOR_BOX_WIDTH, Author } from './components/Author';
 import { DetailsButton } from './components/DetailsButton';
 import { MessageActions } from './components/MessageActions';
 import { MessageButtons } from './components/MessageButtons';
-import { MessageChoiceActions } from './components/MessageChoiceActions';
 import { MessageContent } from './components/MessageContent';
+import { MessageListActions } from './components/MessageListActions';
 
 import type {
   IAction,
-  IChoiceAction,
-  IExternalAction,
   ILayout,
+  IListAction,
   IMessageElement,
   IStep
 } from 'client-types/';
@@ -28,7 +27,7 @@ interface Props {
   message: IStep;
   elements: IMessageElement[];
   actions: IAction[];
-  choiceActions: (IChoiceAction | IExternalAction)[];
+  listActions: IListAction[];
   indent: number;
   showAvatar?: boolean;
   showBorder?: boolean;
@@ -42,7 +41,7 @@ const Message = memo(
     message,
     elements,
     actions,
-    choiceActions,
+    listActions,
     indent,
     showAvatar,
     showBorder,
@@ -133,11 +132,11 @@ const Message = memo(
                 {actions?.length ? (
                   <MessageActions message={message} actions={actions} />
                 ) : null}
-                {choiceActions?.length ? (
-                  <MessageChoiceActions
+                {listActions?.length ? (
+                  <MessageListActions
                     layout={layout}
                     message={message}
-                    choiceActions={choiceActions}
+                    listActions={listActions}
                   />
                 ) : null}
                 <MessageButtons message={message} />
@@ -149,7 +148,7 @@ const Message = memo(
           <Messages
             messages={message.steps}
             actions={actions}
-            choiceActions={choiceActions}
+            listActions={listActions}
             elements={elements}
             indent={indent + 1}
             isRunning={isRunning}

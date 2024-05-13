@@ -27,7 +27,7 @@ const useChatData = () => {
   const avatars = useRecoilValue(avatarState);
   const tasklists = useRecoilValue(tasklistState);
   const actions = useRecoilValue(actionState);
-  const choiceActions = useRecoilValue(choiceActionState);
+  const listActions = useRecoilValue(choiceActionState);
   const session = useRecoilValue(sessionState);
   const askUser = useRecoilValue(askUserState);
   const gatherCommand = useRecoilValue(gatherCommandState);
@@ -42,7 +42,7 @@ const useChatData = () => {
 
   return {
     actions,
-    choiceActions,
+    listActions,
     askUser,
     avatars,
     chatSettingsDefaultValue,

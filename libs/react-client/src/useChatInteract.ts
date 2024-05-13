@@ -18,14 +18,7 @@ import {
   threadIdToResumeState,
   tokenCountState
 } from 'src/state';
-import {
-  IAction,
-  IAskResponse,
-  IChoiceAction,
-  IExternalAction,
-  IFileRef,
-  IStep
-} from 'src/types';
+import { IAction, IAskResponse, IFileRef, IListAction, IStep } from 'src/types';
 import { addMessage } from 'src/utils/message';
 
 import { ChainlitAPI } from './api';
@@ -82,7 +75,7 @@ const useChatInteract = () => {
         setMessages((oldMessages) => addMessage(oldMessages, message));
         let responseMessage: IAskResponse | undefined = undefined;
         if (
-          askUser.spec.type == 'choice_action' ||
+          askUser.spec.type == 'list_action' ||
           askUser.spec.type == 'action'
         ) {
           responseMessage = {
@@ -140,8 +133,8 @@ const useChatInteract = () => {
     [session?.socket]
   );
 
-  const callChoiceAction = useCallback(
-    (action: IChoiceAction | IExternalAction) => {
+  const callListAction = useCallback(
+    (action: IListAction) => {
       const socket = session?.socket;
       if (!socket) return;
 
@@ -180,7 +173,7 @@ const useChatInteract = () => {
   return {
     uploadFile,
     callAction,
-    callChoiceAction,
+    callListAction,
     clear,
     replyMessage,
     sendMessage,

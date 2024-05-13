@@ -7,12 +7,12 @@ from dataclasses_json import DataClassJsonMixin
 
 
 @dataclass
-class ChoiceActionSpec(ActionSpec):
+class ListActionSpec(ActionSpec):
     layout: List[typing.Dict[Literal["field", "width"], dict]]
 
 
 @dataclass
-class AskChoiceActionSpec(ChoiceActionSpec, AskSpec, DataClassJsonMixin):
+class AskListActionSpec(ListActionSpec, AskSpec, DataClassJsonMixin):
     """Specification for asking the user an choice_action"""
 
 
@@ -23,7 +23,5 @@ GatherCommandType = Literal[
 
 @dataclass
 class GatherCommandSpec(DataClassJsonMixin):
-    """Specification for asking the user an choice_action"""
-
     timeout: int
     type: GatherCommandType

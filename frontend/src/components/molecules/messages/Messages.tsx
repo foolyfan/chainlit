@@ -3,9 +3,8 @@ import { memo, useContext } from 'react';
 
 import type {
   IAction,
-  IChoiceAction,
-  IExternalAction,
   ILayout,
+  IListAction,
   IMessageElement,
   IStep
 } from 'client-types/';
@@ -16,7 +15,7 @@ interface Props {
   messages: IStep[];
   elements: IMessageElement[];
   actions: IAction[];
-  choiceActions: (IChoiceAction | IExternalAction)[];
+  listActions: IListAction[];
   indent: number;
   isRunning?: boolean;
   layout?: ILayout;
@@ -27,7 +26,7 @@ const Messages = memo(
     messages,
     elements,
     actions,
-    choiceActions,
+    listActions,
     indent,
     isRunning,
     layout
@@ -75,7 +74,7 @@ const Messages = memo(
               message={m}
               elements={elements}
               actions={actions}
-              choiceActions={choiceActions}
+              listActions={listActions}
               layout={layout}
               showAvatar={showAvatar}
               showBorder={showBorder}
