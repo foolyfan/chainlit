@@ -11,6 +11,7 @@ import {
   IGatherCommand,
   IListAction,
   IMessageElement,
+  ISpeechPromptMessage,
   IStep,
   ITasklistElement,
   IUser,
@@ -56,7 +57,7 @@ export const actionState = atom<IAction[]>({
   default: []
 });
 
-export const choiceActionState = atom<Array<IListAction>>({
+export const listActionState = atom<Array<IListAction>>({
   key: 'ListActions',
   default: []
 });
@@ -176,4 +177,9 @@ export const threadHistoryState = atom<ThreadHistory | undefined>({
       );
     }
   ]
+});
+
+export const speechPromptsState = atom<ISpeechPromptMessage[]>({
+  key: 'SpeechPrompts',
+  default: []
 });

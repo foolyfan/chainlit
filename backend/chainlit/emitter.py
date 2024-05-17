@@ -1,4 +1,5 @@
 import asyncio
+import typing
 import uuid
 from typing import Any, Dict, List, Literal, Optional, Union, cast
 
@@ -116,6 +117,9 @@ class BaseChainlitEmitter:
     async def gather_command(
         self, step_dict: StepDict, spec: GatherCommandSpec, raise_on_timeout=False
     ):
+        pass
+
+    async def speech_prompt(self, data: typing.Dict):
         pass
 
     async def send_action_response(
@@ -357,6 +361,9 @@ class ChainlitEmitter(BaseChainlitEmitter):
 
             if raise_on_timeout:
                 raise e
+
+    def speech_prompt(self, data: typing.Dict):
+        return self.emit("speech_prompt", data)
 
     def task_start(self):
         """

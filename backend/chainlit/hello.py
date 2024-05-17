@@ -10,7 +10,11 @@ from chainlit.extensions.listaction import (
     ChoiceImageAction,
     ExternalAction,
 )
-from chainlit.extensions.message import AskUserChoiceMessage, GatherCommand
+from chainlit.extensions.message import (
+    AskUserChoiceMessage,
+    GatherCommand,
+    SpeechPromptMessage,
+)
 from chainlit.logger import logger
 from chainlit.types import AskUserResponse
 
@@ -253,3 +257,6 @@ async def main(message: Message):
                 choiceHook=choiceResultConfirm,
                 timeout=30,
             ).send()
+    if message.content == "14":
+        content = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
+        await SpeechPromptMessage(content=content).send()

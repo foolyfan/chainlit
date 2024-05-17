@@ -1,5 +1,7 @@
 import typing
-from typing import Awaitable, Callable, List, Literal, Union, cast
+import uuid
+from abc import ABC
+from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
@@ -12,7 +14,10 @@ from chainlit.extensions.types import (
 from chainlit.message import AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
 from chainlit.types import AskUserResponse
+from dataclasses_json import DataClassJsonMixin
 from literalai.helper import utc_now
+
+from chainlit import logger
 
 
 class AskUserChoiceMessage(AskMessageBase):
@@ -138,3 +143,51 @@ class GatherCommand(MessageBase):
         res = await context.emitter.gather_command(step_dict, spec, False)
 
         return res
+
+
+class SpeechPromptMessage:
+
+    def __init__(
+        self,
+        content: Optional[str] = None,
+        url: Optional[str] = None,
+        modelId: str = "0",
+        speakerName: str = "coder",
+        language: str = "ZH",
+        id: str = str(uuid.uuid4()),
+        streaming: bool = False,
+    ):
+        self.content = content
+        self.url = url
+        self.modelId = modelId
+        self.speakerName = speakerName
+        self.language = language
+        self.id = id
+        self.chainlitKey = ""
+        self.streaming = streaming
+
+    def __post_init__(self):
+        if not self.content and not self.url:
+            raise ValueError(
+                "Must provide content or url to instantiate SpeechPromptMessage"
+            )
+
+    def _creatr(self):
+        pass
+
+    def to_dict(self):
+        _dict = {
+            "content": self.content,
+            "url": self.url,
+            "modelId": self.modelId,
+            "speakerName": self.speakerName,
+            "language": self.language,
+            "id": self.id,
+            "streaming": self.streaming,
+        }
+        return _dict
+
+    async def send(self):
+        trace_event("speech_prompt")
+        data = self.to_dict()
+        return await context.emitter.speech_prompt(data)

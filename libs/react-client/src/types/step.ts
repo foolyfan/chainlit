@@ -43,3 +43,13 @@ export type IChoiceLayout = {
 };
 
 export type ILayout = IChoiceLayout[];
+
+export interface ISpeechPromptMessage {
+  id: string;
+  content?: string;
+  url?: string;
+  modelId: string;
+  speakerName: string;
+  language: string;
+  streaming: boolean;
+}

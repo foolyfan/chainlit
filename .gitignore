@@ -5,6 +5,8 @@ dist
 
 .env
 
+*.wav
+
 *.files
 
 poetry.lock

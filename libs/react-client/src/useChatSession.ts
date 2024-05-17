@@ -1,5 +1,5 @@
 import { debounce } from 'lodash';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   useRecoilState,
   useRecoilValue,
@@ -15,14 +15,15 @@ import {
   chatProfileState,
   chatSettingsInputsState,
   chatSettingsValueState,
-  choiceActionState,
   elementState,
   firstUserInteraction,
   gatherCommandState,
+  listActionState,
   loadingState,
   messagesState,
   sessionIdState,
   sessionState,
+  speechPromptsState,
   tasklistState,
   threadIdToResumeState,
   tokenCountState
@@ -34,6 +35,7 @@ import {
   IElement,
   IListAction,
   IMessageElement,
+  ISpeechPromptMessage,
   IStep,
   ITasklistElement,
   IThread
@@ -46,7 +48,8 @@ import {
 } from 'src/utils/message';
 
 import { ChainlitAPI } from './api';
-import type { IToken } from './useChatData';
+import { type IToken, useChatData } from './useChatData';
+import { audioPlayer, textToSpeech } from './utils/speech';
 
 const useChatSession = () => {
   const sessionId = useRecoilValue(sessionIdState);
@@ -65,11 +68,13 @@ const useChatSession = () => {
   const setAvatars = useSetRecoilState(avatarState);
   const setTasklists = useSetRecoilState(tasklistState);
   const setActions = useSetRecoilState(actionState);
-  const setListActions = useSetRecoilState(choiceActionState);
+  const setListActions = useSetRecoilState(listActionState);
   const setChatSettingsInputs = useSetRecoilState(chatSettingsInputsState);
   const setTokenCount = useSetRecoilState(tokenCountState);
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
   const idToResume = useRecoilValue(threadIdToResumeState);
+  const setSpeechPrompts = useSetRecoilState(speechPromptsState);
+  const { speechPrompts } = useChatData();
 
   const _connect = useCallback(
     ({
@@ -324,6 +329,10 @@ const useChatSession = () => {
         });
       });
 
+      socket.on('speech_prompt', (messge: ISpeechPromptMessage) => {
+        setSpeechPrompts((old) => [...old, messge]);
+      });
+
       socket.on('token_usage', (count: number) => {
         setTokenCount((old) => old + count);
       });
@@ -339,6 +348,21 @@ const useChatSession = () => {
       session.socket.close();
     }
   }, [session]);
+
+  useEffect(() => {
+    if (speechPrompts.length) {
+      const localSrcs = speechPrompts.map((speechPrompt) =>
+        textToSpeech(
+          speechPrompt.content!,
+          speechPrompt.modelId,
+          speechPrompt.language,
+          speechPrompt.speakerName
+        )
+      );
+
+      audioPlayer.start(localSrcs);
+    }
+  }, [speechPrompts]);
 
   return {
     connect,

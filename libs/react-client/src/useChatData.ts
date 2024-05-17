@@ -7,11 +7,12 @@ import {
   chatSettingsDefaultValueSelector,
   chatSettingsInputsState,
   chatSettingsValueState,
-  choiceActionState,
   elementState,
   gatherCommandState,
+  listActionState,
   loadingState,
   sessionState,
+  speechPromptsState,
   tasklistState
 } from './state';
 
@@ -27,7 +28,7 @@ const useChatData = () => {
   const avatars = useRecoilValue(avatarState);
   const tasklists = useRecoilValue(tasklistState);
   const actions = useRecoilValue(actionState);
-  const listActions = useRecoilValue(choiceActionState);
+  const listActions = useRecoilValue(listActionState);
   const session = useRecoilValue(sessionState);
   const askUser = useRecoilValue(askUserState);
   const gatherCommand = useRecoilValue(gatherCommandState);
@@ -36,6 +37,7 @@ const useChatData = () => {
   const chatSettingsDefaultValue = useRecoilValue(
     chatSettingsDefaultValueSelector
   );
+  const speechPrompts = useRecoilValue(speechPromptsState);
 
   const connected = session?.socket.connected && !session?.error;
   const disabled = !connected || loading || askUser?.spec.type === 'file';
@@ -54,7 +56,8 @@ const useChatData = () => {
     error: session?.error,
     loading,
     tasklists,
-    gatherCommand
+    gatherCommand,
+    speechPrompts
   };
 };
 

@@ -48,7 +48,7 @@ from chainlit.extensions.listaction import (
     ChoiceImageAction,
     ExternalAction,
 )
-from chainlit.extensions.message import AskUserChoiceMessage
+from chainlit.extensions.message import AskUserChoiceMessage, SpeechPromptMessage
 from chainlit.logger import logger
 from chainlit.message import (
     AskActionMessage,
@@ -383,6 +383,7 @@ __all__ = [
     "PreviewInfoGroup",
     "ChoiceImageAction",
     "ExternalAction",
+    "SpeechPromptMessage",
 ]
 
 
