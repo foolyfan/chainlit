@@ -7,27 +7,31 @@ import {
 } from 'react';
 import { useRecoilValue } from 'recoil';
 
+import { IProjectSettings } from './types/config';
+
 import { speechPromptsState } from './state';
 import { audioPlayer, textToSpeech } from './utils/speech';
 
 interface ChatProviderProps {
   children: ReactNode;
+  chatSettings: IProjectSettings | undefined;
 }
 interface ChatContextType {
   stopPlayer: () => void;
 }
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
+const ChatProvider: React.FC<ChatProviderProps> = ({
+  children,
+  chatSettings
+}) => {
   const speechPrompt = useRecoilValue(speechPromptsState);
   useEffect(() => {
-    if (speechPrompt) {
+    if (chatSettings?.features.text_to_speech?.params && speechPrompt) {
       const localSrcs = [
         textToSpeech(
           speechPrompt.content!,
-          speechPrompt.modelId,
-          speechPrompt.language,
-          speechPrompt.speakerName
+          chatSettings?.features.text_to_speech?.params
         )
       ];
       audioPlayer.start(localSrcs);

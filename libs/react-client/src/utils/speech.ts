@@ -1,12 +1,7 @@
 import { Howl } from 'howler';
 
-export const textToSpeech = (
-  content: string,
-  modelId: string,
-  language: string,
-  speakerName: string
-): string => {
-  console.log(`textToSpeech ${content} ${modelId} ${language} ${speakerName}`);
+export const textToSpeech = (content: string, params: any): string => {
+  console.log(`textToSpeech ${content}`, params);
   return '';
 };
 

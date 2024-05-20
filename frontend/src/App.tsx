@@ -106,7 +106,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <ChatProvider>
+      <ChatProvider chatSettings={pSettings}>
         <GlobalStyles
           styles={{
             body: { backgroundColor: theme.palette.background.default }

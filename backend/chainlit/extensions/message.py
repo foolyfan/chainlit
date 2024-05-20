@@ -1,6 +1,7 @@
 import typing
 import uuid
 from abc import ABC
+from dataclasses import dataclass
 from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
 
 from chainlit.config import config
@@ -149,39 +150,17 @@ class SpeechPromptMessage:
 
     def __init__(
         self,
-        content: Optional[str] = None,
-        url: Optional[str] = None,
-        modelId: str = "0",
-        speakerName: str = "coder",
-        language: str = "ZH",
+        content: str,
         id: str = str(uuid.uuid4()),
         streaming: bool = False,
     ):
-        self.content = content
-        self.url = url
-        self.modelId = modelId
-        self.speakerName = speakerName
-        self.language = language
         self.id = id
-        self.chainlitKey = ""
+        self.content = content
         self.streaming = streaming
-
-    def __post_init__(self):
-        if not self.content and not self.url:
-            raise ValueError(
-                "Must provide content or url to instantiate SpeechPromptMessage"
-            )
-
-    def _creatr(self):
-        pass
 
     def to_dict(self):
         _dict = {
             "content": self.content,
-            "url": self.url,
-            "modelId": self.modelId,
-            "speakerName": self.speakerName,
-            "language": self.language,
             "id": self.id,
             "streaming": self.streaming,
         }

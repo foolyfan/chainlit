@@ -7,3 +7,4 @@ export * from './user';
 export * from './thread';
 export * from './generation';
 export * from './history';
+export * from './config';

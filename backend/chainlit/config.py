@@ -191,6 +191,13 @@ class SpeechToTextFeature:
 
 
 @dataclass
+class TextToSpeechFeature:
+    enabled: Optional[bool] = None
+    streaming: Optional[bool] = None
+    params: Optional[Dict[str, Any]] = None
+
+
+@dataclass
 class MultiModalFeature:
     enabled: Optional[bool] = None
     accept: Optional[Union[List[str], Dict[str, List[str]]]] = None
@@ -205,6 +212,7 @@ class FeaturesSettings(DataClassJsonMixin):
     latex: bool = False
     unsafe_allow_html: bool = False
     speech_to_text: Optional[SpeechToTextFeature] = None
+    text_to_speech: Optional[TextToSpeechFeature] = None
 
 
 @dataclass()
