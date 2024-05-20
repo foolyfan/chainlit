@@ -179,7 +179,7 @@ export const threadHistoryState = atom<ThreadHistory | undefined>({
   ]
 });
 
-export const speechPromptsState = atom<ISpeechPromptMessage[]>({
+export const speechPromptsState = atom<ISpeechPromptMessage | undefined>({
   key: 'SpeechPrompts',
-  default: []
+  default: undefined
 });

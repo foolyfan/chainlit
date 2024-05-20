@@ -7,6 +7,9 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tsconfigPaths(), svgr()],
+  server: {
+    host: '0.0.0.0'
+  },
   resolve: {
     alias: {
       // To prevent conflicts with packages in @chainlit/react-components, we need to specify the resolution paths for these dependencies.

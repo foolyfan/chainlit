@@ -12,7 +12,6 @@ import {
   listActionState,
   loadingState,
   sessionState,
-  speechPromptsState,
   tasklistState
 } from './state';
 
@@ -37,7 +36,6 @@ const useChatData = () => {
   const chatSettingsDefaultValue = useRecoilValue(
     chatSettingsDefaultValueSelector
   );
-  const speechPrompts = useRecoilValue(speechPromptsState);
 
   const connected = session?.socket.connected && !session?.error;
   const disabled = !connected || loading || askUser?.spec.type === 'file';
@@ -56,8 +54,7 @@ const useChatData = () => {
     error: session?.error,
     loading,
     tasklists,
-    gatherCommand,
-    speechPrompts
+    gatherCommand
   };
 };
 

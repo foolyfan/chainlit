@@ -1,5 +1,5 @@
 import { debounce } from 'lodash';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import {
   useRecoilState,
   useRecoilValue,
@@ -48,8 +48,7 @@ import {
 } from 'src/utils/message';
 
 import { ChainlitAPI } from './api';
-import { type IToken, useChatData } from './useChatData';
-import { audioPlayer, textToSpeech } from './utils/speech';
+import { type IToken } from './useChatData';
 
 const useChatSession = () => {
   const sessionId = useRecoilValue(sessionIdState);
@@ -74,7 +73,6 @@ const useChatSession = () => {
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
   const idToResume = useRecoilValue(threadIdToResumeState);
   const setSpeechPrompts = useSetRecoilState(speechPromptsState);
-  const { speechPrompts } = useChatData();
 
   const _connect = useCallback(
     ({
@@ -330,7 +328,9 @@ const useChatSession = () => {
       });
 
       socket.on('speech_prompt', (messge: ISpeechPromptMessage) => {
-        setSpeechPrompts((old) => [...old, messge]);
+        console.log('speech_prompt', messge);
+
+        setSpeechPrompts(() => messge);
       });
 
       socket.on('token_usage', (count: number) => {
@@ -348,21 +348,6 @@ const useChatSession = () => {
       session.socket.close();
     }
   }, [session]);
-
-  useEffect(() => {
-    if (speechPrompts.length) {
-      const localSrcs = speechPrompts.map((speechPrompt) =>
-        textToSpeech(
-          speechPrompt.content!,
-          speechPrompt.modelId,
-          speechPrompt.language,
-          speechPrompt.speakerName
-        )
-      );
-
-      audioPlayer.start(localSrcs);
-    }
-  }, [speechPrompts]);
 
   return {
     connect,
