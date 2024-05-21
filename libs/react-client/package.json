@@ -56,6 +56,7 @@
     "howler": "^2.2.4",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
+    "siro-face-jsbridge": "2.0.22",
     "socket.io-client": "^4.7.2",
     "swr": "^2.2.2",
     "uuid": "^9.0.0"

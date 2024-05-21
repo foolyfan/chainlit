@@ -24,21 +24,24 @@ const SpeechButton = ({ onSpeech, disabled }: Props) => {
     return null;
   }
   const { sessionId } = useChatSession();
-  const { recordFile, startListening, stopListening } =
-    useSpeechRecognition('测试');
+  const { path, startListening, stopListening } = useSpeechRecognition();
   const [isRecording, setIsRecording] = useState(false);
   // const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    console.log('解析文件');
-    const { promise } = apiClient.asrMethod(
-      recordFile as File,
-      () => {},
-      sessionId
-    );
-    promise.then((res) => {
-      onSpeech(res.content);
-    });
-  }, [recordFile]);
+    if (path) {
+      fetch(path)
+        .then((response) => response.blob())
+        .then((blob) => {
+          return apiClient.asrMethod(blob as File, () => {}, sessionId).promise;
+        })
+        .then((response) => {
+          onSpeech(response.content);
+        })
+        .catch((error) => {
+          console.error('asr error:', error);
+        });
+    }
+  }, [path]);
 
   // useEffect(() => {
   //   if (isRecording) {

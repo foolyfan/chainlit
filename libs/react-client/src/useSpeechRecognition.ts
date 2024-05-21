@@ -1,17 +1,25 @@
 import { useCallback, useState } from 'react';
 
-const useSpeechRecognition = (content: string) => {
-  const [recordFile, setFile] = useState<Blob | undefined>(undefined);
+import { jsbridge } from './utils/speech';
+
+const useSpeechRecognition = () => {
+  const [path, setPath] = useState<string | undefined>(undefined);
   const startListening = useCallback(() => {
-    console.log('开启录制');
+    jsbridge.invoke('audioApi.startRecord', '', () => {});
   }, []);
   const stopListening = useCallback(() => {
-    console.log('停止录制');
-    const blob = new Blob([content], { type: 'text/plain' });
-    setFile(blob);
+    jsbridge.invoke('audioApi.stopRecord', '', (res) => {
+      console.log(`stopRecord res ${res}`);
+
+      const { ret, data, errMsg } = JSON.parse(res);
+      console.log(`stopRecord ret ${ret} data ${data} errMsg ${errMsg}`);
+      if (ret == 8) {
+        setPath(data);
+      }
+    });
   }, []);
   return {
-    recordFile,
+    path,
     stopListening,
     startListening
   };

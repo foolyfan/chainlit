@@ -1,8 +1,15 @@
 import { Howl } from 'howler';
+import SRJSBridge from 'siro-face-jsbridge';
 
-export const textToSpeech = (content: string, params: any): string => {
+export const jsbridge = new SRJSBridge();
+
+export const localTextToSpeech = (content: string, params: any): void => {
   console.log(`textToSpeech ${content}`, params);
-  return '';
+  jsbridge.invoke(
+    'voicettsApi.speakText',
+    JSON.stringify({ content }),
+    () => {}
+  );
 };
 
 export const speechToText = () => {
