@@ -297,4 +297,53 @@ export class ChainlitAPI extends APIBase {
   getOAuthEndpoint(provider: string) {
     return this.buildEndpoint(`/auth/oauth/${provider}`);
   }
+
+  asrMethod(
+    file: File,
+    onProgress: (progress: number) => void,
+    sessionId: string,
+    token?: string
+  ) {
+    const xhr = new XMLHttpRequest();
+
+    const promise = new Promise<{ content: string }>((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      xhr.open(
+        'POST',
+        this.buildEndpoint(`/project/asr?session_id=${sessionId}`),
+        true
+      );
+
+      if (token) {
+        xhr.setRequestHeader('Authorization', this.checkToken(token));
+      }
+
+      // Track the progress of the upload
+      xhr.upload.onprogress = function (event) {
+        if (event.lengthComputable) {
+          const percentage = (event.loaded / event.total) * 100;
+          onProgress(percentage);
+        }
+      };
+
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          resolve(response);
+        } else {
+          reject('Upload failed');
+        }
+      };
+
+      xhr.onerror = function () {
+        reject('Upload error');
+      };
+
+      xhr.send(formData);
+    });
+
+    return { xhr, promise };
+  }
 }

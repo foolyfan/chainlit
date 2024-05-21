@@ -5,12 +5,16 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/material';
 
-import { FileSpec, IStep, useChatInteract } from '@chainlit/react-client';
+import {
+  FileSpec,
+  IProjectSettings,
+  IStep,
+  useChatInteract
+} from '@chainlit/react-client';
 
 import ScrollDownButton from 'components/atoms/buttons/scrollDownButton';
 
 import { IAttachment } from 'state/chat';
-import { IProjectSettings } from 'state/project';
 import { inputHistoryState } from 'state/userInputHistory';
 
 import Input from './input';

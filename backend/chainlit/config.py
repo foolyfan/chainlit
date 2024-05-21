@@ -252,6 +252,7 @@ class CodeSettings:
     on_chat_end: Optional[Callable[[], Any]] = None
     on_chat_resume: Optional[Callable[["ThreadDict"], Any]] = None
     on_message: Optional[Callable[[str], Any]] = None
+    asr_method: Optional[Callable[[str], str]] = None
     author_rename: Optional[Callable[[str], str]] = None
     on_settings_update: Optional[Callable[[Dict[str, Any]], Any]] = None
     set_chat_profiles: Optional[Callable[[Optional["User"]], List["ChatProfile"]]] = (
@@ -435,7 +436,8 @@ def load_config():
         run=RunSettings(),
         **settings,
     )
-
+    # 禁用配置文件speech_to_text参数，默认不启用，只有asr全局回调函数注册后才可以启用
+    config.features.speech_to_text.enabled = False
     return config
 
 

@@ -668,6 +668,48 @@ async def upload_file(
     return JSONResponse(file_response)
 
 
+@app.post("/project/asr")
+async def asr_method(
+    session_id: str,
+    file: UploadFile,
+    current_user: Annotated[
+        Union[None, User, PersistedUser], Depends(get_current_user)
+    ],
+):
+    if not config.features.speech_to_text.enabled:
+        raise HTTPException(
+            status_code=501,
+            detail="Not Implemented",
+        )
+    from chainlit.session import WebsocketSession
+
+    session = WebsocketSession.get_by_id(session_id)
+
+    if not session:
+        raise HTTPException(
+            status_code=404,
+            detail="Session not found",
+        )
+
+    if current_user:
+        if not session.user or session.user.identifier != current_user.identifier:
+            raise HTTPException(
+                status_code=401,
+                detail="You are not authorized to upload files for this session",
+            )
+
+    session.files_dir.mkdir(exist_ok=True)
+
+    content = await file.read()
+    mime = file.content_type
+    file_response = await session.persist_file(
+        name=file.filename, content=content, mime=mime
+    )
+    content = await config.code.asr_method(file_response["absolute_path"])
+
+    return JSONResponse({"content": content})
+
+
 @app.get("/project/file/{file_id}")
 async def get_file(
     file_id: str,

@@ -1,7 +1,9 @@
 # This is a simple example of a chainlit app.
 
+import json
 from typing import List
 
+import requests
 from chainlit.element import Image, Text
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.listaction import (
@@ -17,6 +19,7 @@ from chainlit.extensions.message import (
 )
 from chainlit.logger import logger
 from chainlit.types import AskUserResponse
+from fastapi import HTTPException
 
 from chainlit import (
     Action,
@@ -26,6 +29,7 @@ from chainlit import (
     Task,
     TaskList,
     TaskStatus,
+    asr_method,
     on_message,
     sleep,
 )
@@ -58,6 +62,30 @@ async def confirmTradePreviewInfo(res: AskUserResponse, actions):
 async def choiceBranch(res, choices: List[LA]):
     logger.info(f"用户选择机构结果 {res}")
     return choices[0]
+
+
+@asr_method
+async def asrHook(filePath):
+    with open(filePath, "rb") as file:
+        files = {"file": file}
+
+        # 发送POST请求
+        response = requests.post(
+            "http://dev.siro-info.com:8000/v1/audio/transcriptions", files=files
+        )
+
+        if response.status_code == 200:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Asr server failed to parse",
+            )
+        logger.info(f"转换成功 {response.content}")
+        content = ""
+        if isinstance(response.content, bytes):
+            content = response.content.decode("utf-8")
+        else:
+            content = response.content
+        return content
 
 
 @on_message

@@ -71,6 +71,7 @@ class AskActionSpec(ActionSpec, AskSpec, DataClassJsonMixin):
 
 class FileReference(TypedDict):
     id: str
+    absolute_path: str
 
 
 class FileDict(TypedDict):

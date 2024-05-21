@@ -21,7 +21,7 @@ import UserButton from 'components/atoms/buttons/userButton';
 import { Logo } from 'components/atoms/logo';
 import NewChatButton from 'components/molecules/newChatButton';
 
-import { IProjectSettings } from 'state/project';
+import { IProjectSettings } from 'client-types/*';
 
 import { OpenThreadListButton } from './threadHistory/sidebar/OpenThreadListButton';
 

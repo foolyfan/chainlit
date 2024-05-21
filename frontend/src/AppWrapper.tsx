@@ -4,10 +4,10 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 
-import { useApi } from '@chainlit/react-client';
+import { IProjectSettings, useApi } from '@chainlit/react-client';
 
 import { apiClientState } from 'state/apiClient';
-import { IProjectSettings, projectSettingsState } from 'state/project';
+import { projectSettingsState } from 'state/project';
 import { settingsState } from 'state/settings';
 
 export default function AppWrapper() {

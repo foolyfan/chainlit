@@ -7,6 +7,7 @@ import {
   IAction,
   IFeedback,
   IListAction,
+  IProjectSettings,
   IStep,
   accessTokenState,
   messagesState,
@@ -20,7 +21,6 @@ import {
 import { CommandContainer } from 'components/molecules/command/CommandContainer';
 
 import { apiClientState } from 'state/apiClient';
-import { IProjectSettings } from 'state/project';
 
 import MessageContainer from './container';
 import WelcomeScreen from './welcomeScreen';

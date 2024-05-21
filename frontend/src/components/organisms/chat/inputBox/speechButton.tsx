@@ -1,7 +1,6 @@
+import { apiClient } from 'api';
 import { useEffect, useState } from 'react';
-import SpeechRecognition, {
-  useSpeechRecognition
-} from 'react-speech-recognition';
+import { useRecoilValue } from 'recoil';
 
 import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
@@ -9,47 +8,57 @@ import { IconButton, Theme, Tooltip, useMediaQuery } from '@mui/material';
 
 import { Translator } from 'components/i18n';
 
+import { projectSettingsState } from 'state/project';
+
+import { useChatSession, useSpeechRecognition } from 'client-types/*';
+
 interface Props {
   onSpeech: (text: string) => void;
   language?: string;
   disabled?: boolean;
 }
 
-const SpeechButton = ({ onSpeech, language, disabled }: Props) => {
-  const { transcript, browserSupportsSpeechRecognition } =
-    useSpeechRecognition();
+const SpeechButton = ({ onSpeech, disabled }: Props) => {
+  const projectSettings = useRecoilValue(projectSettingsState);
+  if (!projectSettings?.features.speech_to_text?.enabled) {
+    return null;
+  }
+  const { sessionId } = useChatSession();
+  const { recordFile, startListening, stopListening } =
+    useSpeechRecognition('测试');
   const [isRecording, setIsRecording] = useState(false);
-  const [lastTranscript, setLastTranscript] = useState('');
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
-
+  // const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    if (lastTranscript.length < transcript.length) {
-      onSpeech(transcript.slice(lastTranscript.length));
-    }
-    setLastTranscript(transcript);
-  }, [transcript]);
+    console.log('解析文件');
+    const { promise } = apiClient.asrMethod(
+      recordFile as File,
+      () => {},
+      sessionId
+    );
+    promise.then((res) => {
+      onSpeech(res.content);
+    });
+  }, [recordFile]);
 
-  useEffect(() => {
-    if (isRecording) {
-      if (timer) {
-        clearTimeout(timer);
-      }
-      setTimer(
-        setTimeout(() => {
-          setIsRecording(false);
-          SpeechRecognition.stopListening();
-        }, 2000) // stop after 3 seconds of silence
-      );
-    }
-  }, [transcript, isRecording]);
+  // useEffect(() => {
+  //   if (isRecording) {
+  //     if (timer) {
+  //       clearTimeout(timer);
+  //     }
+  //     setTimer(
+  //       setTimeout(() => {
+  //         console.log('超时停止');
+
+  //         setIsRecording(false);
+  //         stopListening();
+  //       }, 2000) // stop after 3 seconds of silence
+  //     );
+  //   }
+  // }, [recordFile, isRecording]);
 
   const size = useMediaQuery<Theme>((theme) => theme.breakpoints.down('sm'))
     ? 'small'
     : 'medium';
-
-  if (!browserSupportsSpeechRecognition) {
-    return null;
-  }
 
   return isRecording ? (
     <Tooltip
@@ -64,7 +73,7 @@ const SpeechButton = ({ onSpeech, language, disabled }: Props) => {
           size={size}
           onClick={() => {
             setIsRecording(false);
-            SpeechRecognition.stopListening();
+            stopListening();
           }}
         >
           <StopCircleIcon fontSize={size} />
@@ -84,10 +93,7 @@ const SpeechButton = ({ onSpeech, language, disabled }: Props) => {
           size={size}
           onClick={() => {
             setIsRecording(true);
-            SpeechRecognition.startListening({
-              continuous: true,
-              language: language
-            });
+            startListening();
           }}
         >
           <KeyboardVoiceIcon fontSize={size} />

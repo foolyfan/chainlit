@@ -264,6 +264,13 @@ def on_stop(func: Callable) -> Callable:
     return func
 
 
+@trace
+def asr_method(func: Callable[[str], str]) -> Callable[[str], str]:
+    config.code.asr_method = wrap_user_function(func)
+    config.features.speech_to_text.enabled = True
+    return func
+
+
 def action_callback(name: str) -> Callable:
     """
     Callback to call when an action is clicked in the UI.
@@ -384,6 +391,7 @@ __all__ = [
     "ChoiceImageAction",
     "ExternalAction",
     "SpeechPromptMessage",
+    "asr_method",
 ]
 
 
