@@ -27,7 +27,7 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
 }) => {
   const speechPrompt = useRecoilValue(speechPromptsState);
   useEffect(() => {
-    if (chatSettings?.features.text_to_speech?.params && speechPrompt) {
+    if (chatSettings?.features.text_to_speech?.enabled && speechPrompt) {
       // const localSrcs = [
       //   textToSpeech(
       //     speechPrompt.content!,

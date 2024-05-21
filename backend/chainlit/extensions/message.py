@@ -166,7 +166,7 @@ class SpeechPromptMessage:
         }
         return _dict
 
-    async def send(self):
+    def send(self):
         trace_event("speech_prompt")
         data = self.to_dict()
-        return await context.emitter.speech_prompt(data)
+        return context.emitter.speech_prompt(data)

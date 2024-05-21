@@ -119,7 +119,7 @@ class BaseChainlitEmitter:
     ):
         pass
 
-    async def speech_prompt(self, data: typing.Dict):
+    def speech_prompt(self, data: typing.Dict):
         pass
 
     async def send_action_response(
@@ -363,7 +363,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
                 raise e
 
     def speech_prompt(self, data: typing.Dict):
-        return self.emit("speech_prompt", data)
+        asyncio.create_task(self.emit("speech_prompt", data))
 
     def task_start(self):
         """
