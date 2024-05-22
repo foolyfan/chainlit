@@ -711,7 +711,7 @@ async def asr_method(
 
 
 @app.post("/project/tts")
-async def asr_method(
+async def tts_method(
     request: Request,
     current_user: Annotated[
         Union[None, User, PersistedUser], Depends(get_current_user)

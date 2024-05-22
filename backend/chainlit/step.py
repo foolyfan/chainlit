@@ -39,6 +39,7 @@ class StepDict(TypedDict, total=False):
     language: Optional[str]
     indent: Optional[int]
     feedback: Optional[FeedbackDict]
+    speechContent: Optional[str]
 
 
 def step(

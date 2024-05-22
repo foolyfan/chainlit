@@ -96,7 +96,7 @@ async def ttsHook(content, params, session: WebsocketSession):
 
     if response.status_code == 200 and response.headers["Content-Type"] == "audio/wav":
         file_dict = await session.persist_file(
-            name=uuid.uuid4(), mime="audio/wav", content=response.content
+            name=str(uuid.uuid4()), mime="audio/wav", content=response.content
         )
         return file_dict["id"]
     else:
