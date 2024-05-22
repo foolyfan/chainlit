@@ -1,6 +1,8 @@
 # This is a simple example of a chainlit app.
 
+import asyncio
 import json
+import uuid
 from typing import List
 
 import requests
@@ -30,8 +32,10 @@ from chainlit import (
     TaskList,
     TaskStatus,
     asr_method,
+    context,
     on_message,
     sleep,
+    tts_method,
 )
 
 
@@ -82,6 +86,26 @@ async def asrHook(filePath):
         content = json.loads(response.content.decode("utf-8"))["text"]
         logger.info(f"转换成功 {response.content}")
         return content
+
+
+@tts_method
+async def ttsHook(content, params):
+    url = "http://dev.siro-info.com:8000/voice"
+    params = {
+        "text": content,
+        "model_id": params["modelId"],
+        "speaker_name": params["speakerName"],
+        "language": params["language"],
+    }
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200 and response.headers["Content-Type"] == "audio/wav":
+        file_dict = await context.session.persist_file(
+            name=uuid.uuid4(), mime="audio/wav", content=response.content
+        )
+        return file_dict["id"]
+    else:
+        return ""
 
 
 @on_message
@@ -283,5 +307,5 @@ async def main(message: Message):
             ).send()
     if message.content == "14":
         content = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
-        SpeechPromptMessage(content=content).send()
+        asyncio.create_task(SpeechPromptMessage(content=content).send())
         res = await AskUserMessage(content="你好，请录入你的姓名!", timeout=10).send()

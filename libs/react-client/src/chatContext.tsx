@@ -1,3 +1,4 @@
+import { isEmpty } from 'lodash';
 import {
   ReactNode,
   createContext,
@@ -9,12 +10,14 @@ import { useRecoilValue } from 'recoil';
 
 import { IProjectSettings } from './types/config';
 
-import { speechPromptsState } from './state';
-import { audioPlayer, localTextToSpeech } from './utils/speech';
+import { ChainlitAPI } from './api';
+import { sessionIdState, speechPromptsState } from './state';
+import { decodeAndConcatAudioFiles, localTextToSpeech } from './utils/speech';
 
 interface ChatProviderProps {
   children: ReactNode;
   chatSettings: IProjectSettings | undefined;
+  client: ChainlitAPI;
 }
 interface ChatContextType {
   stopPlayer: () => void;
@@ -23,31 +26,36 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 const ChatProvider: React.FC<ChatProviderProps> = ({
   children,
-  chatSettings
+  chatSettings,
+  client
 }) => {
   const speechPrompt = useRecoilValue(speechPromptsState);
+  const sessionId = useRecoilValue(sessionIdState);
   useEffect(() => {
     if (chatSettings?.features.text_to_speech?.enabled && speechPrompt) {
-      // const localSrcs = [
-      //   textToSpeech(
-      //     speechPrompt.content!,
-      //     chatSettings?.features.text_to_speech?.params
-      //   )
-      // ];
-      // audioPlayer.start(localSrcs);
-      // return () => {
-      //   audioPlayer.stop();
-      // };
-      localTextToSpeech(
-        speechPrompt.content!,
-        chatSettings?.features.text_to_speech?.params
-      );
+      if (!isEmpty(speechPrompt.chainlitKey)) {
+        console.log('服务端tts');
+        fetch(client.getElementUrl(speechPrompt.chainlitKey, sessionId))
+          .then((response) => response.arrayBuffer())
+          .then((arrayBuffer) => {
+            // setSrc(URL.createObjectURL(blob));
+            decodeAndConcatAudioFiles(arrayBuffer);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      } else {
+        console.log('客户端tts');
+
+        localTextToSpeech(
+          speechPrompt.content!,
+          chatSettings?.features.text_to_speech?.params
+        );
+      }
     }
   }, [speechPrompt]);
 
-  const stopPlayer = useCallback(() => {
-    audioPlayer.stop();
-  }, []);
+  const stopPlayer = useCallback(() => {}, []);
 
   return (
     <ChatContext.Provider value={{ stopPlayer }}>

@@ -48,4 +48,5 @@ export interface ISpeechPromptMessage {
   id: string;
   content?: string;
   streaming: boolean;
+  chainlitKey: string;
 }

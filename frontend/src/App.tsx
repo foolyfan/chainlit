@@ -106,7 +106,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <ChatProvider chatSettings={pSettings}>
+      <ChatProvider chatSettings={pSettings} client={apiClient}>
         <GlobalStyles
           styles={{
             body: { backgroundColor: theme.palette.background.default }

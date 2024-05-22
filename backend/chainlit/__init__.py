@@ -271,6 +271,13 @@ def asr_method(func: Callable[[str], str]) -> Callable[[str], str]:
     return func
 
 
+@trace
+def tts_method(func: Callable[[str, str], str]) -> Callable[[str, str], str]:
+    config.code.tts_method = wrap_user_function(func)
+    config.features.text_to_speech.enabled = True
+    return func
+
+
 def action_callback(name: str) -> Callable:
     """
     Callback to call when an action is clicked in the UI.
@@ -392,6 +399,7 @@ __all__ = [
     "ExternalAction",
     "SpeechPromptMessage",
     "asr_method",
+    "tts_method",
 ]
 
 

@@ -153,20 +153,29 @@ class SpeechPromptMessage:
         content: str,
         id: str = str(uuid.uuid4()),
         streaming: bool = False,
+        chainlitKey: Optional[str] = None,
     ):
         self.id = id
         self.content = content
         self.streaming = streaming
+        self.chainlitKey = chainlitKey
 
     def to_dict(self):
         _dict = {
             "content": self.content,
             "id": self.id,
             "streaming": self.streaming,
+            "chainlitKey": self.chainlitKey,
         }
         return _dict
 
-    def send(self):
+    async def send(self):
         trace_event("speech_prompt")
+
+        params = {}
+        if config.features.text_to_speech.enabled:
+            params = config.features.text_to_speech.params
+        self.chainlitKey = await config.code.tts_method(self.content, params)
+
         data = self.to_dict()
-        return context.emitter.speech_prompt(data)
+        return await context.emitter.speech_prompt(data)
