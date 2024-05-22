@@ -12,7 +12,7 @@ import { IProjectSettings } from './types/config';
 
 import { ChainlitAPI } from './api';
 import { sessionIdState, speechPromptsState } from './state';
-import { decodeAndConcatAudioFiles, localTextToSpeech } from './utils/speech';
+import { audioPlayer, localTextToSpeech } from './utils/speech';
 
 interface ChatProviderProps {
   children: ReactNode;
@@ -32,21 +32,27 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
   const speechPrompt = useRecoilValue(speechPromptsState);
   const sessionId = useRecoilValue(sessionIdState);
   useEffect(() => {
-    if (chatSettings?.features.text_to_speech?.enabled && speechPrompt) {
-      if (!isEmpty(speechPrompt.chainlitKey)) {
+    if (
+      chatSettings?.features.text_to_speech?.enabled &&
+      speechPrompt &&
+      audioPlayer
+    ) {
+      if (!isEmpty(speechPrompt.content)) {
         console.log('服务端tts');
-        fetch(client.getElementUrl(speechPrompt.chainlitKey, sessionId))
+        client
+          .ttsMethod(speechPrompt.content, sessionId)
+          .then((data) =>
+            fetch(client.getElementUrl(data.chainlitKey, sessionId))
+          )
           .then((response) => response.arrayBuffer())
           .then((arrayBuffer) => {
-            // setSrc(URL.createObjectURL(blob));
-            decodeAndConcatAudioFiles(arrayBuffer);
+            audioPlayer!.play(arrayBuffer);
           })
           .catch((error) => {
-            console.log(error);
+            console.log('play fail', error);
           });
       } else {
         console.log('客户端tts');
-
         localTextToSpeech(
           speechPrompt.content!,
           chatSettings?.features.text_to_speech?.params

@@ -44,6 +44,7 @@ class MessageBase(ABC):
     wait_for_answer = False
     indent: Optional[int] = None
     generation: Optional[BaseGeneration] = None
+    speechContent: str = ""
 
     def __post_init__(self) -> None:
         trace_event(f"init {self.__class__.__name__}")
@@ -85,6 +86,7 @@ class MessageBase(ABC):
             "waitForAnswer": self.wait_for_answer,
             "indent": self.indent,
             "generation": self.generation.to_dict() if self.generation else None,
+            "speechContent": self.speechContent,
         }
 
         return _dict
@@ -213,10 +215,12 @@ class Message(MessageBase):
         generation: Optional[BaseGeneration] = None,
         id: Optional[str] = None,
         created_at: Union[str, None] = None,
+        speechContent: str = "",
     ):
         time.sleep(0.001)
         self.language = language
         self.generation = generation
+        self.speechContent = speechContent
         if isinstance(content, dict):
             try:
                 self.content = json.dumps(content, indent=4, ensure_ascii=False)
@@ -353,6 +357,7 @@ class AskUserMessage(AskMessageBase):
         disable_feedback: bool = False,
         timeout: int = 60,
         raise_on_timeout: bool = False,
+        speechContent: str = "",
     ):
         self.content = content
         self.author = author
@@ -360,7 +365,7 @@ class AskUserMessage(AskMessageBase):
         self.type = type
         self.disable_feedback = disable_feedback
         self.raise_on_timeout = raise_on_timeout
-
+        self.speechContent = speechContent
         super().__post_init__()
 
     async def send(self) -> Union[StepDict, None]:
@@ -421,6 +426,7 @@ class AskFileMessage(AskMessageBase):
         disable_feedback: bool = False,
         timeout=90,
         raise_on_timeout=False,
+        speechContent: str = "",
     ):
         self.content = content
         self.max_size_mb = max_size_mb
@@ -431,6 +437,7 @@ class AskFileMessage(AskMessageBase):
         self.timeout = timeout
         self.raise_on_timeout = raise_on_timeout
         self.disable_feedback = disable_feedback
+        self.speechContent = speechContent
 
         super().__post_init__()
 
@@ -499,6 +506,7 @@ class AskActionMessage(AskMessageBase):
         disable_feedback=False,
         timeout=90,
         raise_on_timeout=False,
+        speechContent: str = "",
     ):
         self.content = content
         self.actions = actions
@@ -508,6 +516,7 @@ class AskActionMessage(AskMessageBase):
         self.timeout = timeout
         self.raise_on_timeout = raise_on_timeout
         self.timeoutContent = timeoutContent
+        self.speechContent = speechContent
 
         super().__post_init__()
 

@@ -1,6 +1,5 @@
 # This is a simple example of a chainlit app.
 
-import asyncio
 import json
 import uuid
 from typing import List
@@ -14,12 +13,9 @@ from chainlit.extensions.listaction import (
     ChoiceImageAction,
     ExternalAction,
 )
-from chainlit.extensions.message import (
-    AskUserChoiceMessage,
-    GatherCommand,
-    SpeechPromptMessage,
-)
+from chainlit.extensions.message import AskUserChoiceMessage, GatherCommand
 from chainlit.logger import logger
+from chainlit.session import WebsocketSession
 from chainlit.types import AskUserResponse
 from fastapi import HTTPException
 
@@ -32,7 +28,6 @@ from chainlit import (
     TaskList,
     TaskStatus,
     asr_method,
-    context,
     on_message,
     sleep,
     tts_method,
@@ -89,7 +84,7 @@ async def asrHook(filePath):
 
 
 @tts_method
-async def ttsHook(content, params):
+async def ttsHook(content, params, session: WebsocketSession):
     url = "http://dev.siro-info.com:8000/voice"
     params = {
         "text": content,
@@ -100,7 +95,7 @@ async def ttsHook(content, params):
     response = requests.get(url, params=params)
 
     if response.status_code == 200 and response.headers["Content-Type"] == "audio/wav":
-        file_dict = await context.session.persist_file(
+        file_dict = await session.persist_file(
             name=uuid.uuid4(), mime="audio/wav", content=response.content
         )
         return file_dict["id"]
@@ -257,7 +252,9 @@ async def main(message: Message):
         res = await GatherCommand(action="password", timeout=90).send()
         logger.info(f"密码 {res}")
     if message.content == "12":
-        res = await GatherCommand(action="scan", timeout=90).send()
+        res = await GatherCommand(
+            action="scan", timeout=90, speechContent="扫一扫"
+        ).send()
         logger.info(f"扫一扫 {res}")
     if message.content == "13":
         res = await AskUserChoiceMessage(
@@ -291,6 +288,7 @@ async def main(message: Message):
                 ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
             ],
             choiceHook=choiceBranch,
+            speechContent="请选择",
         ).send()
         if res is not None:
             await Message(
@@ -306,6 +304,22 @@ async def main(message: Message):
                 timeout=30,
             ).send()
     if message.content == "14":
-        content = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
-        asyncio.create_task(SpeechPromptMessage(content=content).send())
-        res = await AskUserMessage(content="你好，请录入你的姓名!", timeout=10).send()
+        speechContent = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
+        res = await AskUserMessage(
+            content="你好，请录入你的姓名!", timeout=30, speechContent=speechContent
+        ).send()
+    if message.content == "15":
+        speechContent = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
+        res = await Message(
+            content="你好，请录入你的姓名!", speechContent=speechContent
+        ).send()
+    if message.content == "16":
+        res = await AskActionMessage(
+            content="Pick an action!",
+            actions=[
+                Action(name="continue", value="continue", label="✅ Continue"),
+                Action(name="cancel", value="cancel", label="❌ Cancel"),
+            ],
+            choiceHook=choiceResultConfirm,
+            speechContent="请点击",
+        ).send()

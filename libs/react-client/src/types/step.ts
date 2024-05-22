@@ -33,6 +33,7 @@ export interface IStep {
   streaming?: boolean;
   generation?: IGeneration;
   steps?: IStep[];
+  speechContent: string;
   //legacy
   indent?: number;
 }
@@ -45,8 +46,5 @@ export type IChoiceLayout = {
 export type ILayout = IChoiceLayout[];
 
 export interface ISpeechPromptMessage {
-  id: string;
-  content?: string;
-  streaming: boolean;
-  chainlitKey: string;
+  content: string;
 }

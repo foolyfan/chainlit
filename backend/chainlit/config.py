@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 import tomli
 from chainlit.logger import logger
+from chainlit.session import WebsocketSession
 from chainlit.version import __version__
 from dataclasses_json import DataClassJsonMixin
 from pydantic.dataclasses import Field, dataclass
@@ -253,7 +254,7 @@ class CodeSettings:
     on_chat_resume: Optional[Callable[["ThreadDict"], Any]] = None
     on_message: Optional[Callable[[str], Any]] = None
     asr_method: Optional[Callable[[str], str]] = None
-    tts_method: Optional[Callable[[str, str], str]] = None
+    tts_method: Optional[Callable[[str, str, WebsocketSession], str]] = None
     author_rename: Optional[Callable[[str], str]] = None
     on_settings_update: Optional[Callable[[Dict[str, Any]], Any]] = None
     set_chat_profiles: Optional[Callable[[Optional["User"]], List["ChatProfile"]]] = (

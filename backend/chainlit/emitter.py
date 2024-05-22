@@ -119,9 +119,6 @@ class BaseChainlitEmitter:
     ):
         pass
 
-    async def speech_prompt(self, data: typing.Dict):
-        pass
-
     async def send_action_response(
         self, id: str, status: bool, response: Optional[str] = None
     ):
@@ -361,9 +358,6 @@ class ChainlitEmitter(BaseChainlitEmitter):
 
             if raise_on_timeout:
                 raise e
-
-    def speech_prompt(self, data: typing.Dict):
-        return self.emit("speech_prompt", data)
 
     def task_start(self):
         """

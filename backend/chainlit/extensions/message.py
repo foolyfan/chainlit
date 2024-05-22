@@ -1,8 +1,5 @@
 import typing
-import uuid
-from abc import ABC
-from dataclasses import dataclass
-from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
+from typing import Awaitable, Callable, List, Literal, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
@@ -15,10 +12,7 @@ from chainlit.extensions.types import (
 from chainlit.message import AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
 from chainlit.types import AskUserResponse
-from dataclasses_json import DataClassJsonMixin
 from literalai.helper import utc_now
-
-from chainlit import logger
 
 
 class AskUserChoiceMessage(AskMessageBase):
@@ -41,6 +35,7 @@ class AskUserChoiceMessage(AskMessageBase):
         disable_feedback=False,
         timeout=90,
         raise_on_timeout=False,
+        speechContent: str = "",
     ):
         self.content = choiceContent
         self.layout = layout
@@ -51,6 +46,7 @@ class AskUserChoiceMessage(AskMessageBase):
         self.timeoutContent = timeoutContent
         self.raise_on_timeout = raise_on_timeout
         self.choiceActions = choiceActions
+        self.speechContent = speechContent
         super().__post_init__()
 
     async def _create(self):
@@ -113,10 +109,12 @@ class GatherCommand(MessageBase):
         action: GatherCommandType,
         timeout=90,
         author=config.ui.name,
+        speechContent: str = "",
     ):
         self.timeout = timeout
         self.author = author
         self.action = action
+        self.speechContent = speechContent
         super().__post_init__()
 
     async def send(self) -> Union[GatherCommandSpec, None]:
@@ -144,38 +142,3 @@ class GatherCommand(MessageBase):
         res = await context.emitter.gather_command(step_dict, spec, False)
 
         return res
-
-
-class SpeechPromptMessage:
-
-    def __init__(
-        self,
-        content: str,
-        id: str = str(uuid.uuid4()),
-        streaming: bool = False,
-        chainlitKey: Optional[str] = None,
-    ):
-        self.id = id
-        self.content = content
-        self.streaming = streaming
-        self.chainlitKey = chainlitKey
-
-    def to_dict(self):
-        _dict = {
-            "content": self.content,
-            "id": self.id,
-            "streaming": self.streaming,
-            "chainlitKey": self.chainlitKey,
-        }
-        return _dict
-
-    async def send(self):
-        trace_event("speech_prompt")
-
-        params = {}
-        if config.features.text_to_speech.enabled:
-            params = config.features.text_to_speech.params
-        self.chainlitKey = await config.code.tts_method(self.content, params)
-
-        data = self.to_dict()
-        return await context.emitter.speech_prompt(data)

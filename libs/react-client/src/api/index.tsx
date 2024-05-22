@@ -346,4 +346,9 @@ export class ChainlitAPI extends APIBase {
 
     return { xhr, promise };
   }
+
+  async ttsMethod(content: string, sessionId: string, token?: string) {
+    const res = await this.post('/project/tts', { content, sessionId }, token);
+    return res.json();
+  }
 }

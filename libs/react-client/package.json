@@ -33,7 +33,6 @@
     "@swc/core": "^1.3.86",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
-    "@types/howler": "^2.2.11",
     "@types/lodash": "^4.14.199",
     "@types/uuid": "^9.0.3",
     "@vitejs/plugin-react": "^4.0.4",
@@ -53,7 +52,6 @@
     "recoil": "^0.7.7"
   },
   "dependencies": {
-    "howler": "^2.2.4",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
     "siro-face-jsbridge": "2.0.22",

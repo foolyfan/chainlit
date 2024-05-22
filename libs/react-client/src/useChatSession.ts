@@ -1,4 +1,4 @@
-import { debounce } from 'lodash';
+import { debounce, isEmpty } from 'lodash';
 import { useCallback } from 'react';
 import {
   useRecoilState,
@@ -35,7 +35,6 @@ import {
   IElement,
   IListAction,
   IMessageElement,
-  ISpeechPromptMessage,
   IStep,
   ITasklistElement,
   IThread
@@ -151,6 +150,11 @@ const useChatSession = () => {
       socket.on('new_message', (message: IStep) => {
         console.log('new_message', message);
         setMessages((oldMessages) => addMessage(oldMessages, message));
+        if (!isEmpty(message.speechContent)) {
+          setSpeechPrompts({
+            content: message.speechContent
+          });
+        }
       });
 
       socket.on('first_interaction', (interaction: string) => {
@@ -171,6 +175,11 @@ const useChatSession = () => {
         setMessages((oldMessages) =>
           deleteMessageById(oldMessages, message.id)
         );
+        if (!isEmpty(message.speechContent)) {
+          setSpeechPrompts({
+            content: message.speechContent
+          });
+        }
       });
 
       socket.on('stream_start', (message: IStep) => {
@@ -184,10 +193,14 @@ const useChatSession = () => {
       });
 
       socket.on('ask', ({ msg, spec }, callback) => {
-        console.log('ask', msg, spec, callback);
+        console.log('ask msg', msg, spec);
         setAskUser({ spec, callback });
         setMessages((oldMessages) => addMessage(oldMessages, msg));
-
+        if (!isEmpty(msg.speechContent)) {
+          setSpeechPrompts({
+            content: msg.speechContent
+          });
+        }
         setLoading(false);
       });
 
@@ -203,6 +216,11 @@ const useChatSession = () => {
       socket.on('gather_command', ({ msg, spec }, callback) => {
         console.log('gather_command', msg, spec, callback);
         setGatherCommand({ spec, callback });
+        if (!isEmpty(msg.speechContent)) {
+          setSpeechPrompts({
+            content: msg.speechContent
+          });
+        }
       });
 
       socket.on('clear_ask', () => {
@@ -325,12 +343,6 @@ const useChatSession = () => {
           if (index === -1) return old;
           return [...old.slice(0, index), ...old.slice(index + 1)];
         });
-      });
-
-      socket.on('speech_prompt', (messge: ISpeechPromptMessage) => {
-        console.log('speech_prompt', messge);
-
-        setSpeechPrompts(() => messge);
       });
 
       socket.on('token_usage', (count: number) => {
