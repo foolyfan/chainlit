@@ -152,7 +152,7 @@ const useChatSession = () => {
         setMessages((oldMessages) => addMessage(oldMessages, message));
         if (!isEmpty(message.speechContent)) {
           setSpeechPrompts({
-            content: message.speechContent
+            content: message.speechContent!
           });
         }
       });
@@ -177,7 +177,7 @@ const useChatSession = () => {
         );
         if (!isEmpty(message.speechContent)) {
           setSpeechPrompts({
-            content: message.speechContent
+            content: message.speechContent!
           });
         }
       });

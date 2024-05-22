@@ -33,7 +33,7 @@ export interface IStep {
   streaming?: boolean;
   generation?: IGeneration;
   steps?: IStep[];
-  speechContent: string;
+  speechContent?: string;
   //legacy
   indent?: number;
 }
