@@ -1,5 +1,6 @@
 import os
 
+from chainlit.session import WebsocketSession
 from dotenv import load_dotenv
 
 env_found = load_dotenv(dotenv_path=os.path.join(os.getcwd(), ".env"))
@@ -272,7 +273,9 @@ def asr_method(func: Callable[[str], str]) -> Callable[[str], str]:
 
 
 @trace
-def tts_method(func: Callable[[str, str], str]) -> Callable[[str, str], str]:
+def tts_method(
+    func: Callable[[str, Dict, WebsocketSession], str]
+) -> Callable[[str, Dict, WebsocketSession], str]:
     config.code.tts_method = wrap_user_function(func)
     config.features.text_to_speech.enabled = True
     return func
