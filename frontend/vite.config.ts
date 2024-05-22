@@ -8,7 +8,18 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   plugins: [react(), tsconfigPaths(), svgr()],
   server: {
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    proxy: {
+      '^/(auth|login|logout|generation|feedback|project|logo)': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true
+      },
+      '/ws': {
+        target: 'http://127.0.0.1:8000',
+        ws: true,
+        changeOrigin: true
+      }
+    }
   },
   resolve: {
     alias: {

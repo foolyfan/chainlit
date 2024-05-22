@@ -74,17 +74,13 @@ async def asrHook(filePath):
             "http://dev.siro-info.com:8000/v1/audio/transcriptions", files=files
         )
 
-        if response.status_code == 200:
+        if response.status_code != 200:
             raise HTTPException(
                 status_code=500,
                 detail=f"Asr server failed to parse",
             )
+        content = json.loads(response.content.decode("utf-8"))["text"]
         logger.info(f"转换成功 {response.content}")
-        content = ""
-        if isinstance(response.content, bytes):
-            content = response.content.decode("utf-8")
-        else:
-            content = response.content
         return content
 
 
@@ -288,3 +284,4 @@ async def main(message: Message):
     if message.content == "14":
         content = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
         SpeechPromptMessage(content=content).send()
+        res = await AskUserMessage(content="你好，请录入你的姓名!", timeout=10).send()
