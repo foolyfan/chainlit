@@ -1,34 +1,24 @@
 import { apiClient } from 'api';
 import { useEffect, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 
-import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
-import StopCircleIcon from '@mui/icons-material/StopCircle';
-import { IconButton, Theme, Tooltip, useMediaQuery } from '@mui/material';
-
-import { Translator } from 'components/i18n';
-
-import { projectSettingsState } from 'state/project';
+import { Button } from '@mui/material';
 
 import { useChatSession, useSpeechRecognition } from 'client-types/*';
 
 interface Props {
   onSpeech: (text: string) => void;
-  language?: string;
-  disabled?: boolean;
+  onSpeechRecognitionRuning: (state: boolean) => void;
 }
 
-const SpeechButton = ({ onSpeech, disabled }: Props) => {
-  const projectSettings = useRecoilValue(projectSettingsState);
-  if (!projectSettings?.features.speech_to_text?.enabled) {
-    return null;
-  }
+const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
   const { sessionId } = useChatSession();
   const { file, startListening, stopListening } = useSpeechRecognition();
-  const [isRecording, setIsRecording] = useState(false);
-  // const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+  const [speechRecognitionRuning, setSpeechRecognitionRuning] =
+    useState<boolean>(false);
   useEffect(() => {
     if (file) {
+      setSpeechRecognitionRuning(true);
+      onSpeechRecognitionRuning(true);
       apiClient
         .asrMethod(file as File, () => {}, sessionId)
         .promise.then((response) => {
@@ -36,70 +26,40 @@ const SpeechButton = ({ onSpeech, disabled }: Props) => {
         })
         .catch((error) => {
           console.error('asr error:', error);
+        })
+        .finally(() => {
+          onSpeechRecognitionRuning(false);
+          setSpeechRecognitionRuning(false);
         });
     }
   }, [file]);
 
-  // useEffect(() => {
-  //   if (isRecording) {
-  //     if (timer) {
-  //       clearTimeout(timer);
-  //     }
-  //     setTimer(
-  //       setTimeout(() => {
-  //         console.log('超时停止');
-
-  //         setIsRecording(false);
-  //         stopListening();
-  //       }, 2000) // stop after 3 seconds of silence
-  //     );
-  //   }
-  // }, [recordFile, isRecording]);
-
-  const size = useMediaQuery<Theme>((theme) => theme.breakpoints.down('sm'))
-    ? 'small'
-    : 'medium';
-
-  return isRecording ? (
-    <Tooltip
-      title={
-        <Translator path="components.organisms.chat.inputBox.speechButton.stop" />
-      }
+  return (
+    <Button
+      disabled={speechRecognitionRuning}
+      variant="outlined"
+      fullWidth
+      sx={{
+        height: '3.5em',
+        boxShadow: 'none',
+        border: 'none',
+        color: 'text.primary',
+        backgroundColor: 'background.paper',
+        '&:hover': {
+          border: 'none !important',
+          backgroundColor: 'transparent'
+        },
+        '&:active': {
+          backgroundColor: '#F80061'
+        }
+      }}
+      onKeyUp={() => startListening()}
+      onKeyDown={() => stopListening()}
+      onTouchStart={() => startListening()}
+      onTouchEnd={() => stopListening()}
     >
-      <span>
-        <IconButton
-          disabled={disabled}
-          color="inherit"
-          size={size}
-          onClick={() => {
-            setIsRecording(false);
-            stopListening();
-          }}
-        >
-          <StopCircleIcon fontSize={size} />
-        </IconButton>
-      </span>
-    </Tooltip>
-  ) : (
-    <Tooltip
-      title={
-        <Translator path="components.organisms.chat.inputBox.speechButton.start" />
-      }
-    >
-      <span>
-        <IconButton
-          disabled={disabled}
-          color="inherit"
-          size={size}
-          onClick={() => {
-            setIsRecording(true);
-            startListening();
-          }}
-        >
-          <KeyboardVoiceIcon fontSize={size} />
-        </IconButton>
-      </span>
-    </Tooltip>
+      {speechRecognitionRuning ? '语音解析中...' : '按住说话'}
+    </Button>
   );
 };
 export default SpeechButton;

@@ -18,7 +18,6 @@ import { IAttachment } from 'state/chat';
 import { inputHistoryState } from 'state/userInputHistory';
 
 import Input from './input';
-import WaterMark from './waterMark';
 
 interface Props {
   fileSpec: FileSpec;
@@ -105,7 +104,7 @@ const InputBox = memo(
         position="relative"
         flexDirection="column"
         gap={1}
-        p={2}
+        p={1}
         sx={{
           boxSizing: 'border-box',
           width: '100%',
@@ -137,7 +136,7 @@ const InputBox = memo(
         </Stack> */}
           {/* )} */}
         </Box>
-        <WaterMark />
+        {/* <WaterMark /> */}
       </Box>
     );
   }
