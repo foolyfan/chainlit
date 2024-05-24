@@ -1,9 +1,11 @@
 # This is a simple example of a chainlit app.
 
+import asyncio
 import json
 import uuid
 from typing import List
 
+import httpx
 import requests
 from chainlit.element import Image, Text
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
@@ -67,11 +69,19 @@ async def choiceBranch(res, choices: List[LA]):
 async def asrHook(filePath):
     with open(filePath, "rb") as file:
         files = {"file": file}
-
-        # 发送POST请求
-        response = requests.post(
-            "http://dev.siro-info.com:8000/v1/audio/transcriptions", files=files
-        )
+        try:
+            async with httpx.AsyncClient() as client:
+                logger.info("语音解析")
+                # 发送POST请求
+                response = client.post(
+                    "http://dev.siro-info.com:8000/v1/audio/transcriptions", files=files
+                )
+        except:
+            logger.info("语音解析错误")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Asr server failed to parse",
+            )
 
         if response.status_code != 200:
             raise HTTPException(
@@ -79,20 +89,26 @@ async def asrHook(filePath):
                 detail=f"Asr server failed to parse",
             )
         content = json.loads(response.content.decode("utf-8"))["text"]
-        logger.info(f"转换成功 {response.content}")
+        logger.info(f"语音解析成功 {response.content}")
         return content
 
 
 @tts_method
 async def ttsHook(content, params, session: WebsocketSession):
     url = "http://dev.siro-info.com:8000/voice"
+    logger.info(f"文本解析 {content}")
     params = {
         "text": content,
         "model_id": params["modelId"],
         "speaker_name": params["speakerName"],
         "language": params["language"],
     }
-    response = requests.get(url, params=params)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params)
+    except:
+        print("文本解析失败")
+        return ""
 
     if response.status_code == 200 and response.headers["Content-Type"] == "audio/wav":
         file_dict = await session.persist_file(
@@ -213,6 +229,7 @@ async def main(message: Message):
         await Message(
             content="请核对以下转账信息符合您的预期。",
             elements=elements,
+            speechContent="请核对以下转账信息符合您的预期",
         ).send()
         res = await AskActionMessage(
             actions=[
