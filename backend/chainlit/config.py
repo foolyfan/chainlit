@@ -148,7 +148,7 @@ generated_by = "{__version__}"
 
 
 DEFAULT_HOST = "0.0.0.0"
-DEFAULT_PORT = 8000
+DEFAULT_PORT = 8005
 
 
 @dataclass()

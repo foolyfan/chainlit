@@ -11,11 +11,11 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '^/(auth|login|logout|generation|feedback|project|logo)': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:8005',
         changeOrigin: true
       },
       '/ws': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:8005',
         ws: true,
         changeOrigin: true
       }

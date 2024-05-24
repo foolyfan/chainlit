@@ -17,8 +17,6 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
     useState<boolean>(false);
   useEffect(() => {
     if (file) {
-      setSpeechRecognitionRuning(true);
-      onSpeechRecognitionRuning(true);
       apiClient
         .asrMethod(file as File, () => {}, sessionId)
         .promise.then((response) => {
@@ -54,9 +52,17 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
         }
       }}
       onKeyUp={() => startListening()}
-      onKeyDown={() => stopListening()}
+      onKeyDown={() => {
+        setSpeechRecognitionRuning(true);
+        onSpeechRecognitionRuning(true);
+        stopListening();
+      }}
       onTouchStart={() => startListening()}
-      onTouchEnd={() => stopListening()}
+      onTouchEnd={() => {
+        setSpeechRecognitionRuning(true);
+        onSpeechRecognitionRuning(true);
+        stopListening();
+      }}
     >
       {speechRecognitionRuning ? '语音解析中...' : '按住说话'}
     </Button>
