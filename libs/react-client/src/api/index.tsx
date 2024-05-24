@@ -348,7 +348,8 @@ export class ChainlitAPI extends APIBase {
   }
 
   async ttsMethod(content: string, sessionId: string, token?: string) {
-    const res = await this.post('/project/tts', { content, sessionId }, token);
-    return res.json();
+    const queryParams = `?session_id=${sessionId}&content=${content}`;
+
+    return await this.get(`/project/tts${queryParams}`, token);
   }
 }

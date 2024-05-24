@@ -41,9 +41,6 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
         console.log('服务端tts');
         client
           .ttsMethod(speechPrompt.content, sessionId)
-          .then((data) =>
-            fetch(client.getElementUrl(data.chainlitKey, sessionId))
-          )
           .then((response) => response.arrayBuffer())
           .then((arrayBuffer) => {
             audioPlayer!.play(arrayBuffer);

@@ -20,6 +20,7 @@ from chainlit.logger import logger
 from chainlit.session import WebsocketSession
 from chainlit.types import AskUserResponse
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 
 from chainlit import (
     Action,
@@ -94,7 +95,7 @@ async def asrHook(filePath):
 
 
 @tts_method
-async def ttsHook(content, params, session: WebsocketSession):
+async def ttsHook(content, params):
     url = "http://dev.siro-info.com:8000/voice"
     logger.info(f"文本解析 {content}")
     params = {
@@ -110,11 +111,18 @@ async def ttsHook(content, params, session: WebsocketSession):
         print("文本解析失败")
         return ""
 
-    if response.status_code == 200 and response.headers["Content-Type"] == "audio/wav":
-        file_dict = await session.persist_file(
-            name=str(uuid.uuid4()), mime="audio/wav", content=response.content
+    if response.status_code == 200:
+        logger.info("文本解析成功")
+
+        async def iterfile():
+            async for chunk in response.aiter_bytes():
+                yield chunk
+
+        return StreamingResponse(
+            iterfile(),
+            media_type=response.headers["Content-Type"],
+            headers={"X-File-ID": str(uuid.uuid4())},
         )
-        return file_dict["id"]
     else:
         return ""
 
@@ -321,7 +329,7 @@ async def main(message: Message):
                 timeout=30,
             ).send()
     if message.content == "14":
-        speechContent = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
+        speechContent = "程序意外终止"
         res = await AskUserMessage(
             content="你好，请录入你的姓名!", timeout=30, speechContent=speechContent
         ).send()

@@ -710,9 +710,10 @@ async def asr_method(
     return JSONResponse({"content": content})
 
 
-@app.post("/project/tts")
+@app.get("/project/tts")
 async def tts_method(
-    request: Request,
+    session_id: str,
+    content: str,
     current_user: Annotated[
         Union[None, User, PersistedUser], Depends(get_current_user)
     ],
@@ -724,8 +725,7 @@ async def tts_method(
         )
     from chainlit.session import WebsocketSession
 
-    jsonData = await request.json()
-    session = WebsocketSession.get_by_id(jsonData["sessionId"])
+    session = WebsocketSession.get_by_id(session_id)
 
     if not session:
         raise HTTPException(
@@ -739,10 +739,10 @@ async def tts_method(
                 status_code=401,
                 detail="You are not authorized to upload files for this session",
             )
-    chainlitKey = await config.code.tts_method(
-        jsonData["content"], config.features.text_to_speech.params, session
+    streamResponse = await config.code.tts_method(
+        content, config.features.text_to_speech.params
     )
-    return JSONResponse({"chainlitKey": chainlitKey})
+    return streamResponse
 
 
 @app.get("/project/file/{file_id}")
