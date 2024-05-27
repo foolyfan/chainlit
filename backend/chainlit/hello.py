@@ -1,12 +1,11 @@
 # This is a simple example of a chainlit app.
 
-import asyncio
 import json
 import uuid
 from typing import List
 
+import aiofiles
 import httpx
-import requests
 from chainlit.element import Image, Text
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.listaction import (
@@ -17,7 +16,6 @@ from chainlit.extensions.listaction import (
 )
 from chainlit.extensions.message import AskUserChoiceMessage, GatherCommand
 from chainlit.logger import logger
-from chainlit.session import WebsocketSession
 from chainlit.types import AskUserResponse
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
@@ -68,22 +66,22 @@ async def choiceBranch(res, choices: List[LA]):
 
 @asr_method
 async def asrHook(filePath):
-    with open(filePath, "rb") as file:
+    async with aiofiles.open(filePath, "rb") as file:
         files = {"file": file}
         try:
             async with httpx.AsyncClient() as client:
                 logger.info("语音解析")
                 # 发送POST请求
-                response = client.post(
+                response = await client.post(
                     "http://dev.siro-info.com:8000/v1/audio/transcriptions", files=files
                 )
         except:
-            logger.info("语音解析错误")
+            logger.info(f"语音解析错误")
             raise HTTPException(
                 status_code=500,
                 detail=f"Asr server failed to parse",
             )
-
+        logger.info(f"语音解析结果 {response.status_code}  {response.json()}")
         if response.status_code != 200:
             raise HTTPException(
                 status_code=500,
