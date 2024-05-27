@@ -1,6 +1,7 @@
 # This is a simple example of a chainlit app.
 
 import json
+import os
 import uuid
 from typing import List
 
@@ -67,21 +68,24 @@ async def choiceBranch(res, choices: List[LA]):
 @asr_method
 async def asrHook(filePath):
     async with aiofiles.open(filePath, "rb") as file:
-        files = {"file": file}
+        files = {"file": (os.path.basename(filePath), await file.read(), "audio/voice")}
         try:
-            async with httpx.AsyncClient() as client:
-                logger.info("语音解析")
+            timeout = httpx.Timeout(
+                connect=30.0,  # 连接超时
+                read=30.0,  # 读取超时
+                write=30.0,  # 写入超时
+                pool=5.0,  # 连接池获取连接的超时
+            )
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 # 发送POST请求
                 response = await client.post(
                     "http://dev.siro-info.com:8000/v1/audio/transcriptions", files=files
                 )
-        except:
-            logger.info(f"语音解析错误")
+        except Exception as e:
             raise HTTPException(
                 status_code=500,
                 detail=f"Asr server failed to parse",
             )
-        logger.info(f"语音解析结果 {response.status_code}  {response.json()}")
         if response.status_code != 200:
             raise HTTPException(
                 status_code=500,
@@ -103,7 +107,13 @@ async def ttsHook(content, params):
         "language": params["language"],
     }
     try:
-        async with httpx.AsyncClient() as client:
+        timeout = httpx.Timeout(
+            connect=30.0,  # 连接超时
+            read=30.0,  # 读取超时
+            write=30.0,  # 写入超时
+            pool=5.0,  # 连接池获取连接的超时
+        )
+        async with httpx.AsyncClient(timeout) as client:
             response = await client.get(url, params=params)
     except:
         print("文本解析失败")
