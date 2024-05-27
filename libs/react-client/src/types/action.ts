@@ -14,11 +14,10 @@ export interface IListAction {
   forId: string;
   id: string;
   onClick: () => void;
-}
-
-export interface IChoiceAction extends IListAction {
   data: any;
 }
+
+export type IChoiceAction = IListAction;
 
 export interface IExternalAction extends IListAction {
   label: string;

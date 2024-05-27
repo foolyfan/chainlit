@@ -24,9 +24,7 @@ interface Props {
 
 export const MessageListActions = ({ message, listActions, layout }: Props) => {
   const [choiceActions, setChoiceActions] = useState<IChoiceAction[]>([]);
-  const [externalAction, setExternalAction] = useState<
-    IExternalAction | undefined
-  >(undefined);
+  const [externalActions, setExternalActions] = useState<IExternalAction[]>([]);
   const [choiceImageActions, setChoiceImageActions] = useState<
     IChoiceImageAction[]
   >([]);
@@ -41,6 +39,7 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
     const len = listActions.length;
     const tChoiceActions = [];
     const tChoiceImageActions = [];
+    const tChoiceExternalActions = [];
     for (let index = 0; index < len; index++) {
       const action = listActions[index];
       switch (action.type) {
@@ -48,7 +47,7 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
           tChoiceActions.push(action as IChoiceAction);
           break;
         case 'external':
-          setExternalAction(action as IExternalAction);
+          tChoiceExternalActions.push(action as IExternalAction);
           break;
         case 'image':
           tChoiceImageActions.push(action as IChoiceImageAction);
@@ -58,9 +57,10 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
       }
       setChoiceActions(tChoiceActions);
       setChoiceImageActions(tChoiceImageActions);
+      setExternalActions(tChoiceExternalActions);
     }
   }, [listActions]);
-  const show = choiceActions || externalAction || choiceImageActions;
+  const show = choiceActions || externalActions || choiceImageActions;
 
   if (!show) {
     return null;
@@ -83,15 +83,6 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
           onClick={handleClick}
         />
       ) : null}
-      {externalAction ? (
-        <Button
-          variant="outlined"
-          sx={{ width: '100%', marginTop: '20px' }}
-          onClick={() => handleClick(externalAction)}
-        >
-          {externalAction.label}
-        </Button>
-      ) : null}
       {choiceImageActions.length ? (
         <ListWithSize
           elements={choiceImageActions}
@@ -103,6 +94,17 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
           )}
         />
       ) : null}
+      {externalActions
+        ? externalActions.map((externalAction) => (
+            <Button
+              variant="outlined"
+              sx={{ width: '100%', marginTop: '20px' }}
+              onClick={() => handleClick(externalAction)}
+            >
+              {externalAction.label}
+            </Button>
+          ))
+        : null}
     </>
   );
 };

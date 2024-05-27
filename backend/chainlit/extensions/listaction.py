@@ -21,6 +21,8 @@ class ListAction(DataClassJsonMixin):
     # The ID of the action
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
 
+    data: dict = field(default_factory=dict)
+
     def __post_init__(self) -> None:
         trace_event(f"init {self.__class__.__name__}")
 
@@ -40,7 +42,6 @@ LA = TypeVar("LA", bound=ListAction)
 
 @dataclass
 class ChoiceAction(ListAction):
-    data: dict = field(default_factory=dict)
     type: ListActionType = "data"
 
 

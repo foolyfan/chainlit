@@ -313,29 +313,37 @@ async def main(message: Message):
                         "workData": "周一至周日:\n09:00-17:00",
                     }
                 ),
-                ExternalAction(label="新增网点"),
-                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
-                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
-                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
-                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
-                ChoiceImageAction(path="./voucher.png", imageName="凭证图片"),
+                ExternalAction(label="新增网点", data={"label": "新增网点按钮"}),
+                ExternalAction(label="新增网点", data={"label": "新增网点按钮"}),
+                ExternalAction(label="新增网点", data={"label": "新增网点按钮"}),
+                ChoiceImageAction(
+                    path="./voucher.png",
+                    imageName="凭证图片",
+                    data={"label": "凭证图片描述"},
+                ),
+                ChoiceImageAction(
+                    path="./voucher.png",
+                    imageName="凭证图片",
+                    data={"label": "凭证图片描述"},
+                ),
+                ChoiceImageAction(
+                    path="./voucher.png",
+                    imageName="凭证图片",
+                    data={"label": "凭证图片描述"},
+                ),
+                ChoiceImageAction(
+                    path="./voucher.png",
+                    imageName="凭证图片",
+                    data={"label": "凭证图片描述"},
+                ),
+                ChoiceImageAction(
+                    path="./voucher.png",
+                    imageName="凭证图片",
+                    data={"label": "凭证图片描述"},
+                ),
             ],
             choiceHook=choiceBranch,
-            speechContent="请选择",
         ).send()
-        if res is not None:
-            await Message(
-                content=f"根据您的要求，我将使用以下数据：\n网点名称：{res.data['name']}\n网点地址：{res.data['address']}\n作为选择开户机构的结果。"
-            ).send()
-            res = await AskActionMessage(
-                content="请确认以上开户机构信息",
-                actions=[
-                    Action(name="continue", value="continue", label="确认"),
-                    Action(name="cancel", value="cancel", label="取消"),
-                ],
-                choiceHook=choiceResultConfirm,
-                timeout=30,
-            ).send()
     if message.content == "14":
         speechContent = "程序意外终止"
         res = await AskUserMessage(
