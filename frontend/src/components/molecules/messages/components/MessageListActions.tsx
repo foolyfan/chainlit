@@ -1,5 +1,12 @@
 import cloneDeep from 'lodash/cloneDeep';
-import { memo, useCallback, useEffect, useState } from 'react';
+import {
+  RefObject,
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 
 import { Button } from '@mui/material';
 
@@ -23,6 +30,7 @@ interface Props {
   message: IStep;
   listActions: IListAction[];
   layout?: IChoiceLayout[];
+  ref: RefObject<any>;
 }
 
 const MemoListActions = memo(
@@ -123,7 +131,9 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
   const [displayMessage, setDisplayMessage] = useState<IStep | undefined>(
     undefined
   );
-  const { stopPlayer } = useChatContext();
+  const { stopPlayer, setActionRef } = useChatContext();
+
+  const ref = useRef({ toHistory: () => setHistory(true) });
 
   useEffect(() => {
     setDisplayMessage({ ...message });
@@ -140,6 +150,8 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
     if (!(listActions.length && listActions[0].forId == displayMessage?.id)) {
       return;
     }
+    setActionRef(ref);
+
     setDisplayListActions(cloneDeep(listActions));
   }, [listActions, displayMessage]);
 

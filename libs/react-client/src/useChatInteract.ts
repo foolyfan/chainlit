@@ -45,7 +45,7 @@ const useChatInteract = () => {
   const setTokenCount = useSetRecoilState(tokenCountState);
   const setIdToResume = useSetRecoilState(threadIdToResumeState);
 
-  const { stopPlayer } = useChatContext();
+  const { stopPlayer, actionRef } = useChatContext();
 
   const clear = useCallback(() => {
     session?.socket.emit('clear_session');
@@ -92,6 +92,11 @@ const useChatInteract = () => {
         }
         console.log('reply message', responseMessage || message);
         askUser.callback(responseMessage || message);
+        console.log('reply actionRef', actionRef);
+
+        if (actionRef) {
+          actionRef.current.toHistory();
+        }
       }
       if (gatherCommand) {
         gatherCommand.callback(gatherCommand.spec);

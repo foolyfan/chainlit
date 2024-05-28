@@ -1,10 +1,12 @@
 import { isEmpty } from 'lodash';
 import {
   ReactNode,
+  RefObject,
   createContext,
   useCallback,
   useContext,
-  useEffect
+  useEffect,
+  useRef
 } from 'react';
 import { useRecoilValue } from 'recoil';
 
@@ -21,6 +23,8 @@ interface ChatProviderProps {
 }
 interface ChatContextType {
   stopPlayer: () => void;
+  actionRef: React.RefObject<any>;
+  setActionRef: (ref: React.RefObject<any>) => void;
 }
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
@@ -62,8 +66,15 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
     audioPlayer?.stop();
   }, []);
 
+  const actionRef = useRef<any | undefined>(undefined);
+  const setActionRef = useCallback((ref: RefObject<any>) => {
+    console.log('setActionRef');
+
+    actionRef.current = ref.current;
+  }, []);
+
   return (
-    <ChatContext.Provider value={{ stopPlayer }}>
+    <ChatContext.Provider value={{ stopPlayer, actionRef, setActionRef }}>
       {children}
     </ChatContext.Provider>
   );
