@@ -129,16 +129,14 @@ const Message = memo(
                 {!isRunning && isLast && isAsk && (
                   <AskUploadButton onError={onError} />
                 )}
-                {actions?.length ? (
-                  <MessageActions message={message} actions={actions} />
-                ) : null}
-                {listActions?.length ? (
+                {<MessageActions message={message} actions={actions} />}
+                {
                   <MessageListActions
                     layout={layout}
                     message={message}
                     listActions={listActions}
                   />
-                ) : null}
+                }
                 <MessageButtons message={message} />
               </Stack>
             </Author>

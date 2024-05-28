@@ -1,3 +1,6 @@
+import { MessageContext } from 'contexts/MessageContext';
+import { useCallback, useContext, useEffect, useState } from 'react';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
@@ -12,17 +15,46 @@ interface Props {
 }
 
 const MessageActions = ({ message, actions }: Props) => {
-  const scopedActions = actions.filter((a) => {
-    if (a.forId) {
-      return a.forId === message.id;
+  const [displayedActions, setDisplayedActions] = useState<IAction[]>([]);
+  const [displayedDrawerActions, setDisplayedDrawerActions] = useState<
+    IAction[]
+  >([]);
+
+  const { askUser } = useContext(MessageContext);
+
+  const [history, setHistory] = useState<boolean>(false);
+  useEffect(() => {
+    const scopedActions = actions.filter((a) => {
+      if (a.forId) {
+        return a.forId === message.id;
+      }
+      return true;
+    });
+    if (!scopedActions.length) {
+      return;
     }
-    return true;
-  });
+    if (actions.length < displayedActions.length) {
+      setHistory(true);
+      return;
+    }
+    setDisplayedActions(scopedActions.filter((a) => !a.collapsed));
+    setDisplayedDrawerActions(scopedActions.filter((a) => a.collapsed));
+  }, [actions]);
 
-  const displayedActions = scopedActions.filter((a) => !a.collapsed);
-  const drawerActions = scopedActions.filter((a) => a.collapsed);
+  const show =
+    displayedActions.length || displayedDrawerActions.length || history;
 
-  const show = displayedActions.length || drawerActions.length;
+  const handleClick = useCallback((action: IAction) => {
+    if (history) {
+      return;
+    }
+    askUser?.callback({
+      id: action.id,
+      forId: action.forId,
+      value: action.id,
+      type: 'click'
+    });
+  }, []);
 
   if (!show) {
     return null;
@@ -42,10 +74,12 @@ const MessageActions = ({ message, actions }: Props) => {
             key={action.id}
             action={action}
             margin={'2px 8px 6px 0'}
+            onClick={() => handleClick(action)}
+            display={history}
           />
         ))}
-        {drawerActions.length ? (
-          <ActionDrawerButton actions={drawerActions} />
+        {displayedDrawerActions.length ? (
+          <ActionDrawerButton actions={displayedDrawerActions} />
         ) : null}
       </Box>
     </Stack>

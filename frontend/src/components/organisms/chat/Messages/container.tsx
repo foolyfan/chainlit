@@ -41,6 +41,7 @@ interface Props {
   callAction?: (action: IAction) => void;
   callListAction?: (action: IListAction) => void;
   setAutoScroll?: (autoScroll: boolean) => void;
+  hidden?: boolean;
 }
 
 const MessageContainer = memo(
@@ -56,7 +57,8 @@ const MessageContainer = memo(
     onFeedbackUpdated,
     callAction,
     callListAction,
-    setAutoScroll
+    setAutoScroll,
+    hidden
   }: Props) => {
     const appSettings = useRecoilValue(settingsState);
     const projectSettings = useRecoilValue(projectSettingsState);
@@ -215,6 +217,7 @@ const MessageContainer = memo(
         autoScroll={autoScroll}
         setAutoScroll={setAutoScroll}
         context={memoizedContext}
+        hidden={hidden}
       />
     );
   }

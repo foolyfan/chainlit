@@ -149,23 +149,27 @@ const Messages = ({
       allowHtml={projectSettings?.features?.unsafe_allow_html}
       latex={projectSettings?.features?.latex}
     />
-  ) : gatherCommand ? (
-    <CommandContainer gatherCommand={gatherCommand} />
   ) : (
-    <MessageContainer
-      avatars={avatars}
-      loading={loading}
-      askUser={askUser}
-      actions={actions}
-      listActions={listActions}
-      elements={elements}
-      messages={messages}
-      autoScroll={autoScroll}
-      onFeedbackUpdated={onFeedbackUpdated}
-      callAction={callActionWithToast}
-      callListAction={callListActionWithToast}
-      setAutoScroll={setAutoScroll}
-    />
+    <>
+      {gatherCommand ? (
+        <CommandContainer gatherCommand={gatherCommand} />
+      ) : null}
+      <MessageContainer
+        avatars={avatars}
+        loading={loading}
+        askUser={askUser}
+        actions={actions}
+        listActions={listActions}
+        elements={elements}
+        messages={messages}
+        autoScroll={autoScroll}
+        onFeedbackUpdated={onFeedbackUpdated}
+        callAction={callActionWithToast}
+        callListAction={callListActionWithToast}
+        setAutoScroll={setAutoScroll}
+        hidden={!!gatherCommand}
+      />
+    </>
   );
 };
 

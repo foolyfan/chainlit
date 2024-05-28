@@ -23,6 +23,7 @@ interface Props {
   messages: IStep[];
   layout?: ILayout;
   setAutoScroll?: (autoScroll: boolean) => void;
+  hidden?: boolean;
 }
 
 const MessageContainer = memo(
@@ -34,7 +35,8 @@ const MessageContainer = memo(
     elements,
     messages,
     layout,
-    setAutoScroll
+    setAutoScroll,
+    hidden
   }: Props) => {
     const ref = useRef<HTMLDivElement>();
 
@@ -58,7 +60,7 @@ const MessageContainer = memo(
         <Box
           ref={ref}
           position="relative"
-          display="flex"
+          display={hidden ? 'none' : 'flex'}
           flexDirection="column"
           flexGrow={1}
           sx={{

@@ -10,20 +10,19 @@ interface ActionProps {
   action: IAction;
   margin: number | string;
   onClick?: () => void;
+  display?: boolean;
 }
 
-const ActionButton = ({ action, margin, onClick }: ActionProps) => {
+const ActionButton = ({ action, margin, onClick, display }: ActionProps) => {
   const { askUser, loading } = useContext(MessageContext);
   const isAskingAction = askUser?.spec.type === 'action';
   const isDisabled = isAskingAction && !askUser?.spec.keys?.includes(action.id);
   const handleClick = () => {
+    if (display) {
+      return;
+    }
     if (isAskingAction) {
-      askUser?.callback({
-        id: action.id,
-        forId: action.forId,
-        value: action.id,
-        type: 'click'
-      });
+      onClick?.();
     } else {
       action.onClick();
       onClick?.();
