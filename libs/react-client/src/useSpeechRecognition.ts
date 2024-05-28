@@ -17,6 +17,7 @@ const base64ToBlob = (data: string) => {
 
 const useSpeechRecognition = () => {
   const [file, setFile] = useState<Blob | undefined>(undefined);
+  const [short, setShort] = useState<boolean>(false);
   const startListening = useCallback(() => {
     jsbridge.invoke('audioApi.startRecord', '', () => {});
   }, []);
@@ -24,13 +25,18 @@ const useSpeechRecognition = () => {
     jsbridge.invoke('audioApi.stopRecord', '', (res) => {
       const { ret, data, errMsg } = JSON.parse(res);
       console.log(`stopRecord ret ${ret} errMsg ${errMsg}`);
+      setShort(false);
       if (ret == 8) {
         setFile(base64ToBlob(data));
+      }
+      if (ret == 4) {
+        setShort(true);
       }
     });
   }, []);
   return {
     file,
+    short,
     stopListening,
     startListening
   };

@@ -1,5 +1,6 @@
 import { apiClient } from 'api';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@mui/material';
 
@@ -12,10 +13,15 @@ interface Props {
 
 const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
   const { sessionId } = useChatSession();
-  const { file, startListening, stopListening } = useSpeechRecognition();
+  const { file, short, startListening, stopListening } = useSpeechRecognition();
   const [speechRecognitionRuning, setSpeechRecognitionRuning] =
     useState<boolean>(false);
   useEffect(() => {
+    if (short) {
+      setSpeechRecognitionRuning(false);
+      toast.info('说话时间太短');
+      return;
+    }
     if (file) {
       apiClient
         .asrMethod(file as File, () => {}, sessionId)
@@ -26,11 +32,14 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
           console.error('asr error:', error);
         })
         .finally(() => {
-          onSpeechRecognitionRuning(false);
           setSpeechRecognitionRuning(false);
         });
     }
-  }, [file]);
+  }, [file, short]);
+
+  useEffect(() => {
+    onSpeechRecognitionRuning(speechRecognitionRuning);
+  }, [speechRecognitionRuning]);
 
   return (
     <Button
@@ -54,13 +63,11 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
       onKeyUp={() => startListening()}
       onKeyDown={() => {
         setSpeechRecognitionRuning(true);
-        onSpeechRecognitionRuning(true);
         stopListening();
       }}
       onTouchStart={() => startListening()}
       onTouchEnd={() => {
         setSpeechRecognitionRuning(true);
-        onSpeechRecognitionRuning(true);
         stopListening();
       }}
     >

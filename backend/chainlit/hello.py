@@ -113,7 +113,7 @@ async def ttsHook(content, params):
             write=30.0,  # 写入超时
             pool=5.0,  # 连接池获取连接的超时
         )
-        async with httpx.AsyncClient(timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.get(url, params=params)
     except:
         print("文本解析失败")
@@ -364,3 +364,15 @@ async def main(message: Message):
             choiceHook=choiceResultConfirm,
             speechContent="请点击",
         ).send()
+    if message.content == "17":
+        while True:
+            # 循环体的代码
+            res = await AskUserMessage(
+                content="你好，请录入你的姓名!",
+                timeout=30,
+                speechContent="你好，请录入你的姓名",
+            ).send()
+
+            # 检查条件
+            if res is None:
+                break
