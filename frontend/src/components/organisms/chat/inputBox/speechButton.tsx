@@ -4,7 +4,11 @@ import { toast } from 'sonner';
 
 import { Button } from '@mui/material';
 
-import { useChatSession, useSpeechRecognition } from 'client-types/*';
+import {
+  useChatContext,
+  useChatSession,
+  useSpeechRecognition
+} from 'client-types/*';
 
 interface Props {
   onSpeech: (text: string) => void;
@@ -14,6 +18,7 @@ interface Props {
 const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
   const { sessionId } = useChatSession();
   const { file, short, startListening, stopListening } = useSpeechRecognition();
+  const { stopPlayer } = useChatContext();
   const [speechRecognitionRuning, setSpeechRecognitionRuning] =
     useState<boolean>(false);
   useEffect(() => {
@@ -41,6 +46,16 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
     onSpeechRecognitionRuning(speechRecognitionRuning);
   }, [speechRecognitionRuning]);
 
+  const handleStart = () => {
+    stopPlayer();
+    startListening();
+  };
+
+  const handleEnd = () => {
+    setSpeechRecognitionRuning(true);
+    stopListening();
+  };
+
   return (
     <Button
       disabled={speechRecognitionRuning}
@@ -60,16 +75,10 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
           backgroundColor: '#F80061'
         }
       }}
-      onKeyUp={() => startListening()}
-      onKeyDown={() => {
-        setSpeechRecognitionRuning(true);
-        stopListening();
-      }}
-      onTouchStart={() => startListening()}
-      onTouchEnd={() => {
-        setSpeechRecognitionRuning(true);
-        stopListening();
-      }}
+      onKeyUp={handleEnd}
+      onKeyDown={handleStart}
+      onTouchStart={handleStart}
+      onTouchEnd={handleEnd}
     >
       {speechRecognitionRuning ? '语音解析中...' : '按住说话'}
     </Button>

@@ -9,7 +9,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { Box, IconButton, Stack, TextField } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
 
-import { FileSpec, useChatData } from '@chainlit/react-client';
+import { FileSpec, useChatContext, useChatData } from '@chainlit/react-client';
 
 import { Attachments } from 'components/molecules/attachments';
 
@@ -42,6 +42,8 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
   const [pSettings] = useRecoilState(projectSettingsState);
   const setInputHistory = useSetRecoilState(inputHistoryState);
   const setChatSettingsOpen = useSetRecoilState(chatSettingsOpenState);
+
+  const { stopPlayer } = useChatContext();
 
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -148,7 +150,6 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
 
   useEffect(() => {
     if (value != '' && inputState == 'speech') {
-      console.log('22222222value', value);
       submit();
     }
   }, [value]);
@@ -251,6 +252,7 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
             onCompositionEnd={() => setIsComposing(false)}
             value={value}
             fullWidth
+            onFocus={stopPlayer}
             InputProps={{
               disableUnderline: true,
               startAdornment: (

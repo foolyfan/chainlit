@@ -36,6 +36,15 @@ class AudioPlayer {
     this.audioSource.connect(this.audioContext.destination);
     this.audioSource.start();
   }
+
+  stop() {
+    if (this.audioSource) {
+      this.audioSource.disconnect();
+    }
+    if (this.audioContext) {
+      this.audioContext.close();
+    }
+  }
 }
 
 export const audioPlayer: AudioPlayer | undefined = AudioPlayer.supported

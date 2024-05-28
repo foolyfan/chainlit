@@ -22,6 +22,7 @@ import { IAction, IAskResponse, IFileRef, IListAction, IStep } from 'src/types';
 import { addMessage } from 'src/utils/message';
 
 import { ChainlitAPI } from './api';
+import { useChatContext } from './chatContext';
 
 const useChatInteract = () => {
   const accessToken = useRecoilValue(accessTokenState);
@@ -44,6 +45,8 @@ const useChatInteract = () => {
   const setTokenCount = useSetRecoilState(tokenCountState);
   const setIdToResume = useSetRecoilState(threadIdToResumeState);
 
+  const { stopPlayer } = useChatContext();
+
   const clear = useCallback(() => {
     session?.socket.emit('clear_session');
     session?.socket.disconnect();
@@ -62,6 +65,7 @@ const useChatInteract = () => {
 
   const sendMessage = useCallback(
     (message: IStep, fileReferences?: IFileRef[]) => {
+      stopPlayer();
       setMessages((oldMessages) => addMessage(oldMessages, message));
       console.log('emit ui_message', message);
       session?.socket.emit('ui_message', { message, fileReferences });
@@ -71,6 +75,7 @@ const useChatInteract = () => {
 
   const replyMessage = useCallback(
     (message: IStep) => {
+      stopPlayer();
       if (askUser) {
         setMessages((oldMessages) => addMessage(oldMessages, message));
         let responseMessage: IAskResponse | undefined = undefined;
@@ -175,8 +180,8 @@ const useChatInteract = () => {
     callAction,
     callListAction,
     clear,
-    replyMessage,
     sendMessage,
+    replyMessage,
     stopTask,
     setIdToResume,
     updateChatSettings

@@ -58,7 +58,9 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
     }
   }, [speechPrompt]);
 
-  const stopPlayer = useCallback(() => {}, []);
+  const stopPlayer = useCallback(() => {
+    audioPlayer?.stop();
+  }, []);
 
   return (
     <ChatContext.Provider value={{ stopPlayer }}>

@@ -10,9 +10,11 @@ import {
   IExternalAction,
   IListAction,
   type IStep,
+  useChatContext,
   useChatData
 } from '@chainlit/react-client';
 
+import { ActionMask } from './ActionMask';
 import { ListWithSize } from './ListWithSize';
 import { MessageImageAction } from './MessageImageAction';
 import { DataListAction } from './listactions/DataListAction';
@@ -116,30 +118,34 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
     []
   );
   const [displayLayout, setDisplayLayout] = useState<IChoiceLayout[]>([]);
-  const [history, setHistory] = useState<boolean>(false);
   const { askUser } = useChatData();
+  const [history, setHistory] = useState<boolean>(false);
+  const [displayMessage, setDisplayMessage] = useState<IStep | undefined>(
+    undefined
+  );
+  const { stopPlayer } = useChatContext();
+
   useEffect(() => {
-    if (
-      askUser?.spec.type !== 'list_action' &&
-      listActions.length &&
-      listActions[0].forId !== message.id
-    ) {
-      return;
-    }
-    if (listActions.length < displayListActions.length) {
-      setHistory(true);
-      return;
-    }
+    setDisplayMessage({ ...message });
     if (layout) {
       setDisplayLayout([...layout]);
     }
-    setDisplayListActions(cloneDeep(listActions));
-  }, [listActions]);
+  }, []);
 
-  const handleClick = useCallback((action: IListAction) => {
-    if (history) {
+  useEffect(() => {
+    if (askUser?.spec.type !== 'list_action') {
       return;
     }
+
+    if (!(listActions.length && listActions[0].forId == displayMessage?.id)) {
+      return;
+    }
+    setDisplayListActions(cloneDeep(listActions));
+  }, [listActions, displayMessage]);
+
+  const handleClick = useCallback((action: IListAction) => {
+    setHistory(true);
+    stopPlayer();
     askUser?.callback({
       id: action.id,
       forId: action.forId,
@@ -147,11 +153,15 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
       value: action.id
     });
   }, []);
+
   return (
-    <MemoListActions
-      listActions={displayListActions}
-      layout={displayLayout}
-      onClick={handleClick}
-    />
+    <>
+      {displayListActions.length ? <ActionMask show={history} /> : null}
+      <MemoListActions
+        listActions={displayListActions}
+        layout={displayLayout}
+        onClick={handleClick}
+      />
+    </>
   );
 };
