@@ -112,8 +112,8 @@ export class APIBase {
     }
   }
 
-  async get(endpoint: string, token?: string) {
-    return await this.fetch('GET', endpoint, token);
+  async get(endpoint: string, token?: string, signal?: AbortSignal) {
+    return await this.fetch('GET', endpoint, token, undefined, signal);
   }
 
   async post(
@@ -347,9 +347,14 @@ export class ChainlitAPI extends APIBase {
     return { xhr, promise };
   }
 
-  async ttsMethod(content: string, sessionId: string, token?: string) {
+  async ttsMethod(
+    content: string,
+    sessionId: string,
+    signal?: AbortSignal,
+    token?: string
+  ) {
     const queryParams = `?session_id=${sessionId}&content=${content}`;
 
-    return await this.get(`/project/tts${queryParams}`, token);
+    return await this.get(`/project/tts${queryParams}`, token, signal);
   }
 }

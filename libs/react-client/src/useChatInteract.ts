@@ -45,7 +45,7 @@ const useChatInteract = () => {
   const setTokenCount = useSetRecoilState(tokenCountState);
   const setIdToResume = useSetRecoilState(threadIdToResumeState);
 
-  const { stopPlayer, actionRef } = useChatContext();
+  const { abortAudioTask, actionRef } = useChatContext();
 
   const clear = useCallback(() => {
     session?.socket.emit('clear_session');
@@ -65,17 +65,17 @@ const useChatInteract = () => {
 
   const sendMessage = useCallback(
     (message: IStep, fileReferences?: IFileRef[]) => {
-      stopPlayer();
+      abortAudioTask();
       setMessages((oldMessages) => addMessage(oldMessages, message));
       console.log('emit ui_message', message);
       session?.socket.emit('ui_message', { message, fileReferences });
     },
-    [session?.socket]
+    [session?.socket, abortAudioTask]
   );
 
   const replyMessage = useCallback(
     (message: IStep) => {
-      stopPlayer();
+      abortAudioTask();
       if (askUser) {
         setMessages((oldMessages) => addMessage(oldMessages, message));
         let responseMessage: IAskResponse | undefined = undefined;
@@ -92,7 +92,6 @@ const useChatInteract = () => {
         }
         console.log('reply message', responseMessage || message);
         askUser.callback(responseMessage || message);
-        console.log('reply actionRef', actionRef);
 
         if (actionRef) {
           actionRef.current.toHistory();
@@ -102,7 +101,7 @@ const useChatInteract = () => {
         gatherCommand.callback(gatherCommand.spec);
       }
     },
-    [askUser, gatherCommand]
+    [askUser, gatherCommand, abortAudioTask]
   );
 
   const updateChatSettings = useCallback(

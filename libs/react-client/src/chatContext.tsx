@@ -6,7 +6,8 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef
+  useRef,
+  useState
 } from 'react';
 import { useRecoilValue } from 'recoil';
 
@@ -22,7 +23,7 @@ interface ChatProviderProps {
   client: ChainlitAPI;
 }
 interface ChatContextType {
-  stopPlayer: () => void;
+  abortAudioTask: () => void;
   actionRef: React.RefObject<any>;
   setActionRef: (ref: React.RefObject<any>) => void;
 }
@@ -35,6 +36,9 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
 }) => {
   const speechPrompt = useRecoilValue(speechPromptsState);
   const sessionId = useRecoilValue(sessionIdState);
+  const [ttsRuning, setTtsRuning] = useState<boolean>(false);
+  const ttsAbortRef = useRef<AbortController | undefined>(undefined);
+
   useEffect(() => {
     if (
       chatSettings?.features.text_to_speech?.enabled &&
@@ -42,15 +46,23 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
       audioPlayer
     ) {
       if (!isEmpty(speechPrompt.content)) {
+        abortAudioTask();
+        setTtsRuning(true);
         console.log('服务端tts');
+        const controller = new AbortController();
+        ttsAbortRef.current = controller;
         client
-          .ttsMethod(speechPrompt.content, sessionId)
+          .ttsMethod(speechPrompt.content, sessionId, controller.signal)
           .then((response) => response.arrayBuffer())
           .then((arrayBuffer) => {
+            console.log('音频资源加载完成');
             audioPlayer!.play(arrayBuffer);
           })
           .catch((error) => {
             console.log('play fail', error);
+          })
+          .finally(() => {
+            setTtsRuning(false);
           });
       } else {
         console.log('客户端tts');
@@ -62,19 +74,20 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
     }
   }, [speechPrompt]);
 
-  const stopPlayer = useCallback(() => {
+  const abortAudioTask = useCallback(() => {
     audioPlayer?.stop();
-  }, []);
+    if (ttsRuning) {
+      ttsAbortRef.current?.abort('中断tts请求');
+    }
+  }, [ttsRuning, ttsAbortRef]);
 
   const actionRef = useRef<any | undefined>(undefined);
   const setActionRef = useCallback((ref: RefObject<any>) => {
-    console.log('setActionRef');
-
     actionRef.current = ref.current;
   }, []);
 
   return (
-    <ChatContext.Provider value={{ stopPlayer, actionRef, setActionRef }}>
+    <ChatContext.Provider value={{ abortAudioTask, actionRef, setActionRef }}>
       {children}
     </ChatContext.Provider>
   );

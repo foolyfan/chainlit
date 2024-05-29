@@ -66,6 +66,10 @@ async def choiceBranch(res, choices: List[LA]):
 
 
 @asr_method
+async def asrHook_local(filePath):
+    return "语音解析结果"
+
+
 async def asrHook(filePath):
     async with aiofiles.open(filePath, "rb") as file:
         files = {"file": (os.path.basename(filePath), await file.read(), "audio/voice")}
@@ -97,6 +101,31 @@ async def asrHook(filePath):
 
 
 @tts_method
+async def ttshook_local(content, params):
+    file_path = "c:\\Users\\22571\\workspace\\company\\chainlit-workspace\\111.wav"
+
+    async def file_iterator(file_path):
+        try:
+            async with aiofiles.open(file_path, "rb") as f:
+                # 模拟加载资源慢
+                # bufferSize = 1024
+                bufferSize = 1024 * 1024
+                while True:
+                    chunk = await f.read(bufferSize)
+                    if not chunk:
+                        break
+                    yield chunk
+        except GeneratorExit:
+            logger.info("客户端断开连接")
+            raise
+
+    return StreamingResponse(
+        file_iterator(file_path),
+        media_type="audio/wav",
+        headers={"X-File-ID": str(uuid.uuid4())},
+    )
+
+
 async def ttsHook(content, params):
     url = "http://dev.siro-info.com:8000/voice"
     logger.info(f"文本解析 {content}")
@@ -123,8 +152,12 @@ async def ttsHook(content, params):
         logger.info("文本解析成功")
 
         async def iterfile():
-            async for chunk in response.aiter_bytes():
-                yield chunk
+            try:
+                async for chunk in response.aiter_bytes():
+                    yield chunk
+            except GeneratorExit:
+                logger.info("客户端断开连接")
+                raise
 
         return StreamingResponse(
             iterfile(),
@@ -306,36 +339,7 @@ async def main(message: Message):
                         "workData": "周一至周日:\n09:00-17:00",
                     }
                 ),
-                ChoiceAction(
-                    data={
-                        "name": "北京国际大厦支行",
-                        "address": "北京市朝阳区建外街道建国门外大街19号",
-                        "workData": "周一至周日:\n09:00-17:00",
-                    }
-                ),
                 ExternalAction(label="新增网点", data={"label": "新增网点按钮"}),
-                ExternalAction(label="新增网点", data={"label": "新增网点按钮"}),
-                ExternalAction(label="新增网点", data={"label": "新增网点按钮"}),
-                ChoiceImageAction(
-                    path="./voucher.png",
-                    imageName="凭证图片",
-                    data={"label": "凭证图片描述"},
-                ),
-                ChoiceImageAction(
-                    path="./voucher.png",
-                    imageName="凭证图片",
-                    data={"label": "凭证图片描述"},
-                ),
-                ChoiceImageAction(
-                    path="./voucher.png",
-                    imageName="凭证图片",
-                    data={"label": "凭证图片描述"},
-                ),
-                ChoiceImageAction(
-                    path="./voucher.png",
-                    imageName="凭证图片",
-                    data={"label": "凭证图片描述"},
-                ),
                 ChoiceImageAction(
                     path="./voucher.png",
                     imageName="凭证图片",
@@ -343,7 +347,9 @@ async def main(message: Message):
                 ),
             ],
             choiceHook=choiceBranch,
+            speechContent="请选择",
         ).send()
+        res = await Message(content="选择完成").send()
     if message.content == "14":
         speechContent = "程序意外终止"
         res = await AskUserMessage(
@@ -351,28 +357,23 @@ async def main(message: Message):
         ).send()
     if message.content == "15":
         speechContent = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
-        res = await Message(
-            content="你好，请录入你的姓名!", speechContent=speechContent
-        ).send()
+        res = await Message(content="一条消息", speechContent=speechContent).send()
     if message.content == "16":
         res = await AskActionMessage(
             content="Pick an action!",
             actions=[
-                Action(name="continue", value="continue", label="✅ Continue"),
-                Action(name="cancel", value="cancel", label="❌ Cancel"),
+                Action(name="continue", value="continue", label="确认"),
+                Action(name="cancel", value="cancel", label="取消"),
             ],
             choiceHook=choiceResultConfirm,
             speechContent="请点击",
         ).send()
     if message.content == "17":
         while True:
-            # 循环体的代码
             res = await AskUserMessage(
                 content="你好，请录入你的姓名!",
                 timeout=30,
-                speechContent="你好，请录入你的姓名",
+                speechContent="长亭外，古道边，芳草碧连天。晚风拂柳笛声残，夕阳山外山。天之涯，地之角，知交半零落",
             ).send()
-
-            # 检查条件
             if res is None:
                 break

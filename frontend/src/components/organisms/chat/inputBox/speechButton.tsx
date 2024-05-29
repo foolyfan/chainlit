@@ -18,7 +18,7 @@ interface Props {
 const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
   const { sessionId } = useChatSession();
   const { file, short, startListening, stopListening } = useSpeechRecognition();
-  const { stopPlayer } = useChatContext();
+  const { abortAudioTask } = useChatContext();
   const [speechRecognitionRuning, setSpeechRecognitionRuning] =
     useState<boolean>(false);
   useEffect(() => {
@@ -47,7 +47,7 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
   }, [speechRecognitionRuning]);
 
   const handleStart = () => {
-    stopPlayer();
+    abortAudioTask();
     startListening();
   };
 

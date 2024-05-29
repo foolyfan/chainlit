@@ -1,12 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep';
-import {
-  RefObject,
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@mui/material';
 
@@ -30,7 +23,6 @@ interface Props {
   message: IStep;
   listActions: IListAction[];
   layout?: IChoiceLayout[];
-  ref: RefObject<any>;
 }
 
 const MemoListActions = memo(
@@ -131,7 +123,7 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
   const [displayMessage, setDisplayMessage] = useState<IStep | undefined>(
     undefined
   );
-  const { stopPlayer, setActionRef } = useChatContext();
+  const { abortAudioTask, setActionRef } = useChatContext();
 
   const ref = useRef({ toHistory: () => setHistory(true) });
 
@@ -155,16 +147,19 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
     setDisplayListActions(cloneDeep(listActions));
   }, [listActions, displayMessage]);
 
-  const handleClick = useCallback((action: IListAction) => {
-    setHistory(true);
-    stopPlayer();
-    askUser?.callback({
-      id: action.id,
-      forId: action.forId,
-      type: 'click',
-      value: action.id
-    });
-  }, []);
+  const handleClick = useCallback(
+    (action: IListAction) => {
+      setHistory(true);
+      abortAudioTask();
+      askUser?.callback({
+        id: action.id,
+        forId: action.forId,
+        type: 'click',
+        value: action.id
+      });
+    },
+    [abortAudioTask, askUser]
+  );
 
   return (
     <>

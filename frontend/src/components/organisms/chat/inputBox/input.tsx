@@ -43,7 +43,7 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
   const setInputHistory = useSetRecoilState(inputHistoryState);
   const setChatSettingsOpen = useSetRecoilState(chatSettingsOpenState);
 
-  const { stopPlayer } = useChatContext();
+  const { abortAudioTask } = useChatContext();
 
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -252,7 +252,7 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
             onCompositionEnd={() => setIsComposing(false)}
             value={value}
             fullWidth
-            onFocus={stopPlayer}
+            onFocus={abortAudioTask}
             InputProps={{
               disableUnderline: true,
               startAdornment: (
