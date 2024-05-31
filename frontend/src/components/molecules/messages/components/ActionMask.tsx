@@ -16,11 +16,12 @@ export const ActionMask = memo(
         left={0}
         width="100%"
         height="100%"
-        bgcolor="rgba(0, 0, 0, 0.5)"
+        bgcolor="rgba(232, 232, 232, 0.3)"
         zIndex={1300}
         alignItems="center"
         justifyContent="center"
         onClick={onClick}
+        borderRadius={1}
       ></Stack>
     ) : null;
   }

@@ -1,5 +1,5 @@
 import { apiClient } from 'api';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@mui/material';
@@ -8,7 +8,7 @@ import {
   useChatContext,
   useChatSession,
   useSpeechRecognition
-} from 'client-types/*';
+} from '@chainlit/react-client';
 
 interface Props {
   onSpeech: (text: string) => void;
@@ -17,7 +17,8 @@ interface Props {
 
 const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
   const { sessionId } = useChatSession();
-  const { file, short, startListening, stopListening } = useSpeechRecognition();
+  const { file, short, error, startListening, stopListening } =
+    useSpeechRecognition();
   const { abortAudioTask } = useChatContext();
   const [speechRecognitionRuning, setSpeechRecognitionRuning] =
     useState<boolean>(false);
@@ -46,15 +47,21 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
     onSpeechRecognitionRuning(speechRecognitionRuning);
   }, [speechRecognitionRuning]);
 
-  const handleStart = () => {
+  useEffect(() => {
+    if (error) {
+      setSpeechRecognitionRuning(false);
+    }
+  }, [error]);
+
+  const handleStart = useCallback(() => {
     abortAudioTask();
     startListening();
-  };
+  }, []);
 
-  const handleEnd = () => {
+  const handleEnd = useCallback(() => {
     setSpeechRecognitionRuning(true);
     stopListening();
-  };
+  }, []);
 
   return (
     <Button

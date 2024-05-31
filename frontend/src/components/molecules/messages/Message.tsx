@@ -129,14 +129,24 @@ const Message = memo(
                 {!isRunning && isLast && isAsk && (
                   <AskUploadButton onError={onError} />
                 )}
-                {<MessageActions message={message} actions={actions} />}
-                {
-                  <MessageListActions
-                    layout={layout}
-                    message={message}
-                    listActions={listActions}
-                  />
-                }
+                <Box
+                  sx={{
+                    position: 'relative',
+                    paddingBottom: 1,
+                    paddingTop: 1,
+                    marginTop: 1
+                  }}
+                >
+                  {<MessageActions message={message} actions={actions} />}
+                  {
+                    <MessageListActions
+                      layout={layout}
+                      message={message}
+                      listActions={listActions}
+                    />
+                  }
+                </Box>
+
                 <MessageButtons message={message} />
               </Stack>
             </Author>

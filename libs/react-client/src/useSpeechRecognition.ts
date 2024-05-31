@@ -18,25 +18,45 @@ const base64ToBlob = (data: string) => {
 const useSpeechRecognition = () => {
   const [file, setFile] = useState<Blob | undefined>(undefined);
   const [short, setShort] = useState<boolean>(false);
+  const [stopTimeout, setStopTimeout] = useState<NodeJS.Timeout | undefined>(
+    undefined
+  );
+  const [error, setError] = useState<string | undefined>();
+
   const startListening = useCallback(() => {
+    setShort(false);
+    setFile(undefined);
+    setError(undefined);
+    console.log('startListening');
     jsbridge.invoke('audioApi.startRecord', '', () => {});
   }, []);
   const stopListening = useCallback(() => {
+    if (stopTimeout) {
+      clearTimeout(stopTimeout);
+    }
+    setStopTimeout(
+      setTimeout(() => {
+        setError('本地语音库超时');
+      }, 5000)
+    );
+    console.log('stopListening');
     jsbridge.invoke('audioApi.stopRecord', '', (res) => {
       const { ret, data, errMsg } = JSON.parse(res);
       console.log(`stopRecord ret ${ret} errMsg ${errMsg}`);
-      setShort(false);
       if (ret == 8) {
         setFile(base64ToBlob(data));
-      }
-      if (ret == 4) {
+      } else if (ret == 4) {
         setShort(true);
+      } else {
+        setError('无效信息');
       }
     });
   }, []);
   return {
     file,
     short,
+    error,
+    setShort,
     stopListening,
     startListening
   };
