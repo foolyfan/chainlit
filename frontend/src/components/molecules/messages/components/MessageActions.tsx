@@ -43,10 +43,6 @@ const MessageActions = ({ message, actions }: Props) => {
     if (!scopedActions.length) {
       return;
     }
-    if (actions.length < displayedActions.length) {
-      setHistory(true);
-      return;
-    }
     setActionRef(ref);
     setDisplayedActions(scopedActions.filter((a) => !a.collapsed));
     setDisplayedDrawerActions(scopedActions.filter((a) => a.collapsed));
