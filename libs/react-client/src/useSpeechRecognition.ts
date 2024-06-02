@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { jsbridge } from './utils/speech';
 
@@ -17,46 +17,51 @@ const base64ToBlob = (data: string) => {
 
 const useSpeechRecognition = () => {
   const [file, setFile] = useState<Blob | undefined>(undefined);
-  const [short, setShort] = useState<boolean>(false);
   const [stopTimeout, setStopTimeout] = useState<NodeJS.Timeout | undefined>(
     undefined
   );
   const [error, setError] = useState<string | undefined>();
 
   const startListening = useCallback(() => {
-    setShort(false);
     setFile(undefined);
     setError(undefined);
     console.log('startListening');
     jsbridge.invoke('audioApi.startRecord', '', () => {});
   }, []);
   const stopListening = useCallback(() => {
+    console.log('stopListening');
     if (stopTimeout) {
       clearTimeout(stopTimeout);
     }
     setStopTimeout(
       setTimeout(() => {
-        setError('本地语音库超时');
+        setError('本地停止语音调用超时');
       }, 5000)
     );
-    console.log('stopListening');
-    jsbridge.invoke('audioApi.stopRecord', '', (res) => {
-      const { ret, data, errMsg } = JSON.parse(res);
-      console.log(`stopRecord ret ${ret} errMsg ${errMsg}`);
-      if (ret == 8) {
+
+    jsbridge.invokeStrict(
+      'audioApi.stopRecord',
+      '',
+      (res) => {
+        console.log('录音成功');
+        const { data } = JSON.parse(res);
         setFile(base64ToBlob(data));
-      } else if (ret == 4) {
-        setShort(true);
-      } else {
-        setError('无效信息');
+      },
+      (res) => {
+        console.log(`录音失败返回 ${res}`);
+        const { errMsg } = JSON.parse(res);
+        setError(errMsg);
       }
-    });
+    );
   }, []);
+  useEffect(() => {
+    if (error || file) {
+      clearTimeout(stopTimeout);
+    }
+  }, [error, file]);
   return {
     file,
-    short,
     error,
-    setShort,
     stopListening,
     startListening
   };

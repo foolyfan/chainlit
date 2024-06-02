@@ -17,15 +17,14 @@ interface Props {
 
 const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
   const { sessionId } = useChatSession();
-  const { file, short, error, startListening, stopListening } =
-    useSpeechRecognition();
+  const { file, error, startListening, stopListening } = useSpeechRecognition();
   const { abortAudioTask } = useChatContext();
   const [speechRecognitionRuning, setSpeechRecognitionRuning] =
     useState<boolean>(false);
   useEffect(() => {
-    if (short) {
+    if (error) {
       setSpeechRecognitionRuning(false);
-      toast.info('说话时间太短');
+      toast.info(`录音异常：${error}`);
       return;
     }
     if (file) {
@@ -41,17 +40,11 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
           setSpeechRecognitionRuning(false);
         });
     }
-  }, [file, short]);
+  }, [file, error]);
 
   useEffect(() => {
     onSpeechRecognitionRuning(speechRecognitionRuning);
   }, [speechRecognitionRuning]);
-
-  useEffect(() => {
-    if (error) {
-      setSpeechRecognitionRuning(false);
-    }
-  }, [error]);
 
   const handleStart = useCallback(() => {
     abortAudioTask();

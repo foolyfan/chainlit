@@ -14,6 +14,7 @@ export const DataListAction = ({ choiceActions, layout, onClick }: Props) => {
       {choiceActions.map((action, index) => {
         return (
           <ListItemButton
+            key={index}
             divider
             sx={{ bgcolor: 'white', marginTop: '10px' }}
             onClick={() => onClick(action)}
@@ -25,6 +26,7 @@ export const DataListAction = ({ choiceActions, layout, onClick }: Props) => {
                 sx={{ width: `${item.width}%`, flexGrow: 0, marginLeft: '5px' }}
               />
             ))}
+            <ListItemText />
           </ListItemButton>
         );
       })}

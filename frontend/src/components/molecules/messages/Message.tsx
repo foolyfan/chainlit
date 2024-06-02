@@ -132,6 +132,7 @@ const Message = memo(
                 <Box
                   sx={{
                     position: 'relative',
+                    width: '100%',
                     paddingBottom: 1,
                     paddingTop: 1,
                     marginTop: 1

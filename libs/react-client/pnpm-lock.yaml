@@ -25,10 +25,10 @@ importers:
         version: 18.2.0(react@18.2.0)
       recoil:
         specifier: ^0.7.7
-        version: 0.7.7(react-dom@18.2.0)(react@18.2.0)
+        version: 0.7.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       siro-face-jsbridge:
-        specifier: 2.0.22
-        version: 2.0.22
+        specifier: ^2.0.24
+        version: 2.0.24
       socket.io-client:
         specifier: ^4.7.2
         version: 4.7.2
@@ -1403,8 +1403,8 @@ packages:
   signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
 
-  siro-face-jsbridge@2.0.22:
-    resolution: {integrity: sha512-4moPGXbEGvWpOgGihGZozS/6hZQdDhuwvFjPlECmZUgyjD9v44PLz86pI2jVo/9sPKnhOgIBgHKUNJROw3JjWg==}
+  siro-face-jsbridge@2.0.24:
+    resolution: {integrity: sha512-BCL+SylsVFhlZPeGF2KJlRCTr74YilbjXv0yaMyX0mzHImK/0pom/IOmSixud+J/yuwhIWoeb0xHVTA51b6Vkw==}
 
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
@@ -3008,10 +3008,11 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
-  recoil@0.7.7(react-dom@18.2.0)(react@18.2.0):
+  recoil@0.7.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       hamt_plus: 1.0.2
       react: 18.2.0
+    optionalDependencies:
       react-dom: 18.2.0(react@18.2.0)
 
   redent@3.0.0:
@@ -3084,7 +3085,7 @@ snapshots:
 
   signal-exit@3.0.7: {}
 
-  siro-face-jsbridge@2.0.22: {}
+  siro-face-jsbridge@2.0.24: {}
 
   slash@3.0.0: {}
 
