@@ -40,7 +40,7 @@ const InputBox = memo(
     const setInputHistory = useSetRecoilState(inputHistoryState);
 
     const { user } = useAuth();
-    const { sendMessage, replyMessage } = useChatInteract();
+    const { sendMessage, replyMessage, addWaitingMessage } = useChatInteract();
     // const tokenCount = useRecoilValue(tokenCountState);
 
     const onSubmit = useCallback(
@@ -77,6 +77,7 @@ const InputBox = memo(
 
         setAutoScroll(true);
         sendMessage(message, fileReferences);
+        addWaitingMessage(projectSettings!.ui.name);
       },
       [user, projectSettings, sendMessage]
     );

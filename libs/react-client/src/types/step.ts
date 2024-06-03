@@ -11,7 +11,8 @@ type StepType =
   | 'embedding'
   | 'retrieval'
   | 'rerank'
-  | 'undefined';
+  | 'undefined'
+  | 'waiting';
 
 export interface IStep {
   id: string;

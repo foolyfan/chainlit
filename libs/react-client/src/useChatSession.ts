@@ -149,6 +149,13 @@ const useChatSession = () => {
 
       socket.on('new_message', (message: IStep) => {
         console.log('new_message', message);
+        setMessages((oldMessages) => {
+          const lastMessage = oldMessages.pop();
+          if (lastMessage?.type == 'waiting') {
+            return [...oldMessages];
+          }
+          return oldMessages;
+        });
         setMessages((oldMessages) => addMessage(oldMessages, message));
         if (!isEmpty(message.speechContent)) {
           setSpeechPrompts({
@@ -194,6 +201,13 @@ const useChatSession = () => {
 
       socket.on('ask', ({ msg, spec }, callback) => {
         console.log('ask msg', msg, spec);
+        setMessages((oldMessages) => {
+          const lastMessage = oldMessages.pop();
+          if (lastMessage?.type == 'waiting') {
+            return [...oldMessages];
+          }
+          return oldMessages;
+        });
         setAskUser({ spec, callback });
         setMessages((oldMessages) => addMessage(oldMessages, msg));
         if (!isEmpty(msg.speechContent)) {

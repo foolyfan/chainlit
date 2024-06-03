@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 import uuid
 from typing import List
 
@@ -171,6 +172,7 @@ async def ttsHook(content, params):
 @on_message
 async def main(message: Message):
     if message.content == "1":
+        time.sleep(5)
         res = await AskUserChoiceMessage(
             timeout=30,
             choiceContent="请在以下收款人数据中做出选择：",
@@ -197,6 +199,7 @@ async def main(message: Message):
             ).send()
 
     if message.content == "2":
+        # time.sleep(60)
         res = await AskActionMessage(
             content="Pick an action!",
             actions=[
@@ -233,6 +236,7 @@ async def main(message: Message):
         task_list.status = "Failed"
         await task_list.send()
     if message.content == "4":
+        time.sleep(5)
         res = await AskUserMessage(content="你好，请录入你的姓名!", timeout=10).send()
     if message.content == "5":
         text_content = "Hello, this is a text element."
@@ -275,6 +279,7 @@ async def main(message: Message):
                 ],
             ),
         ]
+        time.sleep(5)
         await Message(
             content="请核对以下转账信息符合您的预期。",
             elements=elements,

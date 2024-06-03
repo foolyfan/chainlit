@@ -2,6 +2,7 @@ import { keyframes } from '@emotion/react';
 import { MessageContext } from 'contexts/MessageContext';
 import { memo, useContext, useEffect, useState } from 'react';
 
+import { CircularProgress } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
@@ -113,42 +114,59 @@ const Message = memo(
           >
             <Author message={message} show={showAvatar}>
               <Stack alignItems="flex-start" minWidth={150}>
-                <MessageContent
-                  elements={elements}
-                  message={message}
-                  preserveSize={!!message.streaming || !defaultCollapseContent}
-                  allowHtml={allowHtml}
-                  latex={latex}
-                />
-                <DetailsButton
-                  message={message}
-                  opened={showDetails}
-                  onClick={() => setShowDetails(!showDetails)}
-                  loading={isRunning && isLast}
-                />
-                {!isRunning && isLast && isAsk && (
-                  <AskUploadButton onError={onError} />
-                )}
-                <Box
-                  sx={{
-                    position: 'relative',
-                    width: '100%',
-                    paddingBottom: 1,
-                    paddingTop: 1,
-                    marginTop: 1
-                  }}
-                >
-                  {<MessageActions message={message} actions={actions} />}
-                  {
-                    <MessageListActions
-                      layout={layout}
+                {message.type == 'waiting' ? (
+                  <Box
+                    sx={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <CircularProgress size={16} />
+                  </Box>
+                ) : (
+                  <>
+                    <MessageContent
+                      elements={elements}
                       message={message}
-                      listActions={listActions}
+                      preserveSize={
+                        !!message.streaming || !defaultCollapseContent
+                      }
+                      allowHtml={allowHtml}
+                      latex={latex}
                     />
-                  }
-                </Box>
+                    <DetailsButton
+                      message={message}
+                      opened={showDetails}
+                      onClick={() => setShowDetails(!showDetails)}
+                      loading={isRunning && isLast}
+                    />
+                    {!isRunning && isLast && isAsk && (
+                      <AskUploadButton onError={onError} />
+                    )}
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        width: '100%',
+                        paddingBottom: 1,
+                        paddingTop: 1,
+                        marginTop: 1
+                      }}
+                    >
+                      {<MessageActions message={message} actions={actions} />}
+                      {
+                        <MessageListActions
+                          layout={layout}
+                          message={message}
+                          listActions={listActions}
+                        />
+                      }
+                    </Box>
 
-                <MessageButtons message={message} />
+                    <MessageButtons message={message} />
+                  </>
+                )}
               </Stack>
             </Author>
           </Stack>

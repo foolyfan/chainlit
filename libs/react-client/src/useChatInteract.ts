@@ -66,6 +66,7 @@ const useChatInteract = () => {
   const sendMessage = useCallback(
     (message: IStep, fileReferences?: IFileRef[]) => {
       abortAudioTask();
+
       setMessages((oldMessages) => addMessage(oldMessages, message));
       console.log('emit ui_message', message);
       session?.socket.emit('ui_message', { message, fileReferences });
@@ -179,6 +180,16 @@ const useChatInteract = () => {
     [sessionId, accessToken]
   );
 
+  const addWaitingMessage = useCallback((name: string) => {
+    const waitingMessage: IStep = {
+      id: 'virtual',
+      name: name,
+      type: 'waiting',
+      output: 'loading',
+      createdAt: ''
+    };
+    setMessages((oldMessages) => addMessage([...oldMessages], waitingMessage));
+  }, []);
   return {
     uploadFile,
     callAction,
@@ -188,7 +199,8 @@ const useChatInteract = () => {
     replyMessage,
     stopTask,
     setIdToResume,
-    updateChatSettings
+    updateChatSettings,
+    addWaitingMessage
   };
 };
 
