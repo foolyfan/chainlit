@@ -94,6 +94,7 @@ const InputBox = memo(
         };
 
         replyMessage(message);
+        addWaitingMessage(projectSettings!.ui.name);
         setAutoScroll(true);
       },
       [user, replyMessage]

@@ -1,5 +1,6 @@
 import { MessageContext } from 'contexts/MessageContext';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -7,8 +8,11 @@ import Stack from '@mui/material/Stack';
 import {
   type IAction,
   type IStep,
-  useChatContext
+  useChatContext,
+  useChatInteract
 } from '@chainlit/react-client';
+
+import { projectSettingsState } from 'state/project';
 
 import { ActionButton } from './ActionButton';
 import { ActionDrawerButton } from './ActionDrawerButton';
@@ -30,6 +34,8 @@ const MessageActions = ({ message, actions }: Props) => {
   const [history, setHistory] = useState<boolean>(false);
 
   const { abortAudioTask, setActionRef } = useChatContext();
+  const { addWaitingMessage } = useChatInteract();
+  const projectSettings = useRecoilValue(projectSettingsState);
 
   const ref = useRef({ toHistory: () => setHistory(true) });
 
@@ -56,6 +62,7 @@ const MessageActions = ({ message, actions }: Props) => {
     (action: IAction) => {
       setHistory(true);
       abortAudioTask();
+      addWaitingMessage(projectSettings!.ui.name);
       askUser?.callback({
         id: action.id,
         forId: action.forId,

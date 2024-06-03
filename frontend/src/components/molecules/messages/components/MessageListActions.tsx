@@ -1,5 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 
 import { Button } from '@mui/material';
 
@@ -11,8 +12,11 @@ import {
   IListAction,
   type IStep,
   useChatContext,
-  useChatData
+  useChatData,
+  useChatInteract
 } from '@chainlit/react-client';
+
+import { projectSettingsState } from 'state/project';
 
 import { ActionMask } from './ActionMask';
 import { ListWithSize } from './ListWithSize';
@@ -124,6 +128,8 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
     undefined
   );
   const { abortAudioTask, setActionRef } = useChatContext();
+  const { addWaitingMessage } = useChatInteract();
+  const projectSettings = useRecoilValue(projectSettingsState);
 
   const ref = useRef({ toHistory: () => setHistory(true) });
 
@@ -151,6 +157,7 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
     (action: IListAction) => {
       setHistory(true);
       abortAudioTask();
+      addWaitingMessage(projectSettings!.ui.name);
       askUser?.callback({
         id: action.id,
         forId: action.forId,
