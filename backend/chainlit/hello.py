@@ -184,6 +184,7 @@ async def main(message: Message):
             ],
             choiceHook=choiceFirst,
         ).send()
+        time.sleep(5)
         if res is not None:
             await Message(
                 content=f"根据您的要求，我将使用以下数据：\n姓名：{res.data['name']}\n账号：{res.data['accNo']}\n作为选择收款人的结果。"

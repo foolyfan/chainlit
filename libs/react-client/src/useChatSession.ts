@@ -151,8 +151,12 @@ const useChatSession = () => {
         console.log('new_message', message);
         setMessages((oldMessages) => {
           const lastMessage = oldMessages.pop();
+
           if (lastMessage?.type == 'waiting') {
             return [...oldMessages];
+          }
+          if (lastMessage) {
+            oldMessages.push(lastMessage);
           }
           return oldMessages;
         });
@@ -205,6 +209,9 @@ const useChatSession = () => {
           const lastMessage = oldMessages.pop();
           if (lastMessage?.type == 'waiting') {
             return [...oldMessages];
+          }
+          if (lastMessage) {
+            oldMessages.push(lastMessage);
           }
           return oldMessages;
         });
