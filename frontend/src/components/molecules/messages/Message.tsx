@@ -10,7 +10,6 @@ import { AskUploadButton } from './components/AskUploadButton';
 import { AUTHOR_BOX_WIDTH, Author } from './components/Author';
 import { DetailsButton } from './components/DetailsButton';
 import { MessageActions } from './components/MessageActions';
-import { MessageButtons } from './components/MessageButtons';
 import { MessageContent } from './components/MessageContent';
 import { MessageListActions } from './components/MessageListActions';
 
@@ -72,7 +71,7 @@ const Message = memo(
 
     const isUser = message.type === 'user_message';
     const isAsk = message.waitForAnswer;
-
+    showAvatar = false;
     return (
       <Box
         sx={{
@@ -84,7 +83,7 @@ const Message = memo(
               ? theme.palette.grey[800]
               : theme.palette.grey[100]
         }}
-        className="step"
+        className={isUser ? 'user step' : 'step'}
       >
         <Box
           sx={{
@@ -113,7 +112,20 @@ const Message = memo(
             }}
           >
             <Author message={message} show={showAvatar}>
-              <Stack alignItems="flex-start" minWidth={150}>
+              <Stack
+                alignItems="flex-start"
+                sx={{
+                  background: isUser
+                    ? 'linear-gradient(270deg,#6485ff 0.95%,#849ffe 100%)'
+                    : 'white',
+                  'border-radius': isUser
+                    ? '16px 16px 4px 16px'
+                    : '4px 16px 16px 16px',
+                  padding: '10px',
+                  color: isUser ? 'white' : 'black',
+                  width: isUser ? 'fit-content' : '100%'
+                }}
+              >
                 {message.type == 'waiting' ? (
                   <Box
                     sx={{
@@ -145,26 +157,26 @@ const Message = memo(
                     {!isRunning && isLast && isAsk && (
                       <AskUploadButton onError={onError} />
                     )}
-                    <Box
-                      sx={{
-                        position: 'relative',
-                        width: '100%',
-                        paddingBottom: 1,
-                        paddingTop: 1,
-                        marginTop: 1
-                      }}
-                    >
-                      {<MessageActions message={message} actions={actions} />}
-                      {
-                        <MessageListActions
-                          layout={layout}
-                          message={message}
-                          listActions={listActions}
-                        />
-                      }
-                    </Box>
-
-                    <MessageButtons message={message} />
+                    {!isUser && (
+                      <Box
+                        sx={{
+                          position: 'relative',
+                          width: '100%',
+                          paddingBottom: 1,
+                          paddingTop: 1,
+                          marginTop: 1
+                        }}
+                      >
+                        {<MessageActions message={message} actions={actions} />}
+                        {
+                          <MessageListActions
+                            layout={layout}
+                            message={message}
+                            listActions={listActions}
+                          />
+                        }
+                      </Box>
+                    )}
                   </>
                 )}
               </Stack>

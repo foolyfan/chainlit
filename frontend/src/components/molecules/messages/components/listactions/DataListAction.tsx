@@ -20,12 +20,30 @@ export const DataListAction = ({ choiceActions, layout, onClick }: Props) => {
             onClick={() => onClick(action)}
           >
             <ListItemText primary={index + 1} sx={{ width: 30, flexGrow: 0 }} />
-            {layout?.map((item) => (
-              <ListItemText
-                primary={action.data[item.field]}
-                sx={{ width: `${item.width}%`, flexGrow: 0, marginLeft: '5px' }}
-              />
-            ))}
+            {action.html ? (
+              <div
+                className={`test-html`}
+                style={{
+                  objectFit: 'cover',
+                  maxWidth: '100%',
+                  margin: 'auto',
+                  height: 'auto',
+                  display: 'block'
+                }}
+                dangerouslySetInnerHTML={{ __html: action.html }}
+              ></div>
+            ) : (
+              layout?.map((item) => (
+                <ListItemText
+                  primary={action.data[item.field]}
+                  sx={{
+                    width: `${item.width}%`,
+                    flexGrow: 0,
+                    marginLeft: '5px'
+                  }}
+                />
+              ))
+            )}
             <ListItemText />
           </ListItemButton>
         );

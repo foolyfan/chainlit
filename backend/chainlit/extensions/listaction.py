@@ -16,6 +16,7 @@ class ListAction(DataClassJsonMixin):
     type: ListActionType
     # 回调使用，extensions代码socket process_list_action；只有使用者设置了自定义回调才需要设置
     name: Optional[str] = None
+    html: Optional[str] = None
     # This should not be set manually, only used internally.
     forId: Optional[str] = None
     # The ID of the action
