@@ -1,6 +1,5 @@
 import os
 
-from chainlit.session import WebsocketSession
 from dotenv import load_dotenv
 from fastapi.responses import StreamingResponse
 
@@ -45,12 +44,19 @@ from chainlit.element import (
 )
 from chainlit.extensions import list_action_callback
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
+from chainlit.extensions.input import (
+    AccountInput,
+    AmountInput,
+    MobilePhoneInput,
+    TextInput,
+    ValidateResult,
+)
 from chainlit.extensions.listaction import (
     ChoiceAction,
     ChoiceImageAction,
     ExternalAction,
 )
-from chainlit.extensions.message import AskUserChoiceMessage
+from chainlit.extensions.message import AskUserChoiceMessage, GatherCommand
 from chainlit.logger import logger
 from chainlit.message import (
     AskActionMessage,
@@ -282,6 +288,38 @@ def tts_method(
     return func
 
 
+@trace
+def amount_recognition(
+    func: Callable[[str], Union[str, GatherCommand, None]]
+) -> Callable[[str], Union[str, GatherCommand, None]]:
+    wrap_user_function(func)
+    return func
+
+
+@trace
+def modilephone_recognition(
+    func: Callable[[str], Union[str, GatherCommand, None]]
+) -> Callable[[str], Union[str, GatherCommand, None]]:
+    wrap_user_function(func)
+    return func
+
+
+@trace
+def account_recognition(
+    func: Callable[[str], Union[str, GatherCommand, None]]
+) -> Callable[[str], Union[str, GatherCommand, None]]:
+    wrap_user_function(func)
+    return func
+
+
+@trace
+def text_recognition(
+    func: Callable[[str], Union[str, GatherCommand, None]]
+) -> Callable[[str], Union[str, GatherCommand, None]]:
+    wrap_user_function(func)
+    return func
+
+
 def action_callback(name: str) -> Callable:
     """
     Callback to call when an action is clicked in the UI.
@@ -403,6 +441,11 @@ __all__ = [
     "ExternalAction",
     "asr_method",
     "tts_method",
+    "AmountInput",
+    "TextInput",
+    "MobilePhoneInput",
+    "AccountInput",
+    "ValidateResult",
 ]
 
 

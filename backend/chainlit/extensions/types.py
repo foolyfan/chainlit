@@ -1,6 +1,6 @@
 import typing
 from dataclasses import dataclass
-from typing import List, Literal
+from typing import Dict, List, Literal, TypedDict
 
 from chainlit.types import ActionSpec, AskSpec
 from dataclasses_json import DataClassJsonMixin
@@ -25,3 +25,22 @@ GatherCommandType = Literal[
 class GatherCommandSpec(DataClassJsonMixin):
     timeout: int
     type: GatherCommandType
+
+
+@dataclass
+class GatherCommandResponse(DataClassJsonMixin):
+    value: Dict
+
+
+@dataclass
+class InputSpec(DataClassJsonMixin):
+    timeout: int
+    type: Literal["text", "number"]
+    keys: List[str]
+
+
+class InputResponse(TypedDict):
+    value: str
+    forId: str
+    id: str
+    type: Literal["click", "input", "asr_res"]

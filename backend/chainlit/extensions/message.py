@@ -6,6 +6,7 @@ from chainlit.context import context
 from chainlit.extensions.listaction import LA, ChoiceImageAction
 from chainlit.extensions.types import (
     AskListActionSpec,
+    GatherCommandResponse,
     GatherCommandSpec,
     GatherCommandType,
 )
@@ -117,7 +118,7 @@ class GatherCommand(MessageBase):
         self.speechContent = speechContent
         super().__post_init__()
 
-    async def send(self) -> Union[GatherCommandSpec, None]:
+    async def send(self) -> Union[GatherCommandResponse, None]:
         """
         Sends the question to ask to the UI and waits for the reply
         """
@@ -139,6 +140,9 @@ class GatherCommand(MessageBase):
             timeout=self.timeout,
         )
 
-        res = await context.emitter.gather_command(step_dict, spec, False)
+        res = cast(
+            Union[GatherCommandResponse, None],
+            await context.emitter.gather_command(step_dict, spec, False),
+        )
 
         return res

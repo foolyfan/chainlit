@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Literal, Optional, Union, cast
 from chainlit.data import get_data_layer
 from chainlit.element import Element, File
 from chainlit.extensions.message import AskUserResponse
-from chainlit.extensions.types import GatherCommandSpec
+from chainlit.extensions.types import GatherCommandSpec, InputResponse, InputSpec
 from chainlit.logger import logger
 from chainlit.message import Message
 from chainlit.session import BaseSession, WebsocketSession
@@ -82,6 +82,16 @@ class BaseChainlitEmitter:
         self, step_dict: StepDict, spec: AskSpec, raise_on_timeout=False
     ) -> Optional[Union["StepDict", "AskUserResponse", List["FileDict"]]]:
         """Stub method to send a prompt to the UI and wait for a response."""
+        pass
+
+    async def send_input(
+        self, step_dict: StepDict, spec: InputSpec, raise_on_timeout=False
+    ) -> Optional["InputResponse"]:
+        pass
+
+    async def update_input(
+        self, step_dict: StepDict, spec: InputSpec, raise_on_timeout=False
+    ) -> Optional["InputResponse"]:
         pass
 
     async def send_call_fn(
