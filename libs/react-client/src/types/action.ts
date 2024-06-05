@@ -15,6 +15,7 @@ export interface IListAction {
   id: string;
   onClick: () => void;
   data: any;
+  html?: string;
 }
 
 export type IChoiceAction = IListAction;

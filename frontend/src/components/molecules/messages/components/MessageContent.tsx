@@ -110,7 +110,7 @@ const MessageContent = memo(
 
     return (
       <Stack width="100%" direction="row">
-        <Box width="100%" sx={{ minWidth: '100px' }}>
+        <Box width="100%">
           {output ? messageContent : null}
           <InlinedElements elements={outputInlinedElements} />
         </Box>

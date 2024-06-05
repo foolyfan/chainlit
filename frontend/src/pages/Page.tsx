@@ -5,7 +5,7 @@ import { useRecoilValue } from 'recoil';
 import { Alert, Box, Stack } from '@mui/material';
 
 import { Translator } from 'components/i18n';
-import { Header } from 'components/organisms/header';
+// import { Header } from 'components/organisms/header';
 import { ThreadHistorySideBar } from 'components/organisms/threadHistory/sidebar';
 
 import { projectSettingsState } from 'state/project';
@@ -38,7 +38,7 @@ const Page = ({ children }: Props) => {
         width: '100%'
       }}
     >
-      <Header projectSettings={projectSettings} />
+      {/* <Header projectSettings={projectSettings} /> */}
       {!isAuthenticated ? (
         <Alert severity="error">
           <Translator path="pages.Page.notPartOfProject" />
