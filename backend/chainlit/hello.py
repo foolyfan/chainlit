@@ -10,7 +10,12 @@ import aiofiles
 import httpx
 from chainlit.element import Image, Text
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
-from chainlit.extensions.input import AccountInput, AmountInput, MobilePhoneInput
+from chainlit.extensions.input import (
+    AccountInput,
+    AmountInput,
+    CompositeInput,
+    MobilePhoneInput,
+)
 from chainlit.extensions.listaction import (
     LA,
     ChoiceAction,
@@ -413,4 +418,10 @@ async def main(message: Message):
     if message.content == "20":
         # 必须实现 @modilephone_recognition
         res = await MobilePhoneInput().send()
+        await Message(content=res).send()
+    if message.content == "21":
+        # 必须实现 @composite_recognition
+        res = await CompositeInput(
+            content="请输入", optionals=[MobilePhoneInput, AccountInput]
+        ).send()
         await Message(content=res).send()

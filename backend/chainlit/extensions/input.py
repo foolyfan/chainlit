@@ -1,7 +1,7 @@
 import re
 from abc import ABC
 from dataclasses import dataclass
-from typing import Callable, List, Optional, TypedDict, TypeVar, Union, cast
+from typing import Callable, List, Optional, Type, TypedDict, TypeVar, Union, cast
 
 from chainlit.action import Action
 from chainlit.config import config
@@ -161,6 +161,26 @@ class NumberInput(InputBase):
     pass
 
 
+class TextInput(InputBase):
+    def __init__(
+        self,
+        content: str,
+        rules: List[Callable[[str], ValidateResult]] = [],
+        speechContent: str = "",
+        timeout: int = 60,
+    ):
+        self.rules = rules
+        self.content = content
+        self.timeout = timeout
+        self.speechContent = speechContent
+
+    async def send(self) -> str:
+        return ""
+
+
+InputType = Type[Union[TextInput, NumberInput]]
+
+
 def lenValidate(value) -> ValidateResult:
     res = len(value) == 19
     return {"value": res, "errmsg": None if res else "账号长度不满足19位的要求"}
@@ -231,18 +251,18 @@ class AmountInput(NumberInput):
         return "5000.33"
 
 
-class TextInput(InputBase):
+class CompositeInput(TextInput):
     def __init__(
         self,
         content: str,
-        rules: List[Callable[[str], ValidateResult]] = [],
         speechContent: str = "",
         timeout: int = 60,
+        optionals: List[InputType] = [],
     ):
-        self.rules = rules
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
+        self.optionals = optionals
 
     async def send(self) -> str:
-        return ""
+        return "复合输入场"

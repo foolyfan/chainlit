@@ -47,6 +47,8 @@ from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.input import (
     AccountInput,
     AmountInput,
+    CompositeInput,
+    InputType,
     MobilePhoneInput,
     TextInput,
     ValidateResult,
@@ -320,6 +322,14 @@ def text_recognition(
     return func
 
 
+@trace
+def composite_recognition(
+    func: Callable[[str], Union[str, GatherCommand, None]]
+) -> Callable[[str], Union[str, GatherCommand, None]]:
+    wrap_user_function(func)
+    return func
+
+
 def action_callback(name: str) -> Callable:
     """
     Callback to call when an action is clicked in the UI.
@@ -445,7 +455,9 @@ __all__ = [
     "TextInput",
     "MobilePhoneInput",
     "AccountInput",
+    "CompositeInput",
     "ValidateResult",
+    "InputType",
 ]
 
 
