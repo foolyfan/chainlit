@@ -1,6 +1,6 @@
 import { keyframes } from '@emotion/react';
 import { MessageContext } from 'contexts/MessageContext';
-import { memo, useContext, useEffect, useState } from 'react';
+import { memo, useContext, useEffect, useRef, useState } from 'react';
 
 import { CircularProgress } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -34,6 +34,7 @@ interface Props {
   isRunning?: boolean;
   isLast?: boolean;
   layout?: ILayout;
+  scrollTop?: () => void;
 }
 
 const Message = memo(
@@ -47,7 +48,8 @@ const Message = memo(
     showBorder,
     isRunning,
     isLast,
-    layout
+    layout,
+    scrollTop
   }: Props) => {
     const {
       expandAll,
@@ -69,11 +71,38 @@ const Message = memo(
       return null;
     }
 
+    // 解决action、图片等资源加载后，不自动滚动到底部的问题
+    const [height, setHeight] = useState<number>(0);
+    const ref = useRef<HTMLDivElement>();
+    useEffect(() => {
+      if (ref.current) {
+        const observer = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            setHeight((oldValue) => {
+              if (height > 0 && entry.contentRect.height > oldValue) {
+                // 滚动窗口
+                scrollTop && scrollTop();
+              }
+              return entry.contentRect.height;
+            });
+          }
+        });
+
+        observer.observe(ref.current);
+
+        // 清理函数
+        return () => {
+          observer.disconnect();
+        };
+      }
+    }, []);
+
     const isUser = message.type === 'user_message';
     const isAsk = message.waitForAnswer;
     showAvatar = false;
     return (
       <Box
+        ref={ref}
         sx={{
           color: 'text.primary',
           backgroundColor: (theme) =>

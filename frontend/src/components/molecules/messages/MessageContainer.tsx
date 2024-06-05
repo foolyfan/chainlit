@@ -1,5 +1,5 @@
 import { MessageContext, defaultMessageContext } from 'contexts/MessageContext';
-import { memo, useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -55,6 +55,12 @@ const MessageContainer = memo(
       setAutoScroll(atBottom);
     };
 
+    const handleScrollTop = useCallback(() => {
+      if (ref.current && ref.current.scrollHeight > ref.current.clientHeight) {
+        ref.current.scrollTop = ref.current.scrollHeight;
+      }
+    }, []);
+
     return (
       <MessageContext.Provider value={context || defaultMessageContext}>
         <Box
@@ -75,6 +81,7 @@ const MessageContainer = memo(
             actions={actions}
             listActions={listActions}
             layout={layout}
+            scrollTop={handleScrollTop}
           />
         </Box>
       </MessageContext.Provider>

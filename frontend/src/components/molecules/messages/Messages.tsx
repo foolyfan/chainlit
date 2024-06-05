@@ -19,6 +19,7 @@ interface Props {
   indent: number;
   isRunning?: boolean;
   layout?: ILayout;
+  scrollTop?: () => void;
 }
 
 const Messages = memo(
@@ -29,7 +30,8 @@ const Messages = memo(
     listActions,
     indent,
     isRunning,
-    layout
+    layout,
+    scrollTop
   }: Props) => {
     const messageContext = useContext(MessageContext);
 
@@ -82,6 +84,7 @@ const Messages = memo(
               indent={indent}
               isRunning={messageRunning}
               isLast={isLast}
+              scrollTop={scrollTop}
             />
           );
         })}
