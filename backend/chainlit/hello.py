@@ -196,7 +196,7 @@ async def ttsHook(content, params):
 @on_message
 async def main(message: Message):
     if message.content == "1":
-        time.sleep(5)
+
         res = await AskUserChoiceMessage(
             timeout=30,
             choiceContent="请在以下收款人数据中做出选择：",
@@ -208,7 +208,7 @@ async def main(message: Message):
             ],
             choiceHook=choiceFirst,
         ).send()
-        time.sleep(5)
+
         if res is not None:
             await Message(
                 content=f"根据您的要求，我将使用以下数据：\n姓名：{res.data['name']}\n账号：{res.data['accNo']}\n作为选择收款人的结果。"
@@ -224,7 +224,6 @@ async def main(message: Message):
             ).send()
 
     if message.content == "2":
-        # time.sleep(60)
         res = await AskActionMessage(
             content="Pick an action!",
             actions=[
@@ -354,7 +353,7 @@ async def main(message: Message):
         logger.info(f"扫一扫 {res}")
     if message.content == "13":
         res = await AskUserChoiceMessage(
-            timeout=60,
+            timeout=5,
             choiceContent="请选择开户网点：",
             layout=[
                 {"field": "name", "width": 30},
@@ -397,6 +396,7 @@ async def main(message: Message):
             ],
             choiceHook=choiceResultConfirm,
             speechContent="请点击",
+            timeout=5,
         ).send()
     if message.content == "17":
         while True:

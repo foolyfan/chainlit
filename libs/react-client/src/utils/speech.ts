@@ -1,6 +1,4 @@
-import SRJSBridge from 'siro-face-jsbridge';
-
-export const jsbridge = new SRJSBridge();
+import { jsbridge } from './bridge';
 
 export const localTextToSpeech = (content: string, params: any): void => {
   console.log(`textToSpeech ${content}`, params);
@@ -21,12 +19,7 @@ class AudioPlayer {
   audioSource: AudioBufferSourceNode | undefined;
 
   async play(audioBuffer: ArrayBuffer) {
-    if (this.audioSource) {
-      this.audioSource.disconnect();
-    }
-    if (this.audioContext) {
-      this.audioContext.close();
-    }
+    this.stop();
     this.audioContext = new AudioContext();
     this.audioSource = this.audioContext.createBufferSource();
 
@@ -41,7 +34,11 @@ class AudioPlayer {
     if (this.audioSource) {
       this.audioSource.disconnect();
     }
-    if (this.audioContext) {
+    if (
+      this.audioContext &&
+      (this.audioContext.state == 'running' ||
+        this.audioContext.state == 'suspended')
+    ) {
       this.audioContext.close();
     }
   }

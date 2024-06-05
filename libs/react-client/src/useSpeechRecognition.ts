@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { jsbridge } from './utils/speech';
+import { jsbridge } from './utils/bridge';
 
 const base64ToBlob = (data: string) => {
   // 将 Base64 编码的数据转换为字节数组

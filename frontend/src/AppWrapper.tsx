@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 
-import { IProjectSettings, useApi } from '@chainlit/react-client';
+import { ChatProvider, IProjectSettings, useApi } from '@chainlit/react-client';
 
 import { apiClientState } from 'state/apiClient';
 import { projectSettingsState } from 'state/project';
@@ -58,5 +58,9 @@ export default function AppWrapper() {
     return null;
   }
 
-  return <App />;
+  return (
+    <ChatProvider chatSettings={projectSettings} client={apiClient}>
+      <App />
+    </ChatProvider>
+  );
 }

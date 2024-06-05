@@ -46,6 +46,7 @@ import {
   updateMessageContentById
 } from 'src/utils/message';
 
+import { useChatContext } from '.';
 import { ChainlitAPI } from './api';
 import { type IToken } from './useChatData';
 
@@ -72,6 +73,7 @@ const useChatSession = () => {
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
   const idToResume = useRecoilValue(threadIdToResumeState);
   const setSpeechPrompts = useSetRecoilState(speechPromptsState);
+  const { actionRef } = useChatContext();
 
   const _connect = useCallback(
     ({
@@ -228,6 +230,9 @@ const useChatSession = () => {
       socket.on('ask_timeout', () => {
         setAskUser(undefined);
         setLoading(false);
+        if (actionRef) {
+          actionRef.current.toHistory();
+        }
       });
 
       socket.on('gather_command_timeout', () => {

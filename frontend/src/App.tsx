@@ -9,7 +9,7 @@ import { makeTheme } from 'theme';
 import { Box, GlobalStyles } from '@mui/material';
 import { Theme, ThemeProvider } from '@mui/material/styles';
 
-import { ChatProvider, useChatSession } from '@chainlit/react-client';
+import { useChatSession } from '@chainlit/react-client';
 
 import Hotkeys from 'components/Hotkeys';
 import SettingsModal from 'components/molecules/settingsModal';
@@ -106,37 +106,35 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <ChatProvider chatSettings={pSettings} client={apiClient}>
-        <GlobalStyles
-          styles={{
-            body: { backgroundColor: theme.palette.background.default }
-          }}
-        />
-        <Toaster
-          className="toast"
-          position="top-right"
-          toastOptions={{
-            style: {
-              fontFamily: theme.typography.fontFamily,
-              background: theme.palette.background.paper,
-              border: `1px solid ${theme.palette.divider}`,
-              color: theme.palette.text.primary
-            }
-          }}
-        />
-        <Box
-          display="flex"
-          height="100vh"
-          width="100vw"
-          sx={{ overflowX: 'hidden' }}
-        >
-          <PromptPlayground />
-          <ChatSettingsModal />
-          <Hotkeys />
-          <SettingsModal />
-          <RouterProvider router={router} />
-        </Box>
-      </ChatProvider>
+      <GlobalStyles
+        styles={{
+          body: { backgroundColor: theme.palette.background.default }
+        }}
+      />
+      <Toaster
+        className="toast"
+        position="top-right"
+        toastOptions={{
+          style: {
+            fontFamily: theme.typography.fontFamily,
+            background: theme.palette.background.paper,
+            border: `1px solid ${theme.palette.divider}`,
+            color: theme.palette.text.primary
+          }
+        }}
+      />
+      <Box
+        display="flex"
+        height="100vh"
+        width="100vw"
+        sx={{ overflowX: 'hidden' }}
+      >
+        <PromptPlayground />
+        <ChatSettingsModal />
+        <Hotkeys />
+        <SettingsModal />
+        <RouterProvider router={router} />
+      </Box>
     </ThemeProvider>
   );
 }
