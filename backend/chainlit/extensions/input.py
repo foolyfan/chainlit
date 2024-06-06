@@ -1,13 +1,18 @@
 import re
-from abc import ABC
-from dataclasses import dataclass
-from typing import Callable, List, Optional, Type, TypedDict, TypeVar, Union, cast
+from abc import ABC, abstractmethod
+from typing import Callable, List, Optional, Type, TypedDict, Union, cast
 
 from chainlit.action import Action
 from chainlit.config import config
 from chainlit.context import context
 from chainlit.extensions.message import GatherCommand
-from chainlit.extensions.types import GatherCommandResponse, InputResponse, InputSpec
+from chainlit.extensions.types import (
+    GatherCommandResponse,
+    InputResponse,
+    InputSpec,
+    InputValueType,
+)
+from chainlit.logger import logger
 from chainlit.message import AskMessageBase
 from chainlit.telemetry import trace_event
 from literalai.helper import utc_now
@@ -17,11 +22,6 @@ from literalai.step import MessageStepType
 class ValidateResult(TypedDict):
     value: bool
     errmsg: Optional[str]
-
-
-class UnImplementedCmdTransformException(Exception):
-    def __init__(self):
-        super().__init__("未实现采集命令结果转换函数")
 
 
 class UnknowInputTypeException(Exception):
@@ -35,38 +35,40 @@ class InputBase(AskMessageBase, ABC):
         self,
         content: str,
         rules: Optional[List[Callable[[str], ValidateResult]]],
-        contentRecognitionHook: Callable[[str], Union[str, GatherCommand, None]],
-        actionHook: Optional[Callable[[Action], Union[GatherCommand, None]]],
-        gatherCommandHook: Optional[
-            Callable[[GatherCommandResponse], Union[str, None]]
-        ],
         timeout: int = 60,
         raise_on_timeout: bool = False,
         speechContent: str = "",
-        author: str = config.ui.name,
         type: MessageStepType = "assistant_message",
         actions: List[Action] = [],
     ):
         self.rules = rules
         self.content = content
-        self.author = author
         self.timeout = timeout
         self.type = type
         self.raise_on_timeout = raise_on_timeout
         self.speechContent = speechContent
         self.actions = actions
-        self.actionHook = actionHook
-        self.contentRecognitionHook = contentRecognitionHook
-        self.gatherCommandHook = gatherCommandHook
+
+    def __post_init__(self) -> None:
+        if not getattr(self, "author", None):
+            self.author = config.ui.name
         super().__post_init__()
+
+    @abstractmethod
+    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+        pass
+
+    async def actionhook(self, value: Action) -> Union[GatherCommand, None]:
+        pass
+
+    async def transfomer_cmd_res(self, cmd: GatherCommandResponse) -> Union[str, None]:
+        pass
 
     async def _processCmd(self, cmd: GatherCommand) -> Union[str, None]:
         cmdRes = await cmd.send()
-        if not self.gatherCommandHook:
-            raise UnImplementedCmdTransformException()
-        if cmdRes is None:
-            return cmdRes
-        return self.gatherCommandHook(cmdRes)
+        if cmdRes:
+            return await self.transfomer_cmd_res(cmdRes)
+        return None
 
     async def _processRules(self, value: Union[str, None]) -> Union[str, None]:
         if value is None:
@@ -82,12 +84,12 @@ class InputBase(AskMessageBase, ABC):
 
         if not len(errors):
             return value
-        self.content = "；".join(errors) + "\n请重新输入"
+        self.content = "；\n".join(errors) + ";\n请重新输入"
         self.speechContent = "请重新输入"
         return None
 
-    async def processInput(self, res: Union[InputResponse, None]) -> Union[str, None]:
-
+    async def _processInput(self, res: Union[InputResponse, None]) -> Union[str, None]:
+        logger.info(f"_processInput {res}")
         if res is None:
             return res
 
@@ -95,20 +97,19 @@ class InputBase(AskMessageBase, ABC):
             action: Action = [
                 action for action in self.actions if res["value"] == action.id
             ][0]
-            if self.actionHook:
-                actionRes = self.actionHook(action)
-                if actionRes is None:
-                    return None
-                actionCmd: GatherCommand = actionRes
-                return await self._processRules(await self._processCmd(actionCmd))
-            self.content = f"服务端未实现该功能 {action.label}"
-            return None
+
+            actionRes = await self.actionhook(action)
+            if actionRes is None:
+                return None
+
+            actionCmd: GatherCommand = actionRes
+            return await self._processRules(await self._processCmd(actionCmd))
 
         if res["type"] == "input":
             return await self._processRules(res["value"])
 
         if res["type"] == "asr_res":
-            hookRes = self.contentRecognitionHook(res["value"])
+            hookRes = await self.recognation(res["value"])
             if hookRes is None:
                 self.content = "语义解析失败，请重新录入"
             if isinstance(hookRes, GatherCommand):
@@ -118,7 +119,7 @@ class InputBase(AskMessageBase, ABC):
 
         raise UnknowInputTypeException()
 
-    async def send(self) -> str:
+    async def input_send(self, type: InputValueType) -> str:
 
         trace_event("send_input")
         if not self.created_at:
@@ -134,7 +135,7 @@ class InputBase(AskMessageBase, ABC):
             action_keys.append(action.id)
             await action.send(for_id=str(step_dict["id"]))
 
-        spec = InputSpec(type="text", timeout=self.timeout, keys=action_keys)
+        spec = InputSpec(type=type, timeout=self.timeout, keys=action_keys)
 
         res = cast(
             Union[InputResponse, None],
@@ -144,15 +145,18 @@ class InputBase(AskMessageBase, ABC):
         processRes = None
 
         while True:
-            processRes = await self.processInput(res)
+            processRes = await self._processInput(res)
             if processRes is not None:
                 break
+            step_dict = await self._create()
             res = await context.emitter.update_input(
                 step_dict, spec, self.raise_on_timeout
             )
 
         for action in self.actions:
             await action.remove()
+        logger.info(f"clear_input {processRes}")
+        await context.emitter.clear("clear_input")
 
         return processRes
 
@@ -182,8 +186,13 @@ InputType = Type[Union[TextInput, NumberInput]]
 
 
 def lenValidate(value) -> ValidateResult:
-    res = len(value) == 19
-    return {"value": res, "errmsg": None if res else "账号长度不满足19位的要求"}
+    res = len(value) == 6
+    return {"value": res, "errmsg": None if res else "账号长度不满足6位的要求"}
+
+
+def startValidate(value: str) -> ValidateResult:
+    res = value.startswith("622")
+    return {"value": res, "errmsg": None if res else "账号需以622开头"}
 
 
 class AccountInput(NumberInput):
@@ -194,13 +203,29 @@ class AccountInput(NumberInput):
         content: str = "请扫描或录入账号",
         speechContent: str = "请扫描或录入账号",
     ):
-        self.rules = [lenValidate]
+        self.rules = [lenValidate, startValidate]
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
+        self.actions = [Action(label="扫一扫", name="scan", value="scan")]
+        self.raise_on_timeout = False
+        super().__post_init__()
+
+    async def actionhook(self, action: Action) -> Union[GatherCommand, None]:
+        return GatherCommand(action="scan") if action.name == "scan" else None
+
+    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+        return await config.code.on_recognation_input["__account__"](value)
+
+    async def transfomer_cmd_res(
+        self, cmdRes: GatherCommandResponse
+    ) -> Union[str, None]:
+        if cmdRes.type == "scan":
+            return cmdRes.data["value"]
+        return None
 
     async def send(self) -> str:
-        return "6217258185020246972"
+        return await super().input_send("number")
 
 
 def validate_chinese_phone_number(value: str) -> ValidateResult:
@@ -222,8 +247,11 @@ class MobilePhoneInput(NumberInput):
         self.timeout = timeout
         self.speechContent = speechContent
 
+    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+        return await config.code.on_recognation_input["__mobilephone__"](value)
+
     async def send(self) -> str:
-        return "18536403990"
+        return await super().input_send("number")
 
 
 def validate_decimal(value: str) -> ValidateResult:
@@ -250,6 +278,9 @@ class AmountInput(NumberInput):
     async def send(self) -> str:
         return "5000.33"
 
+    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+        return await config.code.on_recognation_input["__amount__"](value)
+
 
 class CompositeInput(TextInput):
     def __init__(
@@ -266,3 +297,6 @@ class CompositeInput(TextInput):
 
     async def send(self) -> str:
         return "复合输入场"
+
+    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+        return await config.code.on_recognation_input["__composite__"](value)

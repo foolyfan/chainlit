@@ -43,3 +43,10 @@ export interface IAskResponse {
   forId: string;
   id: string;
 }
+
+export interface IInputResponse {
+  value: string;
+  type: 'click' | 'input' | 'asr_res';
+  forId: string;
+  id: string;
+}

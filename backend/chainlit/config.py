@@ -256,6 +256,7 @@ class CodeSettings:
     on_message: Optional[Callable[[str], Any]] = None
     asr_method: Optional[Callable[[str], str]] = None
     tts_method: Optional[Callable[[str, Dict], Union[StreamingResponse, str]]] = None
+    on_recognation_input: Optional[Dict[str, Callable]] = None
     author_rename: Optional[Callable[[str], str]] = None
     on_settings_update: Optional[Callable[[Dict[str, Any]], Any]] = None
     set_chat_profiles: Optional[Callable[[Optional["User"]], List["ChatProfile"]]] = (
@@ -408,7 +409,9 @@ def load_settings():
             "features": features_settings,
             "ui": ui_settings,
             "project": project_settings,
-            "code": CodeSettings(action_callbacks={}, list_action_callbacks={}),
+            "code": CodeSettings(
+                action_callbacks={}, list_action_callbacks={}, on_recognation_input={}
+            ),
         }
 
 

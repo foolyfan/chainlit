@@ -142,7 +142,6 @@ async def ttshook_local(content, params):
                     yield chunk
         except GeneratorExit:
             logger.info("客户端断开连接")
-            raise
 
     return StreamingResponse(
         file_iterator(file_path),
@@ -417,7 +416,8 @@ async def main(message: Message):
                 break
     if message.content == "18":
         # 必须实现71行的 @account_recognition
-        res = await AccountInput().send()
+        res = await AccountInput(timeout=20).send()
+        logger.info(f"客户输入账号 {res}")
         await Message(content=res).send()
     if message.content == "19":
         # 必须实现 @amount_recognition

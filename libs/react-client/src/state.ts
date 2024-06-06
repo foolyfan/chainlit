@@ -9,6 +9,7 @@ import {
   IAvatarElement,
   ICallFn,
   IGatherCommand,
+  IInput,
   IListAction,
   IMessageElement,
   ISpeechPromptMessage,
@@ -80,6 +81,11 @@ export const loadingState = atom<boolean>({
 
 export const askUserState = atom<IAsk | undefined>({
   key: 'AskUser',
+  default: undefined
+});
+
+export const inputState = atom<IInput | undefined>({
+  key: 'Input',
   default: undefined
 });
 

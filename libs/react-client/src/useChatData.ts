@@ -9,6 +9,7 @@ import {
   chatSettingsValueState,
   elementState,
   gatherCommandState,
+  inputState,
   listActionState,
   loadingState,
   sessionState,
@@ -36,6 +37,7 @@ const useChatData = () => {
   const chatSettingsDefaultValue = useRecoilValue(
     chatSettingsDefaultValueSelector
   );
+  const input = useRecoilValue(inputState);
 
   const connected = session?.socket.connected && !session?.error;
   const disabled = !connected || loading || askUser?.spec.type === 'file';
@@ -54,7 +56,8 @@ const useChatData = () => {
     error: session?.error,
     loading,
     tasklists,
-    gatherCommand
+    gatherCommand,
+    input
   };
 };
 

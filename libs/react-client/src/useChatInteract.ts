@@ -10,6 +10,7 @@ import {
   elementState,
   firstUserInteraction,
   gatherCommandState,
+  inputState,
   loadingState,
   messagesState,
   sessionIdState,
@@ -37,6 +38,7 @@ const useChatInteract = () => {
   const askUser = useRecoilValue(askUserState);
   const gatherCommand = useRecoilValue(gatherCommandState);
   const sessionId = useRecoilValue(sessionIdState);
+  const input = useRecoilValue(inputState);
 
   const resetChatSettings = useResetRecoilState(chatSettingsInputsState);
   const resetSessionId = useResetRecoilState(sessionIdState);
@@ -82,7 +84,10 @@ const useChatInteract = () => {
   );
 
   const replyMessage = useCallback(
-    (message: IStep, cmdRes?: IGatherCommandResponse) => {
+    (
+      message: IStep,
+      spec?: { asr?: boolean; cmdRes?: IGatherCommandResponse }
+    ) => {
       abortAudioTask();
       if (askUser) {
         setMessages((oldMessages) => addMessage(oldMessages, message));
@@ -105,8 +110,17 @@ const useChatInteract = () => {
           actionRef.current.toHistory();
         }
       }
-      if (gatherCommand && cmdRes) {
-        gatherCommand.callback(cmdRes);
+      if (input) {
+        setMessages((oldMessages) => addMessage(oldMessages, message));
+        input.callback({
+          id: message.id,
+          type: spec?.asr ? 'asr_res' : 'input',
+          forId: '',
+          value: message.output
+        });
+      }
+      if (gatherCommand && spec?.cmdRes) {
+        gatherCommand.callback(spec?.cmdRes);
       }
     },
     [askUser, gatherCommand, abortAudioTask]
