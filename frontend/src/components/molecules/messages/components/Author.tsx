@@ -73,7 +73,7 @@ const Author = ({ message, show, children }: Props) => {
     <Stack direction="row" gap={1.5} width="100%" className="hello">
       <Stack
         gap={1}
-        width={`calc(100% - ${AUTHOR_BOX_WIDTH + 12}px)`}
+        width={isUser ? '100%' : `calc(100% - 24px)`}
         sx={{ 'align-items': isUser ? 'end' : 'start' }}
       >
         {name}
