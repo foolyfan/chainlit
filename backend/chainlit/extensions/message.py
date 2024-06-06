@@ -140,9 +140,8 @@ class GatherCommand(MessageBase):
             timeout=self.timeout,
         )
 
-        res = cast(
-            Union[GatherCommandResponse, None],
-            await context.emitter.gather_command(step_dict, spec, False),
-        )
+        res = await context.emitter.gather_command(step_dict, spec, False)
+        if res is not None:
+            res = GatherCommandResponse.from_dict(res)
 
         return res

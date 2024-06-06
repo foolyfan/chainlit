@@ -18,7 +18,14 @@ import {
   threadIdToResumeState,
   tokenCountState
 } from 'src/state';
-import { IAction, IAskResponse, IFileRef, IListAction, IStep } from 'src/types';
+import {
+  IAction,
+  IAskResponse,
+  IFileRef,
+  IGatherCommandResponse,
+  IListAction,
+  IStep
+} from 'src/types';
 import { addMessage } from 'src/utils/message';
 
 import { ChainlitAPI } from './api';
@@ -75,7 +82,7 @@ const useChatInteract = () => {
   );
 
   const replyMessage = useCallback(
-    (message: IStep) => {
+    (message: IStep, cmdRes?: IGatherCommandResponse) => {
       abortAudioTask();
       if (askUser) {
         setMessages((oldMessages) => addMessage(oldMessages, message));
@@ -98,8 +105,8 @@ const useChatInteract = () => {
           actionRef.current.toHistory();
         }
       }
-      if (gatherCommand) {
-        gatherCommand.callback(gatherCommand.spec);
+      if (gatherCommand && cmdRes) {
+        gatherCommand.callback(cmdRes);
       }
     },
     [askUser, gatherCommand, abortAudioTask]

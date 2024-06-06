@@ -8,5 +8,6 @@ export * from './state';
 export * from './utils/message';
 export * from './chatContext';
 export * from './useSpeechRecognition';
+export * from './usePassword';
 
 export { Socket } from 'socket.io-client';

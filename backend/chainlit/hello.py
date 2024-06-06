@@ -344,8 +344,16 @@ async def main(message: Message):
         res = await GatherCommand(action="custom_card", timeout=10).send()
         logger.info(f"定制卡面 {res}")
     if message.content == "11":
-        res = await GatherCommand(action="password", timeout=90).send()
+        res = await GatherCommand(action="password", timeout=10).send()
         logger.info(f"密码 {res}")
+        if res:
+            if res.code == "00":
+                logger.info(f"客户输入成功 {res.data['value']}")
+            else:
+                logger.info("客户取消输入")
+        else:
+            logger.info(f"客户输入超时")
+
     if message.content == "12":
         res = await GatherCommand(
             action="scan", timeout=90, speechContent="扫一扫"

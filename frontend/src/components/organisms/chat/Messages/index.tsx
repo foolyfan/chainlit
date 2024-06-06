@@ -1,11 +1,14 @@
-import { useCallback } from 'react';
+import { useAuth } from 'api/auth';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   IAction,
   IFeedback,
+  IGatherCommandResponse,
   IListAction,
   IProjectSettings,
   IStep,
@@ -15,7 +18,8 @@ import {
   useChatData,
   useChatInteract,
   useChatMessages,
-  useChatSession
+  useChatSession,
+  usePassword
 } from '@chainlit/react-client';
 
 import { CommandContainer } from 'components/molecules/command/CommandContainer';
@@ -140,6 +144,57 @@ const Messages = ({
     []
   );
 
+  const { invokeKeyboard, text, status } = usePassword('请输入密码', false);
+  const { user } = useAuth();
+  const { replyMessage, addWaitingMessage } = useChatInteract();
+  const onReply = useCallback(
+    async (msg: string, cmdRes?: IGatherCommandResponse) => {
+      const message: IStep = {
+        threadId: '',
+        id: uuidv4(),
+        name: user?.identifier || 'User',
+        type: 'user_message',
+        output: msg,
+        createdAt: new Date().toISOString()
+      };
+
+      replyMessage(message, cmdRes);
+      addWaitingMessage(projectSettings!.ui.name);
+      setAutoScroll(true);
+    },
+    [user, replyMessage]
+  );
+
+  useEffect(() => {
+    if (gatherCommand?.spec.type == 'password') {
+      invokeKeyboard();
+    }
+  }, [gatherCommand]);
+
+  useEffect(() => {
+    if (!gatherCommand) {
+      return;
+    }
+    if (status == 'finish') {
+      console.log('密码输入完成', text);
+      onReply('', {
+        ...gatherCommand!.spec,
+        code: '00',
+        msg: '',
+        data: { value: text }
+      });
+    }
+    if (status == 'cancel') {
+      console.log('取消输入密码');
+      onReply('', {
+        ...gatherCommand!.spec,
+        code: '01',
+        msg: '客户取消输入',
+        data: {}
+      });
+    }
+  }, [status, text]);
+
   return !idToResume &&
     !messages.length &&
     projectSettings?.ui.show_readme_as_default ? (
@@ -151,9 +206,9 @@ const Messages = ({
     />
   ) : (
     <>
-      {gatherCommand ? (
+      {gatherCommand && gatherCommand.spec.type !== 'password' && (
         <CommandContainer gatherCommand={gatherCommand} />
-      ) : null}
+      )}
       <MessageContainer
         avatars={avatars}
         loading={loading}
@@ -167,7 +222,9 @@ const Messages = ({
         callAction={callActionWithToast}
         callListAction={callListActionWithToast}
         setAutoScroll={setAutoScroll}
-        hidden={!!gatherCommand}
+        hidden={Boolean(
+          gatherCommand && gatherCommand.spec.type !== 'password'
+        )}
       />
     </>
   );
