@@ -28,8 +28,10 @@ class GatherCommandSpec(DataClassJsonMixin):
 
 
 @dataclass
-class GatherCommandResponse(DataClassJsonMixin):
-    value: Dict
+class GatherCommandResponse(GatherCommandSpec, DataClassJsonMixin):
+    code: str
+    msg: str
+    data: Dict
 
 
 @dataclass

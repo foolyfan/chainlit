@@ -241,6 +241,16 @@ const useChatSession = () => {
 
       socket.on('gather_command', ({ msg, spec }, callback) => {
         console.log('gather_command', msg, spec, callback);
+        setMessages((oldMessages) => {
+          const lastMessage = oldMessages.pop();
+          if (lastMessage?.type == 'waiting') {
+            return [...oldMessages];
+          }
+          if (lastMessage) {
+            oldMessages.push(lastMessage);
+          }
+          return oldMessages;
+        });
         setGatherCommand({ spec, callback });
         if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({

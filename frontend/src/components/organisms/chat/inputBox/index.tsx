@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 
 import {
   FileSpec,
+  IGatherCommandResponse,
   IProjectSettings,
   IStep,
   useChatInteract
@@ -83,7 +84,7 @@ const InputBox = memo(
     );
 
     const onReply = useCallback(
-      async (msg: string) => {
+      async (msg: string, cmdRes?: IGatherCommandResponse) => {
         const message: IStep = {
           threadId: '',
           id: uuidv4(),
@@ -93,7 +94,7 @@ const InputBox = memo(
           createdAt: new Date().toISOString()
         };
 
-        replyMessage(message);
+        replyMessage(message, cmdRes);
         addWaitingMessage(projectSettings!.ui.name);
         setAutoScroll(true);
       },

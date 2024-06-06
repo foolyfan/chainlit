@@ -44,6 +44,14 @@ export interface ICaptureIdCard {
 }
 
 export interface IGatherCommand {
-  callback: (payload: GatherCommandSpec & ICaptureIdCard) => void;
+  callback: (
+    payload: (IGatherCommandResponse & ICaptureIdCard) | undefined
+  ) => void;
   spec: GatherCommandSpec;
+}
+
+export interface IGatherCommandResponse extends GatherCommandSpec {
+  code: '00' | string;
+  msg: string;
+  data: any;
 }

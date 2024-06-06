@@ -6,7 +6,12 @@ from typing import Any, Dict, List, Literal, Optional, Union, cast
 from chainlit.data import get_data_layer
 from chainlit.element import Element, File
 from chainlit.extensions.message import AskUserResponse
-from chainlit.extensions.types import GatherCommandSpec, InputResponse, InputSpec
+from chainlit.extensions.types import (
+    GatherCommandResponse,
+    GatherCommandSpec,
+    InputResponse,
+    InputSpec,
+)
 from chainlit.logger import logger
 from chainlit.message import Message
 from chainlit.session import BaseSession, WebsocketSession
@@ -360,7 +365,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
                 spec.timeout,
             )
 
-            final_res = cast(Union["GatherCommandSpec"], user_res)
+            final_res = cast(GatherCommandResponse, user_res)
             await self.clear("clear_gather_command")
             return final_res
         except TimeoutError as e:

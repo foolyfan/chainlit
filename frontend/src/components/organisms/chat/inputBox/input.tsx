@@ -9,7 +9,12 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { Box, IconButton, Stack, TextField } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
 
-import { FileSpec, useChatContext, useChatData } from '@chainlit/react-client';
+import {
+  FileSpec,
+  IGatherCommandResponse,
+  useChatContext,
+  useChatData
+} from '@chainlit/react-client';
 
 import { Attachments } from 'components/molecules/attachments';
 
@@ -25,7 +30,7 @@ interface Props {
   onFileUpload: (payload: File[]) => void;
   onFileUploadError: (error: string) => void;
   onSubmit: (message: string, attachments?: IAttachment[]) => void;
-  onReply: (message: string) => void;
+  onReply: (message: string, cmdRes?: IGatherCommandResponse) => void;
 }
 
 function getLineCount(el: HTMLDivElement) {
@@ -100,7 +105,12 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
 
   const submit = useCallback(() => {
     if (gatherCommand) {
-      onReply(value);
+      onReply(value, {
+        ...gatherCommand!.spec,
+        code: '00',
+        msg: '客户操作成功',
+        data: {}
+      });
       setValue('');
       return;
     }
