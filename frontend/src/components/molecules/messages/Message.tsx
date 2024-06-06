@@ -99,7 +99,7 @@ const Message = memo(
 
     const isUser = message.type === 'user_message';
     const isAsk = message.waitForAnswer;
-    showAvatar = false;
+    showAvatar = true;
     return (
       <Box
         ref={ref}
