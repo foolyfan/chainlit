@@ -12,13 +12,7 @@ const InlinedHtmlList = ({ items }: Props) => (
   <Stack spacing={1}>
     {items.map((html, i) => {
       return (
-        <div
-          key={i}
-          style={{
-            maxWidth: '600px',
-            height: (html.height ? html.height : 400) + 'px'
-          }}
-        >
+        <div key={i}>
           <HtmlElement element={html} />
         </div>
       );
