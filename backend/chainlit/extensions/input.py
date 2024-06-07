@@ -97,7 +97,7 @@ class InputBase(AskMessageBase, ABC):
             action: Action = [
                 action for action in self.actions if res["value"] == action.id
             ][0]
-
+            await context.emitter.task_start()
             actionRes = await self.actionhook(action)
             if actionRes is None:
                 return None
@@ -155,7 +155,7 @@ class InputBase(AskMessageBase, ABC):
 
         for action in self.actions:
             await action.remove()
-        logger.info(f"clear_input {processRes}")
+
         await context.emitter.clear("clear_input")
 
         return processRes
@@ -212,6 +212,7 @@ class AccountInput(NumberInput):
         super().__post_init__()
 
     async def actionhook(self, action: Action) -> Union[GatherCommand, None]:
+        logger.info(f"actionhook {action}")
         return GatherCommand(action="scan") if action.name == "scan" else None
 
     async def recognation(self, value: str) -> Union[str, GatherCommand, None]:

@@ -86,7 +86,11 @@ const useChatInteract = () => {
   const replyMessage = useCallback(
     (
       message: IStep,
-      spec?: { asr?: boolean; cmdRes?: IGatherCommandResponse }
+      spec?: {
+        asr?: boolean;
+        cmdRes?: IGatherCommandResponse;
+        action?: IAction | IListAction;
+      }
     ) => {
       abortAudioTask();
       if (askUser) {
@@ -96,14 +100,21 @@ const useChatInteract = () => {
           askUser.spec.type == 'list_action' ||
           askUser.spec.type == 'action'
         ) {
-          responseMessage = {
-            id: message.id,
-            type: 'text',
-            forId: '',
-            value: message.output
-          };
+          responseMessage = spec?.action
+            ? {
+                id: spec?.action.id,
+                forId: spec?.action.forId,
+                value: spec?.action.id,
+                type: 'click'
+              }
+            : {
+                id: message.id,
+                type: 'text',
+                forId: '',
+                value: message.output
+              };
         }
-        console.log('reply message', responseMessage || message);
+        console.log('reply askUser message', responseMessage || message);
         askUser.callback(responseMessage || message);
 
         if (actionRef) {
@@ -111,15 +122,28 @@ const useChatInteract = () => {
         }
       }
       if (input) {
+        console.log('reply input message', message);
+        console.log('reply input message', spec);
         setMessages((oldMessages) => addMessage(oldMessages, message));
-        input.callback({
-          id: message.id,
-          type: spec?.asr ? 'asr_res' : 'input',
-          forId: '',
-          value: message.output
-        });
+
+        input.callback(
+          spec?.action
+            ? {
+                id: message.id,
+                type: 'click',
+                forId: spec.action.id,
+                value: spec?.action.id
+              }
+            : {
+                id: message.id,
+                type: spec?.asr ? 'asr_res' : 'input',
+                forId: '',
+                value: message.output
+              }
+        );
       }
       if (gatherCommand && spec?.cmdRes) {
+        console.log('reply gatherCommand message', spec);
         gatherCommand.callback(spec?.cmdRes);
       }
     },

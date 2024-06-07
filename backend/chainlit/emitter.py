@@ -365,7 +365,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
             user_res = await self.emit_call(
                 "input", {"msg": step_dict, "spec": spec.to_dict()}, spec.timeout
             )
-
+            self.task_end()
             final_res: Optional["InputResponse"] = user_res
             return final_res
         except TimeoutError as e:
@@ -373,6 +373,8 @@ class ChainlitEmitter(BaseChainlitEmitter):
 
             if raise_on_timeout:
                 raise e
+        finally:
+            await self.task_start()
 
     async def update_input(
         self, step_dict: StepDict, spec: InputSpec, raise_on_timeout=False
@@ -382,7 +384,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
             user_res = await self.emit_call(
                 "update_input", {"msg": step_dict, "spec": spec.to_dict()}, spec.timeout
             )
-
+            await self.task_end()
             final_res: Optional["InputResponse"] = user_res
             return final_res
         except TimeoutError as e:
@@ -390,6 +392,8 @@ class ChainlitEmitter(BaseChainlitEmitter):
 
             if raise_on_timeout:
                 raise e
+        finally:
+            self.task_start()
 
     def update_token_count(self, count: int):
         """Update the token count for the UI."""

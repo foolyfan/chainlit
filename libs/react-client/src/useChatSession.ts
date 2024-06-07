@@ -116,10 +116,13 @@ const useChatSession = () => {
       });
 
       socket.on('task_start', () => {
+        console.log('task_start');
+
         setLoading(true);
       });
 
       socket.on('task_end', () => {
+        console.log('task_end');
         setLoading(false);
       });
 
@@ -283,6 +286,7 @@ const useChatSession = () => {
             content: msg.speechContent
           });
         }
+        setLoading(false);
       });
 
       socket.on('clear_input', () => {

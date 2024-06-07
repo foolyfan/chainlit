@@ -259,8 +259,7 @@ async def main(message: Message):
         task_list.status = "Failed"
         await task_list.send()
     if message.content == "4":
-        time.sleep(5)
-        res = await AskUserMessage(content="你好，请录入你的姓名!", timeout=10).send()
+        res = await AskUserMessage(content="你好，请录入你的姓名!", timeout=30).send()
     if message.content == "5":
         text_content = "Hello, this is a text element."
         elements = [Text(name="simple_text", content=text_content, display="inline")]
@@ -406,14 +405,14 @@ async def main(message: Message):
             timeout=5,
         ).send()
     if message.content == "17":
-        while True:
-            res = await AskUserMessage(
-                content="你好，请录入你的姓名!",
-                timeout=30,
-                speechContent="长亭外，古道边，芳草碧连天。晚风拂柳笛声残，夕阳山外山。天之涯，地之角，知交半零落",
-            ).send()
-            if res is None:
-                break
+        res = await AskUserMessage(
+            content="你好，请录入你的姓名!",
+            timeout=30,
+            speechContent="长亭外，古道边，芳草碧连天。晚风拂柳笛声残，夕阳山外山。天之涯，地之角，知交半零落",
+        ).send()
+        await Message(
+            content=res["output"] if res is not None else "未收到客户输入结果"
+        ).send()
     if message.content == "18":
         # 必须实现71行的 @account_recognition
         res = await AccountInput(timeout=20).send()

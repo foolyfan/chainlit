@@ -148,7 +148,13 @@ const Messages = ({
   const { user } = useAuth();
   const { replyMessage, addWaitingMessage } = useChatInteract();
   const onReply = useCallback(
-    async (msg: string, cmdRes?: IGatherCommandResponse) => {
+    async (
+      msg: string,
+      spec?: {
+        asr?: boolean;
+        cmdRes?: IGatherCommandResponse;
+      }
+    ) => {
       const message: IStep = {
         threadId: '',
         id: uuidv4(),
@@ -158,7 +164,7 @@ const Messages = ({
         createdAt: new Date().toISOString()
       };
 
-      replyMessage(message, cmdRes);
+      replyMessage(message, spec);
       addWaitingMessage(projectSettings!.ui.name);
       setAutoScroll(true);
     },
@@ -178,19 +184,23 @@ const Messages = ({
     if (status == 'finish') {
       console.log('密码输入完成', text);
       onReply('', {
-        ...gatherCommand!.spec,
-        code: '00',
-        msg: '',
-        data: { value: text }
+        cmdRes: {
+          ...gatherCommand!.spec,
+          code: '00',
+          msg: '',
+          data: { value: text }
+        }
       });
     }
     if (status == 'cancel') {
       console.log('取消输入密码');
       onReply('', {
-        ...gatherCommand!.spec,
-        code: '01',
-        msg: '客户取消输入',
-        data: {}
+        cmdRes: {
+          ...gatherCommand!.spec,
+          code: '01',
+          msg: '客户取消输入',
+          data: {}
+        }
       });
     }
   }, [status, text]);
