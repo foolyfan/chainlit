@@ -250,6 +250,8 @@ class MobilePhoneInput(NumberInput):
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
+        self.raise_on_timeout = False
+        super().__post_init__()
 
     async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
         return await config.code.on_recognation_input["__mobilephone__"](value)

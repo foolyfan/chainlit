@@ -40,6 +40,7 @@ from chainlit import (
     account_recognition,
     amount_recognition,
     asr_method,
+    mobilephone_recognition,
     on_message,
     sleep,
     tts_method,
@@ -105,6 +106,12 @@ async def amount_hook(value: str) -> Union[str, GatherCommand, None]:
     """
 
     return "3900"
+
+
+@mobilephone_recognition
+async def mobilephone_hook(value: str) -> Union[str, GatherCommand, None]:
+
+    return "18536402990"
 
 
 @asr_method
