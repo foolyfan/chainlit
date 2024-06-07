@@ -15,8 +15,7 @@ const InlinedHtmlList = ({ items }: Props) => (
         <div
           key={i}
           style={{
-            maxWidth: '600px',
-            height: (html.height ? html.height : 400) + 'px'
+            maxWidth: '600px'
           }}
         >
           <HtmlElement element={html} />
