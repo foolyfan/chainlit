@@ -78,8 +78,8 @@ const Message = memo(
       if (ref.current) {
         const observer = new ResizeObserver((entries) => {
           for (const entry of entries) {
-            setHeight((oldValue) => {
-              if (height > 0 && entry.contentRect.height > oldValue) {
+            setHeight(() => {
+              if (entry.contentRect.height > height) {
                 // 滚动窗口
                 scrollTop && scrollTop();
               }
@@ -95,7 +95,7 @@ const Message = memo(
           observer.disconnect();
         };
       }
-    }, []);
+    }, [ref, scrollTop]);
 
     const isUser = message.type === 'user_message';
     const isAsk = message.waitForAnswer;
