@@ -1,5 +1,6 @@
 # This is a simple example of a chainlit app.
 
+import asyncio
 import json
 import os
 import time
@@ -452,20 +453,31 @@ async def main(message: Message):
         ).send()
     if message.content == "18":
         # 必须实现71行的 @account_recognition
-        res = await AccountInput(timeout=20, rules=[lenValidate]).send()
+        res = await AccountInput(timeout=5, rules=[lenValidate]).send()
         logger.info(f"客户输入账号 {res}")
-        await Message(content=res).send()
+        if res:
+            await Message(content=res).send()
+
     if message.content == "19":
         # 必须实现 @amount_recognition
         res = await AmountInput(rules=[validateCompare]).send()
-        await Message(content=res).send()
+        if res:
+            await Message(content=res).send()
     if message.content == "20":
         # 必须实现 @modilephone_recognition
-        res = await MobilePhoneInput().send()
-        await Message(content=res).send()
+        res = await MobilePhoneInput(rules=[]).send()
+        if res:
+            await Message(content=res).send()
+
     if message.content == "21":
         # 必须实现 @composite_recognition
         res = await CompositeInput(
             content="请输入", optionals=[MobilePhoneInput, AccountInput]
         ).send()
-        await Message(content=res).send()
+        if res:
+            await Message(content=res).send()
+    if message.content == "22":
+        mobilePhoneInput = MobilePhoneInput(rules=[validateCompare], timeout=30)
+        asyncio.create_task(mobilePhoneInput.send())
+        await asyncio.sleep(5)
+        mobilePhoneInput.cancel()

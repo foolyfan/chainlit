@@ -1,6 +1,7 @@
+import asyncio
 import re
 from abc import ABC, abstractmethod
-from typing import Callable, List, Optional, Type, TypedDict, Union, cast
+from typing import Callable, List, Literal, Optional, Type, TypedDict, Union, cast
 
 from chainlit.action import Action
 from chainlit.config import config
@@ -14,7 +15,9 @@ from chainlit.extensions.types import (
 )
 from chainlit.logger import logger
 from chainlit.message import AskMessageBase
+from chainlit.session import WebsocketSession
 from chainlit.telemetry import trace_event
+from chainlit.user_session import user_session
 from literalai.helper import utc_now
 from literalai.step import MessageStepType
 
@@ -40,6 +43,7 @@ class InputBase(AskMessageBase, ABC):
         speechContent: str = "",
         type: MessageStepType = "assistant_message",
         actions: List[Action] = [],
+        strategy: Literal["repeat", "once"] = "repeat",
     ):
         self.rules = rules
         self.content = content
@@ -48,6 +52,9 @@ class InputBase(AskMessageBase, ABC):
         self.raise_on_timeout = raise_on_timeout
         self.speechContent = speechContent
         self.actions = actions
+        self.strategy = strategy
+
+        self._task: Union[asyncio.Task, None] = None
 
     def __post_init__(self) -> None:
         if not getattr(self, "author", None):
@@ -65,6 +72,9 @@ class InputBase(AskMessageBase, ABC):
 
     async def transfomer_cmd_res(self, cmd: GatherCommandResponse) -> Union[str, None]:
         pass
+
+    def cancel(self):
+        self._task is not None and self._task.cancel()
 
     async def _processCmd(self, cmd: GatherCommand) -> Union[str, None]:
         cmdRes = await cmd.send()
@@ -121,9 +131,12 @@ class InputBase(AskMessageBase, ABC):
 
         raise UnknowInputTypeException()
 
-    async def input_send(self, type: InputValueType) -> str:
+    async def input_send(self, type: InputValueType) -> Union[str, None]:
 
         trace_event("send_input")
+        if not self._isOnline():
+            return None
+
         if not self.created_at:
             self.created_at = utc_now()
 
@@ -139,28 +152,41 @@ class InputBase(AskMessageBase, ABC):
 
         spec = InputSpec(type=type, timeout=self.timeout, keys=action_keys)
 
-        res = cast(
-            Union[InputResponse, None],
-            await context.emitter.send_input(step_dict, spec, self.raise_on_timeout),
-        )
-
-        processRes = None
-
-        while True:
-            processRes = await self._processInput(res)
-            if processRes is not None:
-                break
-            step_dict = await self._create()
-            res = await context.emitter.update_input(
-                step_dict, spec, self.raise_on_timeout
+        try:
+            self._task = asyncio.create_task(
+                context.emitter.send_input(step_dict, spec, self.raise_on_timeout)
             )
 
-        for action in self.actions:
-            await action.remove()
+            res = cast(
+                Union[InputResponse, None],
+                await self._task,
+            )  # 等待任务完成，捕获取消任务的异常
 
-        await context.emitter.clear("clear_input")
+            processRes = None
 
+            while True:
+                processRes = await self._processInput(res)
+                if processRes is not None:
+                    break
+                step_dict = await self._create()
+
+                if not self._isOnline():
+                    return None
+
+                self._task = asyncio.create_task(
+                    context.emitter.update_input(step_dict, spec, self.raise_on_timeout)
+                )
+                res = await self._task
+        except asyncio.CancelledError:
+            await context.emitter.clear("clear_input")
+
+        finally:
+            for action in self.actions:
+                await action.remove()
         return processRes
+
+    def _isOnline(self) -> bool:
+        return True if WebsocketSession.get_by_id(user_session.get("id")) else False
 
 
 class NumberInput(InputBase):
@@ -180,7 +206,7 @@ class TextInput(InputBase):
         self.timeout = timeout
         self.speechContent = speechContent
 
-    async def send(self) -> str:
+    async def send(self) -> Union[str, None]:
         return ""
 
 
@@ -228,7 +254,7 @@ class AccountInput(NumberInput):
             return cmdRes.data["value"]
         return None
 
-    async def send(self) -> str:
+    async def send(self) -> Union[str, None]:
         return await super().input_send("number")
 
 
@@ -242,11 +268,16 @@ def validate_chinese_phone_number(value: str) -> ValidateResult:
 class MobilePhoneInput(NumberInput):
     def __init__(
         self,
+        rules: Optional[List[Callable[[str], ValidateResult]]],
         timeout: int = 60,
         content: str = "请录入手机号码",
         speechContent: str = "请录入手机号码",
     ):
-        self.rules = [validate_chinese_phone_number]
+        self.rules = (
+            [*rules, validate_chinese_phone_number]
+            if rules is not None
+            else [validate_chinese_phone_number]
+        )
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
@@ -256,7 +287,7 @@ class MobilePhoneInput(NumberInput):
     async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
         return await config.code.on_recognation_input["__mobilephone__"](value)
 
-    async def send(self) -> str:
+    async def send(self) -> Union[str, None]:
         return await super().input_send("number")
 
 
@@ -286,7 +317,7 @@ class AmountInput(NumberInput):
         self.raise_on_timeout = False
         super().__post_init__()
 
-    async def send(self) -> str:
+    async def send(self) -> Union[str, None]:
         return await super().input_send("number")
 
     async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
@@ -306,7 +337,7 @@ class CompositeInput(TextInput):
         self.speechContent = speechContent
         self.optionals = optionals
 
-    async def send(self) -> str:
+    async def send(self) -> Union[str, None]:
         return "复合输入场"
 
     async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
