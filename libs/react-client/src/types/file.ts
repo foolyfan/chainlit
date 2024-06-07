@@ -1,4 +1,4 @@
-import { IAskResponse } from './action';
+import { IAskResponse, IInputResponse } from './action';
 import { IChoiceLayout, IStep } from './step';
 
 export interface FileSpec {
@@ -27,6 +27,14 @@ export interface IAsk {
   } & FileSpec &
     ActionSpec &
     ListActionSpec;
+}
+
+export interface IInput {
+  callback: (payload: IInputResponse) => void;
+  spec: {
+    type: 'text' | 'number';
+    timeout: number;
+  } & ActionSpec;
 }
 
 export interface GatherCommandSpec {

@@ -84,7 +84,10 @@ const InputBox = memo(
     );
 
     const onReply = useCallback(
-      async (msg: string, cmdRes?: IGatherCommandResponse) => {
+      async (
+        msg: string,
+        spec?: { asr?: boolean; cmdRes?: IGatherCommandResponse }
+      ) => {
         const message: IStep = {
           threadId: '',
           id: uuidv4(),
@@ -94,7 +97,7 @@ const InputBox = memo(
           createdAt: new Date().toISOString()
         };
 
-        replyMessage(message, cmdRes);
+        replyMessage(message, spec);
         addWaitingMessage(projectSettings!.ui.name);
         setAutoScroll(true);
       },

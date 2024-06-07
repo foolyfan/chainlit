@@ -5,9 +5,7 @@ import 'regenerator-runtime';
 
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
-import TuneIcon from '@mui/icons-material/Tune';
-import { Box, IconButton, Stack, TextField } from '@mui/material';
-import InputAdornment from '@mui/material/InputAdornment';
+import { Box, IconButton, Stack } from '@mui/material';
 
 import {
   FileSpec,
@@ -19,10 +17,11 @@ import {
 import { Attachments } from 'components/molecules/attachments';
 
 import { IAttachment, attachmentsState } from 'state/chat';
-import { chatSettingsOpenState, projectSettingsState } from 'state/project';
+import { projectSettingsState } from 'state/project';
 import { inputHistoryState } from 'state/userInputHistory';
 
-import { SubmitButton } from './SubmitButton';
+import { NumberInputField } from './NumberInputField';
+import { TextInputField } from './TextInputField';
 import SpeechButton from './speechButton';
 
 interface Props {
@@ -30,7 +29,10 @@ interface Props {
   onFileUpload: (payload: File[]) => void;
   onFileUploadError: (error: string) => void;
   onSubmit: (message: string, attachments?: IAttachment[]) => void;
-  onReply: (message: string, cmdRes?: IGatherCommandResponse) => void;
+  onReply: (
+    message: string,
+    spec?: { asr?: boolean; cmdRes?: IGatherCommandResponse }
+  ) => void;
 }
 
 function getLineCount(el: HTMLDivElement) {
@@ -46,17 +48,16 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
   const [attachments, setAttachments] = useRecoilState(attachmentsState);
   const [pSettings] = useRecoilState(projectSettingsState);
   const setInputHistory = useSetRecoilState(inputHistoryState);
-  const setChatSettingsOpen = useSetRecoilState(chatSettingsOpenState);
 
   const { abortAudioTask } = useChatContext();
 
   const ref = useRef<HTMLDivElement>(null);
   const {
     askUser,
-    chatSettingsInputs,
     disabled: _disabled,
     gatherCommand,
-    loading
+    loading,
+    input
   } = useChatData();
 
   const disabled = _disabled || !!attachments.find((a) => !a.uploaded);
@@ -71,6 +72,8 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
   const [inputState, setInputState] = useState<'speech' | 'keyboard'>(
     'keyboard'
   );
+
+  const [asrInput, setAsrInput] = useState<boolean>(false);
 
   const [speechRecognitionRuning, setSpeechRecognitionRuning] =
     useState<boolean>(false);
@@ -103,18 +106,46 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
     };
   }, []);
 
+  const clearInput = useCallback(() => {
+    setAsrInput(false);
+    setValue('');
+  }, [setAsrInput, setValue]);
+
   const submit = useCallback(() => {
     if (gatherCommand) {
-      onReply(value, {
-        ...gatherCommand!.spec,
-        code: '00',
-        msg: '客户操作成功',
-        data: {}
-      });
-      setValue('');
+      if (gatherCommand.spec.type == 'scan') {
+        onReply('622583', {
+          cmdRes: {
+            ...gatherCommand!.spec,
+            code: '00',
+            msg: '客户操作成功',
+            data: {
+              value: '622583'
+            }
+          }
+        });
+      } else {
+        onReply(value, {
+          cmdRes: {
+            ...gatherCommand!.spec,
+            code: '00',
+            msg: '客户操作成功',
+            data: {}
+          }
+        });
+      }
+
+      clearInput();
       return;
     }
     if (value === '' || disabled) {
+      return;
+    }
+    if (input) {
+      onReply(value, {
+        asr: asrInput
+      });
+      clearInput();
       return;
     }
     if (askUser) {
@@ -123,7 +154,7 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
       onSubmit(value, attachments);
     }
     setAttachments([]);
-    setValue('');
+    clearInput();
   }, [
     value,
     disabled,
@@ -132,7 +163,10 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
     attachments,
     setAttachments,
     onSubmit,
-    gatherCommand
+    gatherCommand,
+    asrInput,
+    onReply,
+    clearInput
   ]);
 
   const handleKeyDown = useCallback(
@@ -164,30 +198,30 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
     }
   }, [value]);
 
-  const startAdornment = (
-    <>
-      {/* <HistoryButton
-          disabled={disabled && !loading}
-          onClick={onHistoryClick}
-        />
-        <UploadButton
-          disabled={disabled && !loading}
-          fileSpec={fileSpec}
-          onFileUploadError={onFileUploadError}
-          onFileUpload={onFileUpload}
-        /> */}
-      {chatSettingsInputs.length > 0 && (
-        <IconButton
-          id="chat-settings-open-modal"
-          disabled={disabled}
-          color="inherit"
-          onClick={() => setChatSettingsOpen(true)}
-        >
-          <TuneIcon />
-        </IconButton>
-      )}
-    </>
-  );
+  // const startAdornment = (
+  //   <>
+  //     {/* <HistoryButton
+  //         disabled={disabled && !loading}
+  //         onClick={onHistoryClick}
+  //       />
+  //       <UploadButton
+  //         disabled={disabled && !loading}
+  //         fileSpec={fileSpec}
+  //         onFileUploadError={onFileUploadError}
+  //         onFileUpload={onFileUpload}
+  //       /> */}
+  //     {chatSettingsInputs.length > 0 && (
+  //       <IconButton
+  //         id="chat-settings-open-modal"
+  //         disabled={disabled}
+  //         color="inherit"
+  //         onClick={() => setChatSettingsOpen(true)}
+  //       >
+  //         <TuneIcon />
+  //       </IconButton>
+  //     )}
+  //   </>
+  // );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'row' }}>
@@ -238,6 +272,7 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
         {inputState == 'speech' ? (
           <SpeechButton
             onSpeech={(text) => {
+              setAsrInput(true);
               setValue(text);
             }}
             onSpeechRecognitionRuning={(state) => {
@@ -245,39 +280,38 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
             }}
           />
         ) : (
-          <TextField
-            inputRef={ref}
-            id="chat-input"
-            autoFocus
-            multiline
-            variant="standard"
-            autoComplete="false"
-            placeholder={t(
-              'components.organisms.chat.inputBox.input.placeholder'
+          <>
+            {(!input || input?.spec.type == 'text') && (
+              <TextInputField
+                ref={ref}
+                value={value}
+                onChange={(value) => setValue(value)}
+                onSubmit={submit}
+                onCompositionEnd={() => setIsComposing(false)}
+                onCompositionStart={() => setIsComposing(true)}
+                onFocus={abortAudioTask}
+                onKeyDown={handleKeyDown}
+                disabled={disabled && !loading}
+                placeholder={t(
+                  'components.organisms.chat.inputBox.input.placeholder'
+                )}
+              />
             )}
-            disabled={disabled && !loading}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
-            value={value}
-            fullWidth
-            onFocus={abortAudioTask}
-            InputProps={{
-              disableUnderline: true,
-              startAdornment: (
-                <InputAdornment
-                  sx={{ ml: 1, color: 'text.secondary' }}
-                  position="start"
-                >
-                  {startAdornment}
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <SubmitButton onSubmit={submit} disabled={disabled || !value} />
-              )
-            }}
-          />
+            {input && input.spec.type == 'number' && (
+              <NumberInputField
+                ref={ref}
+                value={value}
+                onChange={(value) => setValue(value)}
+                onSubmit={submit}
+                onCompositionEnd={() => setIsComposing(false)}
+                onCompositionStart={() => setIsComposing(true)}
+                onFocus={abortAudioTask}
+                onKeyDown={handleKeyDown}
+                disabled={disabled && !loading}
+                placeholder={'请输入数字'}
+              />
+            )}
+          </>
         )}
       </Stack>
     </Box>

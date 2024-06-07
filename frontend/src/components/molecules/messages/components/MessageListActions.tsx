@@ -1,6 +1,8 @@
+import { useAuth } from 'api/auth';
 import cloneDeep from 'lodash/cloneDeep';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@mui/material';
 
@@ -9,6 +11,7 @@ import {
   IChoiceImageAction,
   type IChoiceLayout,
   IExternalAction,
+  IGatherCommandResponse,
   IListAction,
   type IStep,
   useChatContext,
@@ -128,7 +131,7 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
     undefined
   );
   const { abortAudioTask, setActionRef } = useChatContext();
-  const { addWaitingMessage } = useChatInteract();
+  const { addWaitingMessage, replyMessage } = useChatInteract();
   const projectSettings = useRecoilValue(projectSettingsState);
 
   const ref = useRef({ toHistory: () => setHistory(true) });
@@ -153,17 +156,36 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
     setDisplayListActions(cloneDeep(listActions));
   }, [listActions, displayMessage]);
 
+  const { user } = useAuth();
+  const onReply = useCallback(
+    async (
+      msg: string,
+      spec?: {
+        asr?: boolean;
+        cmdRes?: IGatherCommandResponse;
+        action?: IListAction;
+      }
+    ) => {
+      const message: IStep = {
+        threadId: '',
+        id: uuidv4(),
+        name: user?.identifier || 'User',
+        type: 'user_message',
+        output: msg,
+        createdAt: new Date().toISOString()
+      };
+
+      replyMessage(message, spec);
+      addWaitingMessage(projectSettings!.ui.name);
+    },
+    [user, replyMessage]
+  );
+
   const handleClick = useCallback(
     (action: IListAction) => {
       setHistory(true);
       abortAudioTask();
-      addWaitingMessage(projectSettings!.ui.name);
-      askUser?.callback({
-        id: action.id,
-        forId: action.forId,
-        type: 'click',
-        value: action.id
-      });
+      onReply('', { action });
     },
     [abortAudioTask, askUser]
   );

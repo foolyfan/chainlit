@@ -1,5 +1,4 @@
 import asyncio
-import typing
 import uuid
 from typing import Any, Dict, List, Literal, Optional, Union, cast
 
@@ -72,7 +71,10 @@ class BaseChainlitEmitter:
         pass
 
     def clear(
-        self, event: Literal["clear_ask", "clear_gather_command", "clear_call_fn"]
+        self,
+        event: Literal[
+            "clear_ask", "clear_gather_command", "clear_call_fn", "clear_input"
+        ],
     ):
         pass
 
@@ -196,12 +198,18 @@ class ChainlitEmitter(BaseChainlitEmitter):
         return self.emit("delete_message", step_dict)
 
     def send_timeout(
-        self, event: Literal["ask_timeout", "gather_command_timeout", "call_fn_timeout"]
+        self,
+        event: Literal[
+            "ask_timeout", "gather_command_timeout", "call_fn_timeout", "input_timeout"
+        ],
     ):
         return self.emit(event, {})
 
     def clear(
-        self, event: Literal["clear_ask", "clear_gather_command", "clear_call_fn"]
+        self,
+        event: Literal[
+            "clear_ask", "clear_gather_command", "clear_call_fn", "clear_input"
+        ],
     ):
         return self.emit(event, {})
 
@@ -348,6 +356,44 @@ class ChainlitEmitter(BaseChainlitEmitter):
             if raise_on_timeout:
                 raise e
             return None
+
+    async def send_input(
+        self, step_dict: StepDict, spec: InputSpec, raise_on_timeout=False
+    ):
+        try:
+            # Send the prompt to the UI
+            user_res = await self.emit_call(
+                "input", {"msg": step_dict, "spec": spec.to_dict()}, spec.timeout
+            )
+            self.task_end()
+            final_res: Optional["InputResponse"] = user_res
+            return final_res
+        except TimeoutError as e:
+            await self.send_timeout("input_timeout")
+
+            if raise_on_timeout:
+                raise e
+        finally:
+            await self.task_start()
+
+    async def update_input(
+        self, step_dict: StepDict, spec: InputSpec, raise_on_timeout=False
+    ):
+        try:
+            # Send the prompt to the UI
+            user_res = await self.emit_call(
+                "update_input", {"msg": step_dict, "spec": spec.to_dict()}, spec.timeout
+            )
+            await self.task_end()
+            final_res: Optional["InputResponse"] = user_res
+            return final_res
+        except TimeoutError as e:
+            await self.send_timeout("input_timeout")
+
+            if raise_on_timeout:
+                raise e
+        finally:
+            self.task_start()
 
     def update_token_count(self, count: int):
         """Update the token count for the UI."""

@@ -294,7 +294,7 @@ def tts_method(
 def amount_recognition(
     func: Callable[[str], Union[str, GatherCommand, None]]
 ) -> Callable[[str], Union[str, GatherCommand, None]]:
-    wrap_user_function(func)
+    config.code.on_recognation_input["__amount__"] = wrap_user_function(func)
     return func
 
 
@@ -302,7 +302,7 @@ def amount_recognition(
 def modilephone_recognition(
     func: Callable[[str], Union[str, GatherCommand, None]]
 ) -> Callable[[str], Union[str, GatherCommand, None]]:
-    wrap_user_function(func)
+    config.code.on_recognation_input["__modilephone__"] = wrap_user_function(func)
     return func
 
 
@@ -310,7 +310,7 @@ def modilephone_recognition(
 def account_recognition(
     func: Callable[[str], Union[str, GatherCommand, None]]
 ) -> Callable[[str], Union[str, GatherCommand, None]]:
-    wrap_user_function(func)
+    config.code.on_recognation_input["__account__"] = wrap_user_function(func)
     return func
 
 

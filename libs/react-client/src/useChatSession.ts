@@ -18,6 +18,7 @@ import {
   elementState,
   firstUserInteraction,
   gatherCommandState,
+  inputState,
   listActionState,
   loadingState,
   messagesState,
@@ -60,6 +61,7 @@ const useChatSession = () => {
   const setLoading = useSetRecoilState(loadingState);
   const setMessages = useSetRecoilState(messagesState);
   const setAskUser = useSetRecoilState(askUserState);
+  const setInput = useSetRecoilState(inputState);
   const setGatherCommand = useSetRecoilState(gatherCommandState);
   const setCallFn = useSetRecoilState(callFnState);
 
@@ -114,10 +116,13 @@ const useChatSession = () => {
       });
 
       socket.on('task_start', () => {
+        console.log('task_start');
+
         setLoading(true);
       });
 
       socket.on('task_end', () => {
+        console.log('task_end');
         setLoading(false);
       });
 
@@ -230,6 +235,64 @@ const useChatSession = () => {
       socket.on('ask_timeout', () => {
         setAskUser(undefined);
         setLoading(false);
+        if (actionRef) {
+          actionRef.current.toHistory();
+        }
+      });
+
+      socket.on('input', ({ msg, spec }, callback) => {
+        console.log('input msg', msg, spec);
+        setMessages((oldMessages) => {
+          const lastMessage = oldMessages.pop();
+          if (lastMessage?.type == 'waiting') {
+            return [...oldMessages];
+          }
+          if (lastMessage) {
+            oldMessages.push(lastMessage);
+          }
+          return oldMessages;
+        });
+        setInput({ spec, callback });
+        setMessages((oldMessages) => addMessage(oldMessages, msg));
+        if (!isEmpty(msg.speechContent)) {
+          setSpeechPrompts({
+            content: msg.speechContent
+          });
+        }
+        setLoading(false);
+      });
+
+      socket.on('input_timeout', () => {
+        console.log('input_timeout');
+      });
+      socket.on('update_input', ({ msg, spec }, callback) => {
+        console.log('update_input', msg, spec);
+        setMessages((oldMessages) => {
+          const lastMessage = oldMessages.pop();
+          if (lastMessage?.type == 'waiting') {
+            return [...oldMessages];
+          }
+          if (lastMessage) {
+            oldMessages.push(lastMessage);
+          }
+          return oldMessages;
+        });
+        setInput({ spec, callback });
+        setMessages((oldMessages) =>
+          updateMessageById(oldMessages, msg.id, msg)
+        );
+        if (!isEmpty(msg.speechContent)) {
+          setSpeechPrompts({
+            content: msg.speechContent
+          });
+        }
+        setLoading(false);
+      });
+
+      socket.on('clear_input', () => {
+        console.log('clear_input');
+
+        setInput(undefined);
         if (actionRef) {
           actionRef.current.toHistory();
         }

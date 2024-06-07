@@ -1,12 +1,15 @@
+import { useAuth } from 'api/auth';
 import { MessageContext } from 'contexts/MessageContext';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import { v4 as uuidv4 } from 'uuid';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
 import {
   type IAction,
+  IGatherCommandResponse,
   type IStep,
   useChatContext,
   useChatInteract
@@ -34,7 +37,7 @@ const MessageActions = ({ message, actions }: Props) => {
   const [history, setHistory] = useState<boolean>(false);
 
   const { abortAudioTask, setActionRef } = useChatContext();
-  const { addWaitingMessage } = useChatInteract();
+  const { addWaitingMessage, replyMessage } = useChatInteract();
   const projectSettings = useRecoilValue(projectSettingsState);
 
   const ref = useRef({ toHistory: () => setHistory(true) });
@@ -58,19 +61,40 @@ const MessageActions = ({ message, actions }: Props) => {
     setDisplayedDrawerActions(scopedActions.filter((a) => a.collapsed));
   }, [actions]);
 
+  const { user } = useAuth();
+  const onReply = useCallback(
+    async (
+      msg: string,
+      spec?: {
+        asr?: boolean;
+        cmdRes?: IGatherCommandResponse;
+        action?: IAction;
+      }
+    ) => {
+      const message: IStep = {
+        threadId: '',
+        id: uuidv4(),
+        name: user?.identifier || 'User',
+        type: 'user_message',
+        output: msg,
+        createdAt: new Date().toISOString()
+      };
+
+      replyMessage(message, spec);
+      addWaitingMessage(projectSettings!.ui.name);
+    },
+    [user, replyMessage]
+  );
+
   const handleClick = useCallback(
     (action: IAction) => {
       setHistory(true);
       abortAudioTask();
-      addWaitingMessage(projectSettings!.ui.name);
-      askUser?.callback({
-        id: action.id,
-        forId: action.forId,
-        value: action.id,
-        type: 'click'
+      onReply('', {
+        action
       });
     },
-    [askUser, abortAudioTask]
+    [askUser, abortAudioTask, onReply]
   );
 
   return (
