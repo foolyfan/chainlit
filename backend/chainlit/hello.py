@@ -15,6 +15,7 @@ from chainlit.extensions.input import (
     AmountInput,
     CompositeInput,
     MobilePhoneInput,
+    ValidateResult,
 )
 from chainlit.extensions.listaction import (
     LA,
@@ -37,6 +38,7 @@ from chainlit import (
     TaskList,
     TaskStatus,
     account_recognition,
+    amount_recognition,
     asr_method,
     on_message,
     sleep,
@@ -88,6 +90,21 @@ async def account_hook(value: str) -> Union[str, GatherCommand, None]:
     if value == "扫一扫":
         return GatherCommand(action="scan", timeout=30)
     return value
+
+
+@amount_recognition
+async def amount_hook(value: str) -> Union[str, GatherCommand, None]:
+    """
+    金额语音识别处理
+
+    Parameters:
+    value: 用户的语音经asr解析后的文本结果
+
+    Returns:
+    Union[str, GatherCommand, None]: 如果不包含具体的指令，返回原始内容或AI解析出用户意图金额（500块钱吧 -> 500），进行格式校验；如果包含具体的指令，返回实例化的指令对象；当返回None时会要求用户再次输入
+    """
+
+    return "3900"
 
 
 @asr_method
@@ -190,6 +207,19 @@ async def ttsHook(content, params):
         )
     else:
         return ""
+
+
+def lenValidate(value) -> ValidateResult:
+    res = len(value) == 6
+    return {"value": res, "errmsg": None if res else "账号长度不满足6位的要求"}
+
+
+def validateCompare(value: str) -> ValidateResult:
+    res = float(value) > 3000
+    return {
+        "value": res,
+        "errmsg": None if res else "需大于3000",
+    }
 
 
 @on_message
@@ -415,12 +445,12 @@ async def main(message: Message):
         ).send()
     if message.content == "18":
         # 必须实现71行的 @account_recognition
-        res = await AccountInput(timeout=20).send()
+        res = await AccountInput(timeout=20, rules=[lenValidate]).send()
         logger.info(f"客户输入账号 {res}")
         await Message(content=res).send()
     if message.content == "19":
         # 必须实现 @amount_recognition
-        res = await AmountInput().send()
+        res = await AmountInput(rules=[validateCompare]).send()
         await Message(content=res).send()
     if message.content == "20":
         # 必须实现 @modilephone_recognition

@@ -52,6 +52,8 @@ class InputBase(AskMessageBase, ABC):
     def __post_init__(self) -> None:
         if not getattr(self, "author", None):
             self.author = config.ui.name
+        if not getattr(self, "actions", None):
+            self.actions = []
         super().__post_init__()
 
     @abstractmethod
@@ -199,11 +201,12 @@ class AccountInput(NumberInput):
 
     def __init__(
         self,
+        rules: Optional[List[Callable[[str], ValidateResult]]],
         timeout: int = 60,
         content: str = "请扫描或录入账号",
         speechContent: str = "请扫描或录入账号",
     ):
-        self.rules = [lenValidate, startValidate]
+        self.rules = rules if rules is not None else []
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
@@ -267,17 +270,22 @@ def validate_decimal(value: str) -> ValidateResult:
 class AmountInput(NumberInput):
     def __init__(
         self,
+        rules: Optional[List[Callable[[str], ValidateResult]]],
         timeout: int = 60,
         content: str = "请录入金额",
         speechContent: str = "请录入金额",
     ):
-        self.rules = [validate_decimal]
+        self.rules = (
+            [*rules, validate_decimal] if rules is not None else [validate_decimal]
+        )
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
+        self.raise_on_timeout = False
+        super().__post_init__()
 
     async def send(self) -> str:
-        return "5000.33"
+        return await super().input_send("number")
 
     async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
         return await config.code.on_recognation_input["__amount__"](value)
