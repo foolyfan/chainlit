@@ -1,14 +1,11 @@
-import { useAuth } from 'api/auth';
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
 
 import {
   IAction,
   IFeedback,
-  IGatherCommandResponse,
   IListAction,
   IProjectSettings,
   IStep,
@@ -57,31 +54,32 @@ const Messages = ({
   const callActionWithToast = useCallback(
     (action: IAction) => {
       const promise = callAction(action);
-      if (promise) {
-        toast.promise(promise, {
-          loading: `${t('components.organisms.chat.Messages.index.running')} ${
-            action.name
-          }`,
-          success: (res) => {
-            if (res.response) {
-              return res.response;
-            } else {
-              return `${action.name} ${t(
-                'components.organisms.chat.Messages.index.executedSuccessfully'
-              )}`;
-            }
-          },
-          error: (res) => {
-            if (res.response) {
-              return res.response;
-            } else {
-              return `${action.name} ${t(
-                'components.organisms.chat.Messages.index.failed'
-              )}`;
-            }
-          }
-        });
-      }
+      promise?.then();
+      // if (promise) {
+      //   toast.promise(promise, {
+      //     loading: `${t('components.organisms.chat.Messages.index.running')} ${
+      //       action.name
+      //     }`,
+      //     success: (res) => {
+      //       if (res.response) {
+      //         return res.response;
+      //       } else {
+      //         return `${action.name} ${t(
+      //           'components.organisms.chat.Messages.index.executedSuccessfully'
+      //         )}`;
+      //       }
+      //     },
+      //     error: (res) => {
+      //       if (res.response) {
+      //         return res.response;
+      //       } else {
+      //         return `${action.name} ${t(
+      //           'components.organisms.chat.Messages.index.failed'
+      //         )}`;
+      //       }
+      //     }
+      //   });
+      // }
     },
     [callAction]
   );
@@ -89,27 +87,28 @@ const Messages = ({
   const callListActionWithToast = useCallback(
     (action: IListAction) => {
       const promise = callListAction(action);
-      if (promise) {
-        toast.promise(promise, {
-          loading: `${t('components.organisms.chat.Messages.index.running')}`,
-          success: (res) => {
-            if (res.response) {
-              return res.response;
-            } else {
-              return `${t(
-                'components.organisms.chat.Messages.index.executedSuccessfully'
-              )}`;
-            }
-          },
-          error: (res) => {
-            if (res.response) {
-              return res.response;
-            } else {
-              return `${t('components.organisms.chat.Messages.index.failed')}`;
-            }
-          }
-        });
-      }
+      promise?.then();
+      // if (promise) {
+      //   toast.promise(promise, {
+      //     loading: `${t('components.organisms.chat.Messages.index.running')}`,
+      //     success: (res) => {
+      //       if (res.response) {
+      //         return res.response;
+      //       } else {
+      //         return `${t(
+      //           'components.organisms.chat.Messages.index.executedSuccessfully'
+      //         )}`;
+      //       }
+      //     },
+      //     error: (res) => {
+      //       if (res.response) {
+      //         return res.response;
+      //       } else {
+      //         return `${t('components.organisms.chat.Messages.index.failed')}`;
+      //       }
+      //     }
+      //   });
+      // }
     },
     [callListAction]
   );
@@ -161,54 +160,27 @@ const Messages = ({
     text,
     status: passwordStatus
   } = usePassword('请输入密码', false);
-  const { user } = useAuth();
-  const { replyMessage, addWaitingMessage } = useChatInteract();
-  const onReply = useCallback(
-    async (
-      msg: string,
-      spec?: {
-        asr?: boolean;
-        cmdRes?: IGatherCommandResponse;
-      }
-    ) => {
-      const message: IStep = {
-        threadId: '',
-        id: uuidv4(),
-        name: user?.identifier || 'User',
-        type: 'user_message',
-        output: msg,
-        createdAt: new Date().toISOString()
-      };
 
-      replyMessage(message, spec);
-      addWaitingMessage(projectSettings!.ui.name);
-      setAutoScroll(true);
-    },
-    [user, replyMessage]
-  );
+  const { replyCmdMessage } = useChatInteract();
 
   useEffect(() => {
     if (!gatherCommand) {
       return;
     }
     if (passwordStatus == 'finish') {
-      onReply('', {
-        cmdRes: {
-          ...gatherCommand!.spec,
-          code: '00',
-          msg: '',
-          data: { value: text }
-        }
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '00',
+        msg: '',
+        data: { value: text }
       });
     }
     if (passwordStatus == 'cancel') {
-      onReply('', {
-        cmdRes: {
-          ...gatherCommand!.spec,
-          code: '01',
-          msg: '客户取消输入',
-          data: {}
-        }
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '01',
+        msg: '客户取消输入',
+        data: {}
       });
     }
   }, [passwordStatus, text]);
@@ -226,14 +198,12 @@ const Messages = ({
       );
       promise
         .then((res) => {
-          onReply('', {
-            cmdRes: {
-              ...gatherCommand!.spec,
-              code: '00',
-              msg: '客户扫描成功',
-              data: {
-                value: res.id
-              }
+          replyCmdMessage({
+            ...gatherCommand!.spec,
+            code: '00',
+            msg: '客户扫描成功',
+            data: {
+              value: res.id
             }
           });
         })
@@ -249,13 +219,11 @@ const Messages = ({
       clearImage();
     }
     if (scanStatus == 'cancel') {
-      onReply('', {
-        cmdRes: {
-          ...gatherCommand!.spec,
-          code: '01',
-          msg: '客户取消扫描',
-          data: {}
-        }
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '01',
+        msg: '客户取消扫描',
+        data: {}
       });
     }
   }, [scanStatus, imageFile]);

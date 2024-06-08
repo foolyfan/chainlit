@@ -178,11 +178,12 @@ class InputBase(AskMessageBase, ABC):
                 )
                 res = await self._task
         except asyncio.CancelledError:
-            await context.emitter.clear("clear_input")
+            pass
 
         finally:
             for action in self.actions:
                 await action.remove()
+            await context.emitter.clear("clear_input")
         return processRes
 
     def _isOnline(self) -> bool:
@@ -250,7 +251,7 @@ class AccountInput(NumberInput):
     async def transfomer_cmd_res(
         self, cmdRes: GatherCommandResponse
     ) -> Union[str, None]:
-        if cmdRes.type == "scan":
+        if cmdRes.type == "scan" and cmdRes.code == "00":
             fileId = cmdRes.data["value"]
             filePath = WebsocketSession.get_by_id(user_session.get("id")).files[fileId][
                 "path"

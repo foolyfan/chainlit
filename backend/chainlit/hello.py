@@ -118,7 +118,7 @@ async def mobilephone_hook(value: str) -> Union[str, GatherCommand, None]:
 
 @image_account_recognition
 async def mage_account_hook(filePath) -> Union[str, None]:
-    return "622458"
+    return "6224584564546"
 
 
 @asr_method
@@ -174,11 +174,14 @@ async def ttshook_local(content, params):
         except GeneratorExit:
             logger.info("客户端断开连接")
 
-    return StreamingResponse(
-        file_iterator(file_path),
-        media_type="audio/wav",
-        headers={"X-File-ID": str(uuid.uuid4())},
-    )
+    try:
+        return StreamingResponse(
+            file_iterator(file_path),
+            media_type="audio/wav",
+            headers={"X-File-ID": str(uuid.uuid4())},
+        )
+    except Exception as e:
+        logger.error(f"Error during streaming: {e}")
 
 
 async def ttsHook(content, params):
@@ -238,6 +241,7 @@ def validateCompare(value: str) -> ValidateResult:
 
 @on_message
 async def main(message: Message):
+    logger.info(f"收到消息 {message.content}")
     if message.content == "1":
 
         res = await AskUserChoiceMessage(
@@ -466,7 +470,7 @@ async def main(message: Message):
         ).send()
     if message.content == "18":
         # 必须实现71行的 @account_recognition
-        res = await AccountInput(timeout=5, rules=[lenValidate]).send()
+        res = await AccountInput(timeout=180, rules=[lenValidate]).send()
         logger.info(f"客户输入账号 {res}")
         if res:
             await Message(content=res).send()

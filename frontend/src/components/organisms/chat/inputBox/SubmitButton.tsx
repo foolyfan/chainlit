@@ -16,10 +16,16 @@ interface SubmitButtonProps {
 const SubmitButton = ({ disabled, onSubmit }: SubmitButtonProps) => {
   const { loading, gatherCommand } = useChatData();
   const { stopTask } = useChatInteract();
+  const { replyCmdMessage } = useChatInteract();
 
   const handleClick = () => {
     if (gatherCommand) {
-      onSubmit();
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '00',
+        msg: '客户操作成功',
+        data: {}
+      });
       return;
     }
     stopTask();

@@ -134,7 +134,9 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
   const { addWaitingMessage, replyMessage } = useChatInteract();
   const projectSettings = useRecoilValue(projectSettingsState);
 
-  const ref = useRef({ toHistory: () => setHistory(true) });
+  const ref = useRef({
+    toHistory: (status: boolean = true) => setHistory(status)
+  });
 
   useEffect(() => {
     setDisplayMessage({ ...message });
