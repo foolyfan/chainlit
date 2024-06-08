@@ -19,7 +19,8 @@ import {
   useChatInteract,
   useChatMessages,
   useChatSession,
-  usePassword
+  usePassword,
+  useScan
 } from '@chainlit/react-client';
 
 import { CommandContainer } from 'components/molecules/command/CommandContainer';
@@ -144,7 +145,22 @@ const Messages = ({
     []
   );
 
-  const { invokeKeyboard, text, status } = usePassword('请输入密码', false);
+  // 启动函数
+  useEffect(() => {
+    if (gatherCommand?.spec.type == 'password') {
+      invokeKeyboard();
+    }
+    if (gatherCommand?.spec.type == 'scan') {
+      takePhoto();
+    }
+  }, [gatherCommand]);
+
+  // 输入密码
+  const {
+    invokeKeyboard,
+    text,
+    status: passwordStatus
+  } = usePassword('请输入密码', false);
   const { user } = useAuth();
   const { replyMessage, addWaitingMessage } = useChatInteract();
   const onReply = useCallback(
@@ -172,16 +188,10 @@ const Messages = ({
   );
 
   useEffect(() => {
-    if (gatherCommand?.spec.type == 'password') {
-      invokeKeyboard();
-    }
-  }, [gatherCommand]);
-
-  useEffect(() => {
     if (!gatherCommand) {
       return;
     }
-    if (status == 'finish') {
+    if (passwordStatus == 'finish') {
       console.log('密码输入完成', text);
       onReply('', {
         cmdRes: {
@@ -192,8 +202,7 @@ const Messages = ({
         }
       });
     }
-    if (status == 'cancel') {
-      console.log('取消输入密码');
+    if (passwordStatus == 'cancel') {
       onReply('', {
         cmdRes: {
           ...gatherCommand!.spec,
@@ -203,7 +212,36 @@ const Messages = ({
         }
       });
     }
-  }, [status, text]);
+  }, [passwordStatus, text]);
+
+  // 扫一扫
+  const { imageData, clearImage, takePhoto, status: scanStatus } = useScan();
+
+  useEffect(() => {
+    if (scanStatus == 'finish') {
+      onReply('', {
+        cmdRes: {
+          ...gatherCommand!.spec,
+          code: '00',
+          msg: '客户扫描成功',
+          data: {
+            imageData
+          }
+        }
+      });
+      clearImage();
+    }
+    if (scanStatus == 'cancel') {
+      onReply('', {
+        cmdRes: {
+          ...gatherCommand!.spec,
+          code: '01',
+          msg: '客户取消扫描',
+          data: {}
+        }
+      });
+    }
+  }, [scanStatus, imageData]);
 
   return !idToResume &&
     !messages.length &&
@@ -216,9 +254,11 @@ const Messages = ({
     />
   ) : (
     <>
-      {gatherCommand && gatherCommand.spec.type !== 'password' && (
-        <CommandContainer gatherCommand={gatherCommand} />
-      )}
+      {gatherCommand &&
+        gatherCommand.spec.type !== 'password' &&
+        gatherCommand.spec.type !== 'scan' && (
+          <CommandContainer gatherCommand={gatherCommand} />
+        )}
       <MessageContainer
         avatars={avatars}
         loading={loading}
@@ -233,7 +273,9 @@ const Messages = ({
         callListAction={callListActionWithToast}
         setAutoScroll={setAutoScroll}
         hidden={Boolean(
-          gatherCommand && gatherCommand.spec.type !== 'password'
+          gatherCommand &&
+            gatherCommand.spec.type !== 'password' &&
+            gatherCommand.spec.type !== 'scan'
         )}
       />
     </>

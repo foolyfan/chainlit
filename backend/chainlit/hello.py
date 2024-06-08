@@ -394,6 +394,14 @@ async def main(message: Message):
         res = await GatherCommand(
             action="scan", timeout=90, speechContent="扫一扫"
         ).send()
+        if res:
+            if res.code == "00":
+                # logger.info(f"客户扫描成功 {res.data['imageData']}")
+                logger.info(f"客户扫描成功")
+            else:
+                logger.info("客户取消扫描")
+        else:
+            logger.info(f"客户输入超时")
         logger.info(f"扫一扫 {res}")
     if message.content == "13":
         res = await AskUserChoiceMessage(
