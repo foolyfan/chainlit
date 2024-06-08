@@ -34,7 +34,8 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
           onSpeech(response.content);
         })
         .catch((error) => {
-          console.error('asr error:', error);
+          console.error(error);
+          toast.error(error.toString());
         })
         .finally(() => {
           setSpeechRecognitionRuning(false);

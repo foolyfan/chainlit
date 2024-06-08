@@ -315,6 +315,14 @@ def account_recognition(
 
 
 @trace
+def image_account_recognition(
+    func: Callable[[str], Union[str, None]]
+) -> Callable[[str], Union[str, None]]:
+    config.code.on_recognation_input["__image_account__"] = wrap_user_function(func)
+    return func
+
+
+@trace
 def text_recognition(
     func: Callable[[str], Union[str, GatherCommand, None]]
 ) -> Callable[[str], Union[str, GatherCommand, None]]:

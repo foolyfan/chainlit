@@ -41,6 +41,7 @@ from chainlit import (
     account_recognition,
     amount_recognition,
     asr_method,
+    image_account_recognition,
     mobilephone_recognition,
     on_message,
     sleep,
@@ -113,6 +114,11 @@ async def amount_hook(value: str) -> Union[str, GatherCommand, None]:
 async def mobilephone_hook(value: str) -> Union[str, GatherCommand, None]:
 
     return "18536402990"
+
+
+@image_account_recognition
+async def mage_account_hook(filePath) -> Union[str, None]:
+    return "622458"
 
 
 @asr_method
@@ -396,8 +402,7 @@ async def main(message: Message):
         ).send()
         if res:
             if res.code == "00":
-                # logger.info(f"客户扫描成功 {res.data['imageData']}")
-                logger.info(f"客户扫描成功")
+                logger.info(f"客户扫描成功 {res}")
             else:
                 logger.info("客户取消扫描")
         else:

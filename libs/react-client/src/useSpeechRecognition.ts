@@ -1,19 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { jsbridge } from './utils/bridge';
-
-const base64ToBlob = (data: string) => {
-  // 将 Base64 编码的数据转换为字节数组
-  const byteCharacters = atob(data);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-
-  // 创建 Blob 对象
-  return new Blob([byteArray], { type: 'audio/voice' });
-};
+import { base64ToBlob, jsbridge } from './utils/bridge';
 
 const useSpeechRecognition = () => {
   const [file, setFile] = useState<Blob | undefined>(undefined);
@@ -45,7 +32,7 @@ const useSpeechRecognition = () => {
       (res) => {
         console.log('录音成功');
         const { data } = JSON.parse(res);
-        setFile(base64ToBlob(data));
+        setFile(base64ToBlob(data, 'audio/voice'));
       },
       (res) => {
         console.log(`录音失败返回 ${res}`);

@@ -251,7 +251,11 @@ class AccountInput(NumberInput):
         self, cmdRes: GatherCommandResponse
     ) -> Union[str, None]:
         if cmdRes.type == "scan":
-            return cmdRes.data["value"]
+            fileId = cmdRes.data["value"]
+            filePath = WebsocketSession.get_by_id(user_session.get("id")).files[fileId][
+                "path"
+            ]
+            return await config.code.on_recognation_input["__image_account__"](filePath)
         return None
 
     async def send(self) -> Union[str, None]:

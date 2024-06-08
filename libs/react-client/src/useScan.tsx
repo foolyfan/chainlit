@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 
-import { jsbridge } from './utils/bridge';
+import { base64ToBlob, jsbridge } from './utils/bridge';
 
 const useScan = () => {
-  const [imageData, setImageData] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<Blob | null>(null);
   const [status, setStatus] = useState<'finish' | 'cancel' | 'init'>('init');
   /**
    * 拍摄类型
@@ -15,7 +15,7 @@ const useScan = () => {
    */
   // 获取图片数据
   const takePhoto = useCallback((type: number = 0) => {
-    setImageData(null);
+    setImageFile(null);
     setStatus('init');
     jsbridge.invoke(
       'cameraApi.openCiticCamera',
@@ -25,7 +25,7 @@ const useScan = () => {
       (res) => {
         const { ret, data } = JSON.parse(res);
         if (ret == 0) {
-          setImageData(JSON.parse(data)['base64']);
+          setImageFile(base64ToBlob(JSON.parse(data)['base64'], 'image/jpeg'));
           setStatus('finish');
         } else {
           setStatus('cancel');
@@ -36,12 +36,12 @@ const useScan = () => {
 
   // 清除图片数据
   const clearImage = useCallback(() => {
-    setImageData(null);
+    setImageFile(null);
   }, []);
 
   return {
     status,
-    imageData,
+    imageFile,
     takePhoto,
     clearImage
   };

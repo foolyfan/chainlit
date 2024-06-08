@@ -192,7 +192,6 @@ const Messages = ({
       return;
     }
     if (passwordStatus == 'finish') {
-      console.log('密码输入完成', text);
       onReply('', {
         cmdRes: {
           ...gatherCommand!.spec,
@@ -215,20 +214,38 @@ const Messages = ({
   }, [passwordStatus, text]);
 
   // 扫一扫
-  const { imageData, clearImage, takePhoto, status: scanStatus } = useScan();
+  const { sessionId } = useChatSession();
+  const { imageFile, clearImage, takePhoto, status: scanStatus } = useScan();
 
   useEffect(() => {
-    if (scanStatus == 'finish') {
-      onReply('', {
-        cmdRes: {
-          ...gatherCommand!.spec,
-          code: '00',
-          msg: '客户扫描成功',
-          data: {
-            imageData
-          }
-        }
-      });
+    if (scanStatus == 'finish' && imageFile) {
+      const { promise } = apiClient.uploadFile(
+        imageFile as File,
+        () => {},
+        sessionId
+      );
+      promise
+        .then((res) => {
+          onReply('', {
+            cmdRes: {
+              ...gatherCommand!.spec,
+              code: '00',
+              msg: '客户扫描成功',
+              data: {
+                value: res.id
+              }
+            }
+          });
+        })
+        .catch((error) => {
+          console.error(error);
+
+          toast.error(error.toString());
+        })
+        .finally(() => {
+          clearImage();
+        });
+
       clearImage();
     }
     if (scanStatus == 'cancel') {
@@ -241,7 +258,7 @@ const Messages = ({
         }
       });
     }
-  }, [scanStatus, imageData]);
+  }, [scanStatus, imageFile]);
 
   return !idToResume &&
     !messages.length &&
