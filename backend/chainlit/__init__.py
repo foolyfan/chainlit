@@ -299,10 +299,10 @@ def amount_recognition(
 
 
 @trace
-def modilephone_recognition(
+def mobilephone_recognition(
     func: Callable[[str], Union[str, GatherCommand, None]]
 ) -> Callable[[str], Union[str, GatherCommand, None]]:
-    config.code.on_recognation_input["__modilephone__"] = wrap_user_function(func)
+    config.code.on_recognation_input["__mobilephone__"] = wrap_user_function(func)
     return func
 
 
@@ -311,6 +311,14 @@ def account_recognition(
     func: Callable[[str], Union[str, GatherCommand, None]]
 ) -> Callable[[str], Union[str, GatherCommand, None]]:
     config.code.on_recognation_input["__account__"] = wrap_user_function(func)
+    return func
+
+
+@trace
+def image_account_recognition(
+    func: Callable[[str], Union[str, None]]
+) -> Callable[[str], Union[str, None]]:
+    config.code.on_recognation_input["__image_account__"] = wrap_user_function(func)
     return func
 
 

@@ -287,6 +287,7 @@ const useChatSession = () => {
           });
         }
         setLoading(false);
+        actionRef.current.toHistory(false);
       });
 
       socket.on('clear_input', () => {

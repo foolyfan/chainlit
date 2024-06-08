@@ -112,32 +112,6 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
   }, [setAsrInput, setValue]);
 
   const submit = useCallback(() => {
-    if (gatherCommand) {
-      if (gatherCommand.spec.type == 'scan') {
-        onReply('622583', {
-          cmdRes: {
-            ...gatherCommand!.spec,
-            code: '00',
-            msg: '客户操作成功',
-            data: {
-              value: '622583'
-            }
-          }
-        });
-      } else {
-        onReply(value, {
-          cmdRes: {
-            ...gatherCommand!.spec,
-            code: '00',
-            msg: '客户操作成功',
-            data: {}
-          }
-        });
-      }
-
-      clearInput();
-      return;
-    }
     if (value === '' || disabled) {
       return;
     }

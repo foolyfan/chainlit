@@ -1,5 +1,6 @@
 # This is a simple example of a chainlit app.
 
+import asyncio
 import json
 import os
 import time
@@ -40,6 +41,8 @@ from chainlit import (
     account_recognition,
     amount_recognition,
     asr_method,
+    image_account_recognition,
+    mobilephone_recognition,
     on_message,
     sleep,
     tts_method,
@@ -107,6 +110,17 @@ async def amount_hook(value: str) -> Union[str, GatherCommand, None]:
     return "3900"
 
 
+@mobilephone_recognition
+async def mobilephone_hook(value: str) -> Union[str, GatherCommand, None]:
+
+    return "18536402990"
+
+
+@image_account_recognition
+async def mage_account_hook(filePath) -> Union[str, None]:
+    return "6224584564546"
+
+
 @asr_method
 async def asrHook_local(filePath):
     return "语音解析结果"
@@ -160,11 +174,14 @@ async def ttshook_local(content, params):
         except GeneratorExit:
             logger.info("客户端断开连接")
 
-    return StreamingResponse(
-        file_iterator(file_path),
-        media_type="audio/wav",
-        headers={"X-File-ID": str(uuid.uuid4())},
-    )
+    try:
+        return StreamingResponse(
+            file_iterator(file_path),
+            media_type="audio/wav",
+            headers={"X-File-ID": str(uuid.uuid4())},
+        )
+    except Exception as e:
+        logger.error(f"Error during streaming: {e}")
 
 
 async def ttsHook(content, params):
@@ -224,6 +241,7 @@ def validateCompare(value: str) -> ValidateResult:
 
 @on_message
 async def main(message: Message):
+    logger.info(f"收到消息 {message.content}")
     if message.content == "1":
 
         res = await AskUserChoiceMessage(
@@ -386,6 +404,13 @@ async def main(message: Message):
         res = await GatherCommand(
             action="scan", timeout=90, speechContent="扫一扫"
         ).send()
+        if res:
+            if res.code == "00":
+                logger.info(f"客户扫描成功 {res}")
+            else:
+                logger.info("客户取消扫描")
+        else:
+            logger.info(f"客户输入超时")
         logger.info(f"扫一扫 {res}")
     if message.content == "13":
         res = await AskUserChoiceMessage(
@@ -445,20 +470,31 @@ async def main(message: Message):
         ).send()
     if message.content == "18":
         # 必须实现71行的 @account_recognition
-        res = await AccountInput(timeout=20, rules=[lenValidate]).send()
+        res = await AccountInput(timeout=180, rules=[lenValidate]).send()
         logger.info(f"客户输入账号 {res}")
-        await Message(content=res).send()
+        if res:
+            await Message(content=res).send()
+
     if message.content == "19":
         # 必须实现 @amount_recognition
         res = await AmountInput(rules=[validateCompare]).send()
-        await Message(content=res).send()
+        if res:
+            await Message(content=res).send()
     if message.content == "20":
         # 必须实现 @modilephone_recognition
-        res = await MobilePhoneInput().send()
-        await Message(content=res).send()
+        res = await MobilePhoneInput(rules=[]).send()
+        if res:
+            await Message(content=res).send()
+
     if message.content == "21":
         # 必须实现 @composite_recognition
         res = await CompositeInput(
             content="请输入", optionals=[MobilePhoneInput, AccountInput]
         ).send()
-        await Message(content=res).send()
+        if res:
+            await Message(content=res).send()
+    if message.content == "22":
+        mobilePhoneInput = MobilePhoneInput(rules=[validateCompare], timeout=30)
+        asyncio.create_task(mobilePhoneInput.send())
+        await asyncio.sleep(5)
+        mobilePhoneInput.cancel()

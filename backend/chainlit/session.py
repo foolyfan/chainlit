@@ -240,7 +240,7 @@ class WebsocketSession(BaseSession):
             "size": file_size,
         }
 
-        return {"id": file_id, "absolute_path": file_path}
+        return {"id": file_id, "absolute_path": str(file_path)}
 
     def restore(self, new_socket_id: str):
         """Associate a new socket id to the session."""

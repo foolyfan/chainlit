@@ -88,7 +88,6 @@ const useChatInteract = () => {
       message: IStep,
       spec?: {
         asr?: boolean;
-        cmdRes?: IGatherCommandResponse;
         action?: IAction | IListAction;
       }
     ) => {
@@ -142,12 +141,19 @@ const useChatInteract = () => {
               }
         );
       }
-      if (gatherCommand && spec?.cmdRes) {
-        console.log('reply gatherCommand message', spec);
-        gatherCommand.callback(spec?.cmdRes);
+    },
+    [askUser, input, abortAudioTask]
+  );
+
+  const replyCmdMessage = useCallback(
+    (cmdRes: IGatherCommandResponse) => {
+      abortAudioTask();
+      if (gatherCommand) {
+        console.log('reply gatherCommand message', cmdRes);
+        gatherCommand.callback(cmdRes);
       }
     },
-    [askUser, gatherCommand, abortAudioTask]
+    [gatherCommand, abortAudioTask]
   );
 
   const updateChatSettings = useCallback(
@@ -245,7 +251,8 @@ const useChatInteract = () => {
     stopTask,
     setIdToResume,
     updateChatSettings,
-    addWaitingMessage
+    addWaitingMessage,
+    replyCmdMessage
   };
 };
 

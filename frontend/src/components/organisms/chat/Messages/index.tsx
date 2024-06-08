@@ -1,14 +1,11 @@
-import { useAuth } from 'api/auth';
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
 
 import {
   IAction,
   IFeedback,
-  IGatherCommandResponse,
   IListAction,
   IProjectSettings,
   IStep,
@@ -19,7 +16,8 @@ import {
   useChatInteract,
   useChatMessages,
   useChatSession,
-  usePassword
+  usePassword,
+  useScan
 } from '@chainlit/react-client';
 
 import { CommandContainer } from 'components/molecules/command/CommandContainer';
@@ -56,31 +54,32 @@ const Messages = ({
   const callActionWithToast = useCallback(
     (action: IAction) => {
       const promise = callAction(action);
-      if (promise) {
-        toast.promise(promise, {
-          loading: `${t('components.organisms.chat.Messages.index.running')} ${
-            action.name
-          }`,
-          success: (res) => {
-            if (res.response) {
-              return res.response;
-            } else {
-              return `${action.name} ${t(
-                'components.organisms.chat.Messages.index.executedSuccessfully'
-              )}`;
-            }
-          },
-          error: (res) => {
-            if (res.response) {
-              return res.response;
-            } else {
-              return `${action.name} ${t(
-                'components.organisms.chat.Messages.index.failed'
-              )}`;
-            }
-          }
-        });
-      }
+      promise?.then();
+      // if (promise) {
+      //   toast.promise(promise, {
+      //     loading: `${t('components.organisms.chat.Messages.index.running')} ${
+      //       action.name
+      //     }`,
+      //     success: (res) => {
+      //       if (res.response) {
+      //         return res.response;
+      //       } else {
+      //         return `${action.name} ${t(
+      //           'components.organisms.chat.Messages.index.executedSuccessfully'
+      //         )}`;
+      //       }
+      //     },
+      //     error: (res) => {
+      //       if (res.response) {
+      //         return res.response;
+      //       } else {
+      //         return `${action.name} ${t(
+      //           'components.organisms.chat.Messages.index.failed'
+      //         )}`;
+      //       }
+      //     }
+      //   });
+      // }
     },
     [callAction]
   );
@@ -88,27 +87,28 @@ const Messages = ({
   const callListActionWithToast = useCallback(
     (action: IListAction) => {
       const promise = callListAction(action);
-      if (promise) {
-        toast.promise(promise, {
-          loading: `${t('components.organisms.chat.Messages.index.running')}`,
-          success: (res) => {
-            if (res.response) {
-              return res.response;
-            } else {
-              return `${t(
-                'components.organisms.chat.Messages.index.executedSuccessfully'
-              )}`;
-            }
-          },
-          error: (res) => {
-            if (res.response) {
-              return res.response;
-            } else {
-              return `${t('components.organisms.chat.Messages.index.failed')}`;
-            }
-          }
-        });
-      }
+      promise?.then();
+      // if (promise) {
+      //   toast.promise(promise, {
+      //     loading: `${t('components.organisms.chat.Messages.index.running')}`,
+      //     success: (res) => {
+      //       if (res.response) {
+      //         return res.response;
+      //       } else {
+      //         return `${t(
+      //           'components.organisms.chat.Messages.index.executedSuccessfully'
+      //         )}`;
+      //       }
+      //     },
+      //     error: (res) => {
+      //       if (res.response) {
+      //         return res.response;
+      //       } else {
+      //         return `${t('components.organisms.chat.Messages.index.failed')}`;
+      //       }
+      //     }
+      //   });
+      // }
     },
     [callListAction]
   );
@@ -144,66 +144,89 @@ const Messages = ({
     []
   );
 
-  const { invokeKeyboard, text, status } = usePassword('请输入密码', false);
-  const { user } = useAuth();
-  const { replyMessage, addWaitingMessage } = useChatInteract();
-  const onReply = useCallback(
-    async (
-      msg: string,
-      spec?: {
-        asr?: boolean;
-        cmdRes?: IGatherCommandResponse;
-      }
-    ) => {
-      const message: IStep = {
-        threadId: '',
-        id: uuidv4(),
-        name: user?.identifier || 'User',
-        type: 'user_message',
-        output: msg,
-        createdAt: new Date().toISOString()
-      };
-
-      replyMessage(message, spec);
-      addWaitingMessage(projectSettings!.ui.name);
-      setAutoScroll(true);
-    },
-    [user, replyMessage]
-  );
-
+  // 启动函数
   useEffect(() => {
     if (gatherCommand?.spec.type == 'password') {
       invokeKeyboard();
     }
+    if (gatherCommand?.spec.type == 'scan') {
+      takePhoto();
+    }
   }, [gatherCommand]);
+
+  // 输入密码
+  const {
+    invokeKeyboard,
+    text,
+    status: passwordStatus
+  } = usePassword('请输入密码', false);
+
+  const { replyCmdMessage } = useChatInteract();
 
   useEffect(() => {
     if (!gatherCommand) {
       return;
     }
-    if (status == 'finish') {
-      console.log('密码输入完成', text);
-      onReply('', {
-        cmdRes: {
-          ...gatherCommand!.spec,
-          code: '00',
-          msg: '',
-          data: { value: text }
-        }
+    if (passwordStatus == 'finish') {
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '00',
+        msg: '',
+        data: { value: text }
       });
     }
-    if (status == 'cancel') {
-      console.log('取消输入密码');
-      onReply('', {
-        cmdRes: {
-          ...gatherCommand!.spec,
-          code: '01',
-          msg: '客户取消输入',
-          data: {}
-        }
+    if (passwordStatus == 'cancel') {
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '01',
+        msg: '客户取消输入',
+        data: {}
       });
     }
-  }, [status, text]);
+  }, [passwordStatus, text]);
+
+  // 扫一扫
+  const { sessionId } = useChatSession();
+  const { imageFile, clearImage, takePhoto, status: scanStatus } = useScan();
+
+  useEffect(() => {
+    if (scanStatus == 'finish' && imageFile) {
+      const { promise } = apiClient.uploadFile(
+        imageFile as File,
+        () => {},
+        sessionId
+      );
+      promise
+        .then((res) => {
+          replyCmdMessage({
+            ...gatherCommand!.spec,
+            code: '00',
+            msg: '客户扫描成功',
+            data: {
+              value: res.id
+            }
+          });
+        })
+        .catch((error) => {
+          console.error(error);
+
+          toast.error(error.toString());
+        })
+        .finally(() => {
+          clearImage();
+        });
+
+      clearImage();
+    }
+    if (scanStatus == 'cancel') {
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '01',
+        msg: '客户取消扫描',
+        data: {}
+      });
+    }
+  }, [scanStatus, imageFile]);
 
   return !idToResume &&
     !messages.length &&
@@ -216,9 +239,11 @@ const Messages = ({
     />
   ) : (
     <>
-      {gatherCommand && gatherCommand.spec.type !== 'password' && (
-        <CommandContainer gatherCommand={gatherCommand} />
-      )}
+      {gatherCommand &&
+        gatherCommand.spec.type !== 'password' &&
+        gatherCommand.spec.type !== 'scan' && (
+          <CommandContainer gatherCommand={gatherCommand} />
+        )}
       <MessageContainer
         avatars={avatars}
         loading={loading}
@@ -233,7 +258,9 @@ const Messages = ({
         callListAction={callListActionWithToast}
         setAutoScroll={setAutoScroll}
         hidden={Boolean(
-          gatherCommand && gatherCommand.spec.type !== 'password'
+          gatherCommand &&
+            gatherCommand.spec.type !== 'password' &&
+            gatherCommand.spec.type !== 'scan'
         )}
       />
     </>
