@@ -72,7 +72,7 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
           backgroundColor: 'transparent'
         },
         '&:active': {
-          backgroundColor: '#F80061'
+          backgroundColor: '#019ddf'
         }
       }}
       onKeyUp={handleEnd}
