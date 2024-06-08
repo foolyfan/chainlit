@@ -14,7 +14,7 @@ from chainlit.extensions.types import (
     InputValueType,
 )
 from chainlit.logger import logger
-from chainlit.message import AskMessageBase
+from chainlit.message import AskMessageBase, Message
 from chainlit.session import WebsocketSession
 from chainlit.telemetry import trace_event
 from chainlit.user_session import user_session
@@ -79,7 +79,10 @@ class InputBase(AskMessageBase, ABC):
     async def _processCmd(self, cmd: GatherCommand) -> Union[str, None]:
         cmdRes = await cmd.send()
         if cmdRes:
-            return await self.transfomer_cmd_res(cmdRes)
+            resTransfomer = await self.transfomer_cmd_res(cmdRes)
+            if resTransfomer:
+                await Message(content=resTransfomer, type="user_message").send()
+                return resTransfomer
         return None
 
     async def _processRules(self, value: Union[str, None]) -> Union[str, None]:
