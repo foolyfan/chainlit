@@ -88,7 +88,6 @@ const useChatInteract = () => {
       message: IStep,
       spec?: {
         asr?: boolean;
-        cmdRes?: IGatherCommandResponse;
         action?: IAction | IListAction;
       }
     ) => {

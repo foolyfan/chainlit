@@ -11,7 +11,6 @@ import {
   IChoiceImageAction,
   type IChoiceLayout,
   IExternalAction,
-  IGatherCommandResponse,
   IListAction,
   type IStep,
   useChatContext,
@@ -40,7 +39,7 @@ const MemoListActions = memo(
   }: {
     listActions: IListAction[];
     layout?: IChoiceLayout[];
-    onClick: (action: IListAction) => void;
+    onClick: (action: IListAction, index?: number) => void;
   }) => {
     const [choiceActions, setChoiceActions] = useState<IChoiceAction[]>([]);
     const [externalActions, setExternalActions] = useState<IExternalAction[]>(
@@ -99,7 +98,7 @@ const MemoListActions = memo(
             renderElement={(ctx) => (
               <MessageImageAction
                 element={ctx.element}
-                onClick={() => onClick(ctx.element)}
+                onClick={() => onClick(ctx.element, ctx.index + 1)}
               />
             )}
           />
@@ -164,7 +163,6 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
       msg: string,
       spec?: {
         asr?: boolean;
-        cmdRes?: IGatherCommandResponse;
         action?: IListAction;
       }
     ) => {
@@ -184,10 +182,20 @@ export const MessageListActions = ({ message, listActions, layout }: Props) => {
   );
 
   const handleClick = useCallback(
-    (action: IListAction) => {
+    (action: IListAction, index?: number) => {
       setHistory(true);
       abortAudioTask();
-      onReply('', { action });
+      let operMsg = '';
+      if (action.type == 'external') {
+        operMsg = (action as IExternalAction).label;
+      }
+      if (action.type == 'data') {
+        operMsg = `第${index}条`;
+      }
+      if (action.type == 'image') {
+        operMsg = `第${index}张`;
+      }
+      onReply(operMsg, { action });
     },
     [abortAudioTask, askUser]
   );

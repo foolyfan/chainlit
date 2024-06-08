@@ -5,7 +5,7 @@ import { type IChoiceAction, type IChoiceLayout } from '@chainlit/react-client';
 interface Props {
   choiceActions: IChoiceAction[];
   layout?: IChoiceLayout[];
-  onClick: (action: IChoiceAction) => void;
+  onClick: (action: IChoiceAction, index?: number) => void;
 }
 
 export const DataListAction = ({ choiceActions, layout, onClick }: Props) => {
@@ -17,7 +17,7 @@ export const DataListAction = ({ choiceActions, layout, onClick }: Props) => {
             key={index}
             divider
             sx={{ bgcolor: 'white', marginTop: '10px' }}
-            onClick={() => onClick(action)}
+            onClick={() => onClick(action, index + 1)}
           >
             <ListItemText primary={index + 1} sx={{ width: 30, flexGrow: 0 }} />
             {action.html ? (

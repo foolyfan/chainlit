@@ -9,7 +9,6 @@ import Stack from '@mui/material/Stack';
 
 import {
   type IAction,
-  IGatherCommandResponse,
   type IStep,
   useChatContext,
   useChatInteract
@@ -69,7 +68,6 @@ const MessageActions = ({ message, actions }: Props) => {
       msg: string,
       spec?: {
         asr?: boolean;
-        cmdRes?: IGatherCommandResponse;
         action?: IAction;
       }
     ) => {
@@ -92,7 +90,7 @@ const MessageActions = ({ message, actions }: Props) => {
     (action: IAction) => {
       setHistory(true);
       abortAudioTask();
-      onReply('', {
+      onReply(action.label ? action.label : '点击按钮', {
         action
       });
     },

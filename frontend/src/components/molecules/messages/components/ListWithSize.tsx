@@ -8,7 +8,13 @@ const ListWithSize = <T extends IChoiceImageAction>({
   renderElement: Renderer
 }: {
   elements: T[];
-  renderElement: ({ element }: { element: T }) => JSX.Element | null;
+  renderElement: ({
+    element,
+    index
+  }: {
+    element: T;
+    index: number;
+  }) => JSX.Element | null;
 }) => {
   return (
     <ImageList
@@ -26,7 +32,7 @@ const ListWithSize = <T extends IChoiceImageAction>({
       {elements.map((element, i) => {
         return (
           <ImageListItem key={i} cols={2} rows={2}>
-            <Renderer element={element} />
+            <Renderer element={element} index={i} />
           </ImageListItem>
         );
       })}
