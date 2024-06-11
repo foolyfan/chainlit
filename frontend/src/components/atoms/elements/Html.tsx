@@ -15,6 +15,9 @@ const HtmlElement = ({ element }: Props) => {
     <FrameElement>
       <div
         className={`${element.display}-html`}
+        style={{
+          maxWidth: '100%'
+        }}
         dangerouslySetInnerHTML={{ __html: element.src }}
       />
     </FrameElement>
