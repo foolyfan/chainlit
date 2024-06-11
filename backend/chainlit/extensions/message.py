@@ -1,5 +1,6 @@
+import asyncio
 import typing
-from typing import Awaitable, Callable, List, Literal, Union, cast
+from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
@@ -10,6 +11,7 @@ from chainlit.extensions.types import (
     GatherCommandSpec,
     GatherCommandType,
 )
+from chainlit.logger import logger
 from chainlit.message import AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
 from chainlit.types import AskUserResponse
@@ -116,6 +118,7 @@ class GatherCommand(MessageBase):
         self.author = author
         self.action = action
         self.speechContent = speechContent
+        self._task: Optional[asyncio.Task] = None
         super().__post_init__()
 
     async def send(self) -> Union[GatherCommandResponse, None]:
@@ -139,9 +142,20 @@ class GatherCommand(MessageBase):
             type=self.action,
             timeout=self.timeout,
         )
+        res = None
+        try:
+            self._task = asyncio.create_task(
+                context.emitter.gather_command(step_dict, spec, False)
+            )
+            res = await self._task
+            self._task = None
+        except asyncio.CancelledError:
+            await context.emitter.clear("clear_gather_command")
 
-        res = await context.emitter.gather_command(step_dict, spec, False)
         if res is not None:
             res = GatherCommandResponse.from_dict(res)
 
         return res
+
+    def cancel(self):
+        self._task is not None and self._task.cancel()

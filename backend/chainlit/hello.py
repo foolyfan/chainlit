@@ -494,7 +494,7 @@ async def main(message: Message):
         if res:
             await Message(content=res).send()
     if message.content == "22":
-        mobilePhoneInput = MobilePhoneInput(rules=[validateCompare], timeout=30)
-        asyncio.create_task(mobilePhoneInput.send())
-        await asyncio.sleep(5)
-        mobilePhoneInput.cancel()
+        accountInput = AccountInput(rules=[lenValidate], timeout=60)
+        asyncio.create_task(accountInput.send())
+        await asyncio.sleep(10)
+        accountInput.cancel()
