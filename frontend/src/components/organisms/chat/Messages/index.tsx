@@ -164,7 +164,7 @@ const Messages = ({
   const { replyCmdMessage } = useChatInteract();
 
   useEffect(() => {
-    if (!gatherCommand) {
+    if (!gatherCommand || gatherCommand.spec.type != 'password') {
       return;
     }
     if (passwordStatus == 'finish') {
@@ -183,14 +183,17 @@ const Messages = ({
         data: {}
       });
     }
-  }, [passwordStatus, text]);
+  }, [gatherCommand, passwordStatus, text]);
 
   // 扫一扫
   const { sessionId } = useChatSession();
   const { imageFile, clearImage, takePhoto, status: scanStatus } = useScan();
 
   useEffect(() => {
-    if (scanStatus == 'finish' && imageFile) {
+    if (!gatherCommand || gatherCommand.spec.type != 'scan') {
+      return;
+    }
+    if (gatherCommand && scanStatus == 'finish' && imageFile) {
       const { promise } = apiClient.uploadFile(
         imageFile as File,
         () => {},
@@ -226,7 +229,7 @@ const Messages = ({
         data: {}
       });
     }
-  }, [scanStatus, imageFile]);
+  }, [gatherCommand, scanStatus, imageFile]);
 
   return !idToResume &&
     !messages.length &&

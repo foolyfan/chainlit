@@ -54,13 +54,17 @@ class InputBase(AskMessageBase, ABC):
         self.actions = actions
         self.strategy = strategy
 
+        self._canceled: bool = False
         self._task: Union[asyncio.Task, None] = None
+        self._cmd_tasks: List[GatherCommand] = []
 
     def __post_init__(self) -> None:
         if not getattr(self, "author", None):
             self.author = config.ui.name
         if not getattr(self, "actions", None):
             self.actions = []
+        self._cmd_tasks = []
+        self._canceled = False
         super().__post_init__()
 
     @abstractmethod
@@ -74,10 +78,21 @@ class InputBase(AskMessageBase, ABC):
         pass
 
     def cancel(self):
-        self._task is not None and self._task.cancel()
+        self._canceled = True
+        try:
+            self._task is not None and self._task.cancel()
+            for item in self._cmd_tasks:
+                item.cancel()
+        except Exception as e:
+            logger.error(f"failed to cancel {str(e)}")
 
     async def _processCmd(self, cmd: GatherCommand) -> Union[str, None]:
+
+        self._cmd_tasks.append(cmd)
+        index = len(self._cmd_tasks) - 1
         cmdRes = await cmd.send()
+        del self._cmd_tasks[index]
+
         if cmdRes:
             resTransfomer = await self.transfomer_cmd_res(cmdRes)
             if resTransfomer:
@@ -109,11 +124,13 @@ class InputBase(AskMessageBase, ABC):
             return res
 
         if res["type"] == "click":
+
             action: Action = [
                 action for action in self.actions if res["value"] == action.id
             ][0]
             await context.emitter.task_start()
             actionRes = await self.actionhook(action)
+
             if actionRes is None:
                 return None
 
@@ -155,7 +172,12 @@ class InputBase(AskMessageBase, ABC):
 
         spec = InputSpec(type=type, timeout=self.timeout, keys=action_keys)
 
+        processRes = None
+
         try:
+            if self._canceled:
+                return None
+
             self._task = asyncio.create_task(
                 context.emitter.send_input(step_dict, spec, self.raise_on_timeout)
             )
@@ -163,18 +185,20 @@ class InputBase(AskMessageBase, ABC):
             res = cast(
                 Union[InputResponse, None],
                 await self._task,
-            )  # 等待任务完成，捕获取消任务的异常
-
-            processRes = None
+            )
 
             while True:
+                self._task = None
                 processRes = await self._processInput(res)
                 if processRes is not None:
                     break
                 step_dict = await self._create()
 
+                if self._canceled:
+                    break
+
                 if not self._isOnline():
-                    return None
+                    break
 
                 self._task = asyncio.create_task(
                     context.emitter.update_input(step_dict, spec, self.raise_on_timeout)
