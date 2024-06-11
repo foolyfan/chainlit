@@ -8,7 +8,7 @@ const FrameElement = ({ children }: { children: React.ReactNode }) => (
       p: 1,
       boxSizing: 'border-box',
       bgcolor: (theme) =>
-        theme.palette.mode === 'light' ? grey[200] : grey[900],
+        theme.palette.mode === 'light' ? grey[50] : grey[900],
       borderRadius: '4px',
       display: 'flex'
     }}

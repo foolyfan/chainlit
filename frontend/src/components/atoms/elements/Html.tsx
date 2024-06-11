@@ -16,12 +16,7 @@ const HtmlElement = ({ element }: Props) => {
       <div
         className={`${element.display}-html`}
         style={{
-          objectFit: 'cover',
-          maxWidth: '100%',
-          margin: 'auto',
-          height: 'auto',
-          display: 'block',
-          cursor: element.display === 'inline' ? 'pointer' : 'default'
+          maxWidth: '100%'
         }}
         dangerouslySetInnerHTML={{ __html: element.src }}
       />
