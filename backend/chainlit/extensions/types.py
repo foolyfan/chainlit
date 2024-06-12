@@ -34,13 +34,13 @@ class GatherCommandResponse(GatherCommandSpec, DataClassJsonMixin):
     data: Dict
 
 
-InputValueType = Literal["text", "number"]
+InputFieldType = Literal["text", "number"]
 
 
 @dataclass
 class InputSpec(DataClassJsonMixin):
     timeout: int
-    type: InputValueType
+    type: InputFieldType
     keys: List[str]
 
 

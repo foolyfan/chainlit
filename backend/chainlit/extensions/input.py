@@ -1,7 +1,8 @@
 import asyncio
 import re
 from abc import ABC, abstractmethod
-from typing import Callable, List, Literal, Optional, Type, TypedDict, Union, cast
+from enum import Enum
+from typing import List, Optional, Type, TypedDict, TypeVar, Union, cast
 
 from chainlit.action import Action
 from chainlit.config import config
@@ -9,9 +10,9 @@ from chainlit.context import context
 from chainlit.extensions.message import GatherCommand
 from chainlit.extensions.types import (
     GatherCommandResponse,
+    InputFieldType,
     InputResponse,
     InputSpec,
-    InputValueType,
 )
 from chainlit.logger import logger
 from chainlit.message import AskMessageBase, Message
@@ -21,10 +22,19 @@ from chainlit.user_session import user_session
 from literalai.helper import utc_now
 from literalai.step import MessageStepType
 
+ValueType = Optional[Union[str, float, int, bool]]
+
+
+class ValueTypeEnum(Enum):
+    STR = "str"
+    FLOAT = "float"
+    INT = "int"
+    BOOL = "bool"
+
 
 class ValidateResult(TypedDict):
     value: bool
-    errmsg: Optional[str]
+    errMsg: Optional[str]
 
 
 class UnknowInputTypeException(Exception):
@@ -32,28 +42,43 @@ class UnknowInputTypeException(Exception):
         super().__init__("未知的输入类型")
 
 
+class Rule(ABC):
+    errMsg: str
+
+    @abstractmethod
+    def valitate(self, value: ValueType) -> ValidateResult:
+        pass
+
+    def toResult(self, res: bool) -> ValidateResult:
+        return (
+            {"value": True, "errMsg": None}
+            if res
+            else {"value": False, "errMsg": self.errMsg}
+        )
+
+
 class InputBase(AskMessageBase, ABC):
+    fieldType: InputFieldType = "text"
+    raise_on_timeout: bool = False
+    valueType: ValueTypeEnum = ValueTypeEnum.STR
 
     def __init__(
         self,
         content: str,
-        rules: Optional[List[Callable[[str], ValidateResult]]],
+        rules: Optional[List[Rule]],
         timeout: int = 60,
-        raise_on_timeout: bool = False,
         speechContent: str = "",
         type: MessageStepType = "assistant_message",
         actions: List[Action] = [],
-        strategy: Literal["repeat", "once"] = "repeat",
     ):
         self.rules = rules
         self.content = content
         self.timeout = timeout
         self.type = type
-        self.raise_on_timeout = raise_on_timeout
         self.speechContent = speechContent
         self.actions = actions
-        self.strategy = strategy
 
+        # 状态和任务
         self._canceled: bool = False
         self._task: Union[asyncio.Task, None] = None
         self._cmd_tasks: List[GatherCommand] = []
@@ -65,19 +90,22 @@ class InputBase(AskMessageBase, ABC):
             self.actions = []
         self._cmd_tasks = []
         self._canceled = False
+
         super().__post_init__()
 
     @abstractmethod
-    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+    async def recognation(self, value: str) -> Optional[Union[str, GatherCommand]]:
         pass
 
-    async def actionhook(self, value: Action) -> Union[GatherCommand, None]:
-        pass
+    async def actionhook(self, value: Action) -> Optional[GatherCommand]:
+        return None
 
-    async def transfomer_cmd_res(self, cmd: GatherCommandResponse) -> Union[str, None]:
-        pass
+    async def transfomer_cmd_res(self, cmd: GatherCommandResponse) -> Optional[str]:
+        return None
 
-    def cancel(self):
+    async def cancel(self):
+        if self._canceled:
+            return
         self._canceled = True
         try:
             self._task is not None and self._task.cancel()
@@ -86,40 +114,53 @@ class InputBase(AskMessageBase, ABC):
         except Exception as e:
             logger.error(f"failed to cancel {str(e)}")
 
-    async def _processCmd(self, cmd: GatherCommand) -> Union[str, None]:
-
+    async def _processCmd(self, cmd: GatherCommand) -> Optional[str]:
         self._cmd_tasks.append(cmd)
-        index = len(self._cmd_tasks) - 1
         cmdRes = await cmd.send()
+        index = len(self._cmd_tasks) - 1
         del self._cmd_tasks[index]
 
         if cmdRes:
             resTransfomer = await self.transfomer_cmd_res(cmdRes)
             if resTransfomer:
-                await Message(content=resTransfomer, type="user_message").send()
+                await Message(content=str(resTransfomer), type="user_message").send()
                 return resTransfomer
         return None
 
-    async def _processRules(self, value: Union[str, None]) -> Union[str, None]:
+    def _transform(self, value: str) -> ValueType:
+        if self.valueType is ValueTypeEnum.FLOAT:
+            return float(value)
+        if self.valueType is ValueTypeEnum.BOOL:
+            return bool(value)
+        if self.valueType is ValueTypeEnum.INT:
+            return int(value)
+        return value
+
+    async def _processRules(self, value: Optional[str]) -> ValueType:
+
         if value is None:
             return value
+
+        _value = self._transform(value)
+
         if not self.rules:
-            return value
+            return _value
 
         errors = []
         for rule in self.rules:
-            ruleRes = rule(value)
-            if ruleRes["value"] is not None and ruleRes["errmsg"] is not None:
-                errors.append(ruleRes["errmsg"])
+            ruleRes = rule.valitate(_value)
+            if not ruleRes["value"] and ruleRes["errMsg"] is not None:
+                errors.append(ruleRes["errMsg"])
 
         if not len(errors):
-            return value
+            return _value
+
         self.content = "；\n".join(errors) + ";\n请重新输入"
         self.speechContent = "请重新输入"
         return None
 
-    async def _processInput(self, res: Union[InputResponse, None]) -> Union[str, None]:
-        logger.info(f"_processInput {res}")
+    async def _processInput(self, res: Union[InputResponse, None]) -> ValueType:
+
         if res is None:
             return res
 
@@ -151,7 +192,7 @@ class InputBase(AskMessageBase, ABC):
 
         raise UnknowInputTypeException()
 
-    async def input_send(self, type: InputValueType) -> Union[str, None]:
+    async def input_send(self) -> ValueType:
 
         trace_event("send_input")
         if not self._isOnline():
@@ -170,7 +211,7 @@ class InputBase(AskMessageBase, ABC):
             action_keys.append(action.id)
             await action.send(for_id=str(step_dict["id"]))
 
-        spec = InputSpec(type=type, timeout=self.timeout, keys=action_keys)
+        spec = InputSpec(type=self.fieldType, timeout=self.timeout, keys=action_keys)
 
         processRes = None
 
@@ -218,44 +259,36 @@ class InputBase(AskMessageBase, ABC):
 
 
 class NumberInput(InputBase):
-    pass
+    fieldType: InputFieldType = "number"
+    # 当valueType为float时会使用该参数设置允许输入的小数位数
+    decimalPlaces: int = -1
 
 
 class TextInput(InputBase):
-    def __init__(
-        self,
-        content: str,
-        rules: List[Callable[[str], ValidateResult]] = [],
-        speechContent: str = "",
-        timeout: int = 60,
-    ):
-        self.rules = rules
-        self.content = content
-        self.timeout = timeout
-        self.speechContent = speechContent
-
-    async def send(self) -> Union[str, None]:
-        return ""
+    fieldType = "text"
+    valueType: ValueTypeEnum = ValueTypeEnum.STR
+    length: Optional[int]
 
 
-InputType = Type[Union[TextInput, NumberInput]]
+class FixedLength(Rule):
+
+    def __init__(self, length: int, errMsg: str):
+        self.errMsg = errMsg
+        self.length = length
+
+    def valitate(self, value: ValueType) -> ValidateResult:
+        try:
+            return self.toResult(isinstance(value, str) and len(value) == self.length)
+        except TypeError as e:
+            logger.error(f"{type(self).__name__} valitate failed {str(e)}")
+            raise e
 
 
-def lenValidate(value) -> ValidateResult:
-    res = len(value) == 6
-    return {"value": res, "errmsg": None if res else "账号长度不满足6位的要求"}
-
-
-def startValidate(value: str) -> ValidateResult:
-    res = value.startswith("622")
-    return {"value": res, "errmsg": None if res else "账号需以622开头"}
-
-
-class AccountInput(NumberInput):
+class AccountInput(TextInput):
 
     def __init__(
         self,
-        rules: Optional[List[Callable[[str], ValidateResult]]],
+        rules: Optional[List[Rule]] = [],
         timeout: int = 60,
         content: str = "请扫描或录入账号",
         speechContent: str = "请扫描或录入账号",
@@ -265,95 +298,98 @@ class AccountInput(NumberInput):
         self.timeout = timeout
         self.speechContent = speechContent
         self.actions = [Action(label="扫一扫", name="scan", value="scan")]
-        self.raise_on_timeout = False
         super().__post_init__()
 
     async def actionhook(self, action: Action) -> Union[GatherCommand, None]:
         logger.info(f"actionhook {action}")
         return GatherCommand(action="scan") if action.name == "scan" else None
 
-    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+    async def recognation(self, value: str) -> Optional[Union[str, GatherCommand]]:
         return await config.code.on_recognation_input["__account__"](value)
 
-    async def transfomer_cmd_res(
-        self, cmdRes: GatherCommandResponse
-    ) -> Union[str, None]:
+    async def transfomer_cmd_res(self, cmdRes: GatherCommandResponse) -> Optional[str]:
         if cmdRes.type == "scan" and cmdRes.code == "00":
             fileId = cmdRes.data["value"]
             filePath = WebsocketSession.get_by_id(user_session.get("id")).files[fileId][
                 "path"
             ]
             return await config.code.on_recognation_input["__image_account__"](filePath)
+
         return None
 
-    async def send(self) -> Union[str, None]:
-        return await super().input_send("number")
+    async def send(self) -> ValueType:
+        return await super().input_send()
 
 
-def validate_chinese_phone_number(value: str) -> ValidateResult:
-    # 正则表达式匹配模式，支持 13x、14x、15x、16x、17x、18x、19x 号段
-    pattern = re.compile(r"^1[3-9]\d{9}$")
-    res = bool(pattern.match(value))
-    return {"value": res, "errmsg": None if res else "手机号码格式不正确"}
+class ChinesePhoneNumberRule(Rule):
+
+    def __init__(self):
+        self.errMsg = "手机号码格式不正确"
+
+    def valitate(self, value: ValueType) -> ValidateResult:
+        try:
+            if not isinstance(value, str):
+                return self.toResult(False)
+            # 正则表达式匹配模式，支持 13x、14x、15x、16x、17x、18x、19x 号段
+            pattern = re.compile(r"^1[3-9]\d{9}$")
+            res = bool(pattern.match(value))
+            return self.toResult(res)
+        except Exception as e:
+            logger.error(f"{type(self).__name__} valitate failed {str(e)}")
+            raise e
 
 
-class MobilePhoneInput(NumberInput):
+class MobilePhoneInput(TextInput):
+
     def __init__(
         self,
-        rules: Optional[List[Callable[[str], ValidateResult]]],
+        rules: Optional[List[Rule]] = [],
         timeout: int = 60,
         content: str = "请录入手机号码",
         speechContent: str = "请录入手机号码",
     ):
         self.rules = (
-            [*rules, validate_chinese_phone_number]
+            [ChinesePhoneNumberRule(), *rules]
             if rules is not None
-            else [validate_chinese_phone_number]
+            else [ChinesePhoneNumberRule()]
         )
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
-        self.raise_on_timeout = False
+        self.valueType = ValueTypeEnum.STR
         super().__post_init__()
 
-    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+    async def recognation(self, value: str) -> Union[str, GatherCommand]:
         return await config.code.on_recognation_input["__mobilephone__"](value)
 
-    async def send(self) -> Union[str, None]:
-        return await super().input_send("number")
-
-
-def validate_decimal(value: str) -> ValidateResult:
-    pattern = re.compile(r"^\d+(\.\d{1,2})?$")
-    res = bool(pattern.match(value))
-    return {
-        "value": res,
-        "errmsg": None if res else "金额格式不正确，请核对。仅允许保持小数点后两位",
-    }
+    async def send(self) -> ValueType:
+        return await super().input_send()
 
 
 class AmountInput(NumberInput):
+    valueType: ValueTypeEnum = ValueTypeEnum.FLOAT
+
     def __init__(
         self,
-        rules: Optional[List[Callable[[str], ValidateResult]]],
+        rules: Optional[List[Rule]] = [],
         timeout: int = 60,
         content: str = "请录入金额",
         speechContent: str = "请录入金额",
     ):
-        self.rules = (
-            [*rules, validate_decimal] if rules is not None else [validate_decimal]
-        )
+        self.rules = rules if rules is not None else []
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
-        self.raise_on_timeout = False
         super().__post_init__()
 
-    async def send(self) -> Union[str, None]:
-        return await super().input_send("number")
+    async def send(self) -> ValueType:
+        return await super().input_send()
 
-    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+    async def recognation(self, value: str) -> Union[str, GatherCommand]:
         return await config.code.on_recognation_input["__amount__"](value)
+
+
+InputType = Type[Union[TextInput, NumberInput]]
 
 
 class CompositeInput(TextInput):
@@ -369,8 +405,8 @@ class CompositeInput(TextInput):
         self.speechContent = speechContent
         self.optionals = optionals
 
-    async def send(self) -> Union[str, None]:
+    async def send(self) -> ValueType:
         return "复合输入场"
 
-    async def recognation(self, value: str) -> Union[str, GatherCommand, None]:
+    async def recognation(self, value: str) -> Union[str, GatherCommand]:
         return await config.code.on_recognation_input["__composite__"](value)

@@ -15,8 +15,11 @@ from chainlit.extensions.input import (
     AccountInput,
     AmountInput,
     CompositeInput,
+    FixedLength,
     MobilePhoneInput,
+    Rule,
     ValidateResult,
+    ValueType,
 )
 from chainlit.extensions.listaction import (
     LA,
@@ -174,14 +177,11 @@ async def ttshook_local(content, params):
         except GeneratorExit:
             logger.info("客户端断开连接")
 
-    try:
-        return StreamingResponse(
-            file_iterator(file_path),
-            media_type="audio/wav",
-            headers={"X-File-ID": str(uuid.uuid4())},
-        )
-    except Exception as e:
-        logger.error(f"Error during streaming: {e}")
+    return StreamingResponse(
+        file_iterator(file_path),
+        media_type="audio/wav",
+        headers={"X-File-ID": str(uuid.uuid4())},
+    )
 
 
 async def ttsHook(content, params):
@@ -226,17 +226,15 @@ async def ttsHook(content, params):
         return ""
 
 
-def lenValidate(value) -> ValidateResult:
-    res = len(value) == 6
-    return {"value": res, "errmsg": None if res else "账号长度不满足6位的要求"}
+class SizeCompare(Rule):
 
+    def __init__(self):
+        self.errMsg = "转账金额必须大于3000"
 
-def validateCompare(value: str) -> ValidateResult:
-    res = float(value) > 3000
-    return {
-        "value": res,
-        "errmsg": None if res else "需大于3000",
-    }
+    def valitate(self, value: ValueType) -> ValidateResult:
+        return self.toResult(
+            True if isinstance(value, float) and value > 3000 else False
+        )
 
 
 @on_message
@@ -470,21 +468,23 @@ async def main(message: Message):
         ).send()
     if message.content == "18":
         # 必须实现71行的 @account_recognition
-        res = await AccountInput(timeout=180, rules=[lenValidate]).send()
+        res = await AccountInput(
+            timeout=180, rules=[FixedLength(length=6, errMsg="账号长度不满足6位的要求")]
+        ).send()
         logger.info(f"客户输入账号 {res}")
         if res:
-            await Message(content=res).send()
+            await Message(content=str(res)).send()
 
     if message.content == "19":
         # 必须实现 @amount_recognition
-        res = await AmountInput(rules=[validateCompare]).send()
+        res = await AmountInput(rules=[SizeCompare()]).send()
         if res:
-            await Message(content=res).send()
+            await Message(content="{:.2f}".format(float(res))).send()
     if message.content == "20":
         # 必须实现 @modilephone_recognition
-        res = await MobilePhoneInput(rules=[]).send()
+        res = await MobilePhoneInput().send()
         if res:
-            await Message(content=res).send()
+            await Message(content=str(res)).send()
 
     if message.content == "21":
         # 必须实现 @composite_recognition
@@ -492,9 +492,16 @@ async def main(message: Message):
             content="请输入", optionals=[MobilePhoneInput, AccountInput]
         ).send()
         if res:
-            await Message(content=res).send()
+            await Message(content=str(res)).send()
     if message.content == "22":
-        accountInput = AccountInput(rules=[lenValidate], timeout=60)
+        accountInput = AccountInput(
+            rules=[FixedLength(length=6, errMsg="账号长度不满足6位的要求")], timeout=60
+        )
         asyncio.create_task(accountInput.send())
         await asyncio.sleep(10)
-        accountInput.cancel()
+        await accountInput.cancel()
+    if message.content == "23":
+        gatherCommand = GatherCommand(action="scan", timeout=90, speechContent="扫一扫")
+        asyncio.create_task(gatherCommand.send())
+        await asyncio.sleep(10)
+        gatherCommand.cancel()

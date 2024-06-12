@@ -739,10 +739,18 @@ async def tts_method(
                 status_code=401,
                 detail="You are not authorized to upload files for this session",
             )
-    streamResponse = await config.code.tts_method(
-        content, config.features.text_to_speech.params
-    )
-    return streamResponse
+    try:
+
+        streamResponse = await config.code.tts_method(
+            content, config.features.text_to_speech.params
+        )
+        return streamResponse
+    except Exception as e:
+        logger.info(f"流式响应异常 {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
 
 
 @app.get("/project/file/{file_id}")

@@ -48,10 +48,13 @@ from chainlit.extensions.input import (
     AccountInput,
     AmountInput,
     CompositeInput,
+    FixedLength,
     InputType,
     MobilePhoneInput,
+    Rule,
     TextInput,
     ValidateResult,
+    ValueType,
 )
 from chainlit.extensions.listaction import (
     ChoiceAction,
@@ -292,16 +295,16 @@ def tts_method(
 
 @trace
 def amount_recognition(
-    func: Callable[[str], Union[str, GatherCommand, None]]
-) -> Callable[[str], Union[str, GatherCommand, None]]:
+    func: Callable[[str], Optional[Union[str, GatherCommand]]]
+) -> Callable[[str], Optional[Union[str, GatherCommand]]]:
     config.code.on_recognation_input["__amount__"] = wrap_user_function(func)
     return func
 
 
 @trace
 def mobilephone_recognition(
-    func: Callable[[str], Union[str, GatherCommand, None]]
-) -> Callable[[str], Union[str, GatherCommand, None]]:
+    func: Callable[[str], Optional[Union[str, GatherCommand]]]
+) -> Callable[[str], Optional[Union[str, GatherCommand]]]:
     config.code.on_recognation_input["__mobilephone__"] = wrap_user_function(func)
     return func
 
@@ -316,24 +319,24 @@ def account_recognition(
 
 @trace
 def image_account_recognition(
-    func: Callable[[str], Union[str, None]]
-) -> Callable[[str], Union[str, None]]:
+    func: Callable[[str], Optional[str]]
+) -> Callable[[str], Optional[str]]:
     config.code.on_recognation_input["__image_account__"] = wrap_user_function(func)
     return func
 
 
 @trace
 def text_recognition(
-    func: Callable[[str], Union[str, GatherCommand, None]]
-) -> Callable[[str], Union[str, GatherCommand, None]]:
+    func: Callable[[str], Optional[Union[str, GatherCommand]]]
+) -> Callable[[str], Optional[Union[str, GatherCommand]]]:
     wrap_user_function(func)
     return func
 
 
 @trace
 def composite_recognition(
-    func: Callable[[str], Union[str, GatherCommand, None]]
-) -> Callable[[str], Union[str, GatherCommand, None]]:
+    func: Callable[[str], Optional[Union[str, GatherCommand]]]
+) -> Callable[[str], Optional[Union[str, GatherCommand]]]:
     wrap_user_function(func)
     return func
 
@@ -466,6 +469,8 @@ __all__ = [
     "CompositeInput",
     "ValidateResult",
     "InputType",
+    "Rule",
+    "FixedLength",
 ]
 
 

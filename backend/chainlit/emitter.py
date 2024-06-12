@@ -367,14 +367,15 @@ class ChainlitEmitter(BaseChainlitEmitter):
             )
             await self.task_end()
             final_res: Optional["InputResponse"] = user_res
+            await self.task_start()
             return final_res
         except TimeoutError as e:
             await self.send_timeout("input_timeout")
-
+            await self.task_start()
             if raise_on_timeout:
                 raise e
-        finally:
-            await self.task_start()
+        except asyncio.CancelledError as e:
+            raise e
 
     async def update_input(
         self, step_dict: StepDict, spec: InputSpec, raise_on_timeout=False
@@ -389,11 +390,11 @@ class ChainlitEmitter(BaseChainlitEmitter):
             return final_res
         except TimeoutError as e:
             await self.send_timeout("input_timeout")
-
+            await self.task_start()
             if raise_on_timeout:
                 raise e
-        finally:
-            await self.task_start()
+        except asyncio.CancelledError as e:
+            raise e
 
     def update_token_count(self, count: int):
         """Update the token count for the UI."""
@@ -410,7 +411,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
                 {"msg": step_dict, "spec": spec.to_dict()},
                 spec.timeout,
             )
-
+            await self.task_end()
             final_res = cast(GatherCommandResponse, user_res)
             await self.clear("clear_gather_command")
             return final_res
@@ -419,6 +420,8 @@ class ChainlitEmitter(BaseChainlitEmitter):
 
             if raise_on_timeout:
                 raise e
+        except asyncio.CancelledError as e:
+            raise e
 
     def task_start(self):
         """
