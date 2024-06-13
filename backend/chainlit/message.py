@@ -557,9 +557,7 @@ class AskActionMessage(AskMessageBase):
         if res is None:
             self.content = self.timeoutContent
         else:
-            choiceHookRes = await self.choiceHook(res, self.actions)
-            self.content = choiceHookRes.label
-            res = choiceHookRes
+            res = await self.choiceHook(res, self.actions)
         self.wait_for_answer = False
 
         await self.update()
