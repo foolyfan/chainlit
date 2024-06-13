@@ -231,7 +231,7 @@ class SizeCompare(Rule):
     def __init__(self):
         self.errMsg = "转账金额必须大于3000"
 
-    def valitate(self, value: ValueType) -> ValidateResult:
+    def validate(self, value: ValueType) -> ValidateResult:
         return self.toResult(
             True if isinstance(value, float) and value > 3000 else False
         )

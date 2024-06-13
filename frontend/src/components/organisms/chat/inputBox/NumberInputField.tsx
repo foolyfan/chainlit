@@ -34,8 +34,6 @@ export const NumberInputField = forwardRef<HTMLDivElement | undefined, Props>(
     const [innerValue, setInnerValue] = useState<string>(value);
 
     const onInnerChange = (e: ChangeEvent<HTMLInputElement>) => {
-      console.log('11111111111111111', e);
-
       let value = e.target.value;
       // 移除非数字和小数点的字符
       value = value.replace(/[^0-9.]/g, '');

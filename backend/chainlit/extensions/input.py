@@ -46,7 +46,7 @@ class Rule(ABC):
     errMsg: str
 
     @abstractmethod
-    def valitate(self, value: ValueType) -> ValidateResult:
+    def validate(self, value: ValueType) -> ValidateResult:
         pass
 
     def toResult(self, res: bool) -> ValidateResult:
@@ -148,7 +148,7 @@ class InputBase(AskMessageBase, ABC):
 
         errors = []
         for rule in self.rules:
-            ruleRes = rule.valitate(_value)
+            ruleRes = rule.validate(_value)
             if not ruleRes["value"] and ruleRes["errMsg"] is not None:
                 errors.append(ruleRes["errMsg"])
 
@@ -276,11 +276,11 @@ class FixedLength(Rule):
         self.errMsg = errMsg
         self.length = length
 
-    def valitate(self, value: ValueType) -> ValidateResult:
+    def validate(self, value: ValueType) -> ValidateResult:
         try:
             return self.toResult(isinstance(value, str) and len(value) == self.length)
         except TypeError as e:
-            logger.error(f"{type(self).__name__} valitate failed {str(e)}")
+            logger.error(f"{type(self).__name__} validate failed {str(e)}")
             raise e
 
 
@@ -326,7 +326,7 @@ class ChinesePhoneNumberRule(Rule):
     def __init__(self):
         self.errMsg = "手机号码格式不正确"
 
-    def valitate(self, value: ValueType) -> ValidateResult:
+    def validate(self, value: ValueType) -> ValidateResult:
         try:
             if not isinstance(value, str):
                 return self.toResult(False)
@@ -335,7 +335,7 @@ class ChinesePhoneNumberRule(Rule):
             res = bool(pattern.match(value))
             return self.toResult(res)
         except Exception as e:
-            logger.error(f"{type(self).__name__} valitate failed {str(e)}")
+            logger.error(f"{type(self).__name__} validate failed {str(e)}")
             raise e
 
 
