@@ -6,6 +6,8 @@ import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import { IconButton, Theme, Tooltip, useMediaQuery } from '@mui/material';
 
+import { accessTokenState } from '@chainlit/react-client';
+
 import { Translator } from 'components/i18n';
 
 import { projectSettingsState } from 'state/project';
@@ -23,6 +25,8 @@ const SpeechButton = ({ onSpeech, disabled }: Props) => {
   if (!projectSettings?.features.speech_to_text?.enabled) {
     return null;
   }
+  const accessToken = useRecoilValue(accessTokenState);
+
   const { sessionId } = useChatSession();
   const { file, startListening, stopListening } = useSpeechRecognition();
   const [isRecording, setIsRecording] = useState(false);
@@ -30,7 +34,7 @@ const SpeechButton = ({ onSpeech, disabled }: Props) => {
   useEffect(() => {
     if (file) {
       apiClient
-        .asrMethod(file as File, () => {}, sessionId)
+        .asrMethod(file as File, () => {}, sessionId, accessToken)
         .promise.then((response) => {
           onSpeech(response.content);
         })
