@@ -1,10 +1,12 @@
 import { apiClient } from 'api';
 import { useCallback, useEffect, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import { toast } from 'sonner';
 
 import { Button } from '@mui/material';
 
 import {
+  accessTokenState,
   useChatContext,
   useChatSession,
   useSpeechRecognition
@@ -21,6 +23,7 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
   const { abortAudioTask } = useChatContext();
   const [speechRecognitionRuning, setSpeechRecognitionRuning] =
     useState<boolean>(false);
+  const accessToken = useRecoilValue(accessTokenState);
   useEffect(() => {
     if (error) {
       setSpeechRecognitionRuning(false);
@@ -29,7 +32,7 @@ const SpeechButton = ({ onSpeech, onSpeechRecognitionRuning }: Props) => {
     }
     if (file) {
       apiClient
-        .asrMethod(file as File, () => {}, sessionId)
+        .asrMethod(file as File, () => {}, sessionId, accessToken)
         .promise.then((response) => {
           onSpeech(response.content);
         })
