@@ -10,6 +10,7 @@ from chainlit.extensions.types import (
     GatherCommandSpec,
     InputResponse,
     InputSpec,
+    UISettingsCommandOptions,
 )
 from chainlit.logger import logger
 from chainlit.message import Message
@@ -134,6 +135,9 @@ class BaseChainlitEmitter:
     async def gather_command(
         self, step_dict: StepDict, spec: GatherCommandSpec, raise_on_timeout=False
     ):
+        pass
+
+    async def change_theme(self, step_dict: StepDict, spec: UISettingsCommandOptions):
         pass
 
     async def send_action_response(
@@ -461,4 +465,10 @@ class ChainlitEmitter(BaseChainlitEmitter):
     ):
         return self.emit(
             "list_action_response", {"id": id, "status": status, "response": response}
+        )
+
+    def change_theme(self, step_dict: StepDict, spec: UISettingsCommandOptions):
+        return self.emit(
+            "change_theme",
+            {"msg": step_dict, "spec": spec.to_dict()},
         )

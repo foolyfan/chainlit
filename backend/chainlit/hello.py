@@ -28,7 +28,12 @@ from chainlit.extensions.listaction import (
     ChoiceImageAction,
     ExternalAction,
 )
-from chainlit.extensions.message import AskUserChoiceMessage, GatherCommand
+from chainlit.extensions.message import (
+    AskUserChoiceMessage,
+    GatherCommand,
+    UISettingsCommand,
+)
+from chainlit.extensions.types import BrightnessModeOptions, FontOptions
 from chainlit.logger import logger
 from chainlit.types import AskUserResponse
 from fastapi import HTTPException
@@ -544,3 +549,7 @@ async def main(message: Message):
         asyncio.create_task(gatherCommand.send())
         await asyncio.sleep(10)
         gatherCommand.cancel()
+    if message.content == "24":
+        await UISettingsCommand(options=BrightnessModeOptions(mode="dark")).send()
+    if message.content == "25":
+        await UISettingsCommand(options=FontOptions(fontSize=30)).send()

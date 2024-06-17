@@ -1,5 +1,6 @@
 import asyncio
 import typing
+from dataclasses import dataclass
 from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
 
 from chainlit.config import config
@@ -10,11 +11,13 @@ from chainlit.extensions.types import (
     GatherCommandResponse,
     GatherCommandSpec,
     GatherCommandType,
+    UISettingsCommandOptions,
 )
 from chainlit.logger import logger
 from chainlit.message import AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
 from chainlit.types import AskUserResponse
+from dataclasses_json import DataClassJsonMixin
 from literalai.helper import utc_now
 
 
@@ -159,3 +162,22 @@ class GatherCommand(MessageBase):
 
     def cancel(self):
         self._task is not None and self._task.cancel()
+
+
+class UISettingsCommand(MessageBase):
+
+    def __init__(
+        self,
+        options: UISettingsCommandOptions,
+    ):
+        self.options = options
+        self.author = config.ui.name
+        self.created_at = utc_now()
+        super().__post_init__()
+
+    async def send(self):
+        trace_event("change_theme")
+
+        step_dict = await self._create()
+        spec = self.options
+        await context.emitter.change_theme(step_dict, spec)

@@ -448,6 +448,10 @@ const useChatSession = () => {
       socket.on('token_usage', (count: number) => {
         setTokenCount((old) => old + count);
       });
+      socket.on('change_theme', ({ msg, spec }) => {
+        console.log('change_theme', msg);
+        console.log('change_theme', spec);
+      });
     },
     [setSession, sessionId, chatProfile]
   );

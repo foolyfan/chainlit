@@ -1,5 +1,6 @@
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 from typing import Dict, List, Literal, Optional, TypedDict
 
 from chainlit.types import ActionSpec, AskSpec
@@ -52,3 +53,21 @@ class InputResponse(TypedDict):
     forId: str
     id: str
     type: Literal["click", "input", "asr_res"]
+
+
+@dataclass
+class UISettingsCommandOptions(DataClassJsonMixin):
+    type: str
+
+
+@dataclass
+class BrightnessModeOptions(UISettingsCommandOptions, DataClassJsonMixin):
+    mode: Literal["light", "dark"] = "light"
+    type: str = "mode"
+
+
+@dataclass
+class FontOptions(UISettingsCommandOptions, DataClassJsonMixin):
+    type: str = "font"
+    fontSize: Optional[int] = None
+    fontFamily: Optional[str] = None
