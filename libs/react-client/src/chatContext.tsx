@@ -10,6 +10,7 @@ import {
   useState
 } from 'react';
 import { useRecoilValue } from 'recoil';
+import { accessTokenState } from 'src/state';
 
 import { IProjectSettings } from './types/config';
 
@@ -38,7 +39,7 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
   const sessionId = useRecoilValue(sessionIdState);
   const [ttsRuning, setTtsRuning] = useState<boolean>(false);
   const ttsAbortRef = useRef<AbortController | undefined>(undefined);
-
+  const accessToken = useRecoilValue(accessTokenState);
   useEffect(() => {
     if (
       chatSettings?.features.text_to_speech?.enabled &&
@@ -52,7 +53,12 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
         const controller = new AbortController();
         ttsAbortRef.current = controller;
         client
-          .ttsMethod(speechPrompt.content, sessionId, controller.signal)
+          .ttsMethod(
+            speechPrompt.content,
+            sessionId,
+            controller.signal,
+            accessToken
+          )
           .then((response) => response.arrayBuffer())
           .then((arrayBuffer) => {
             console.log('音频资源加载完成');
