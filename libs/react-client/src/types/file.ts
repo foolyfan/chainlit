@@ -29,11 +29,18 @@ export interface IAsk {
     ListActionSpec;
 }
 
+export interface IRule {
+  condition: 'onSubmit' | 'onChange';
+  body: string;
+}
+
 export interface IInput {
   callback: (payload: IInputResponse) => void;
   spec: {
     type: 'text' | 'number';
     timeout: number;
+    placeholder: string;
+    rules?: Array<IRule>;
   } & ActionSpec;
 }
 

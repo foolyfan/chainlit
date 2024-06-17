@@ -1,7 +1,12 @@
-import { ChangeEvent, forwardRef, useEffect, useState } from 'react';
+import { ChangeEvent, forwardRef, useEffect, useRef, useState } from 'react';
 
 import { InputAdornment, TextField } from '@mui/material';
 
+import { useRules } from 'hooks/useRules';
+
+import { IRule } from 'client-types/*';
+
+import { InputFieldPrompt } from './InputFieldPrompt';
 import { SubmitButton } from './SubmitButton';
 
 interface Props {
@@ -14,6 +19,7 @@ interface Props {
   onFocus?: () => void;
   value: string;
   onSubmit: () => void;
+  rules?: Array<IRule>;
 }
 
 export const NumberInputField = forwardRef<HTMLDivElement | undefined, Props>(
@@ -27,19 +33,25 @@ export const NumberInputField = forwardRef<HTMLDivElement | undefined, Props>(
       onCompositionEnd,
       value,
       onFocus,
-      onSubmit
+      onSubmit,
+      rules
     },
     ref
   ) => {
+    const innerRef = useRef<HTMLDivElement | null>(null);
+
     const [innerValue, setInnerValue] = useState<string>(value);
+    const { validateSubmit, validateChange, error, helperText } = useRules(
+      innerValue,
+      rules
+    );
 
     const onInnerChange = (e: ChangeEvent<HTMLInputElement>) => {
       let value = e.target.value;
       // 移除非数字和小数点的字符
       value = value.replace(/[^0-9.]/g, '');
-      // 仅保留一个小数点
-      value = value.replace(/^(\d*\.\d{0,2}).*$/, '$1');
       setInnerValue(value);
+      validateChange(value);
       onChange(value);
     };
 
@@ -48,40 +60,53 @@ export const NumberInputField = forwardRef<HTMLDivElement | undefined, Props>(
     }, [value]);
 
     return (
-      <TextField
-        inputRef={ref}
-        inputMode="decimal"
-        type="text"
-        id="chat-input"
-        autoFocus
-        multiline
-        variant="standard"
-        autoComplete="false"
-        placeholder={placeholder}
-        disabled={disabled}
-        onChange={onInnerChange}
-        onKeyDown={onKeyDown}
-        onCompositionStart={onCompositionStart}
-        onCompositionEnd={onCompositionEnd}
-        value={innerValue}
-        fullWidth
-        onFocus={onFocus}
-        InputProps={{
-          disableUnderline: true,
-          startAdornment: (
-            <InputAdornment
-              sx={{ ml: 1, color: 'text.secondary' }}
-              position="start"
-            />
-          ),
-          endAdornment: (
-            <SubmitButton
-              onSubmit={onSubmit}
-              disabled={disabled || !innerValue}
-            />
-          )
-        }}
-      />
+      <>
+        {innerRef.current && error ? (
+          <InputFieldPrompt anchorEl={innerRef.current} content={helperText} />
+        ) : null}
+        <TextField
+          ref={innerRef}
+          inputRef={ref}
+          inputMode="decimal"
+          type="text"
+          id="chat-input"
+          autoFocus
+          multiline
+          variant="standard"
+          autoComplete="false"
+          placeholder={placeholder}
+          disabled={disabled}
+          onChange={onInnerChange}
+          onKeyDown={onKeyDown}
+          error={error}
+          onCompositionStart={onCompositionStart}
+          onCompositionEnd={onCompositionEnd}
+          value={innerValue}
+          fullWidth
+          onFocus={onFocus}
+          InputProps={{
+            disableUnderline: true,
+            startAdornment: (
+              <InputAdornment
+                sx={{ ml: 1, color: 'text.secondary' }}
+                position="start"
+              />
+            ),
+            endAdornment: (
+              <SubmitButton
+                onSubmit={() => {
+                  validateSubmit(value).then(() => {
+                    onSubmit();
+                  });
+                }}
+                disabled={disabled || !innerValue || error}
+              />
+            )
+          }}
+        />
+      </>
     );
   }
 );
+
+NumberInputField.displayName = 'NumberInputField';

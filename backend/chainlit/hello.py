@@ -12,12 +12,13 @@ import httpx
 from chainlit.element import Image, Text
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.input import (
+    AccountAndMobilePhoneInput,
     AccountInput,
     AmountInput,
-    CompositeInput,
+    ClientRule,
     FixedLength,
     MobilePhoneInput,
-    Rule,
+    ServerRule,
     ValidateResult,
     ValueType,
 )
@@ -41,6 +42,7 @@ from chainlit import (
     Task,
     TaskList,
     TaskStatus,
+    account_mobilephone_recognition,
     account_recognition,
     amount_recognition,
     asr_method,
@@ -79,6 +81,24 @@ async def confirmTradePreviewInfo(res: AskUserResponse, actions):
 async def choiceBranch(res, choices: List[LA]):
     logger.info(f"用户选择机构结果 {res}")
     return choices[0]
+
+
+class AccountAndMobilePhoneRule(ClientRule):
+
+    def __init__(self):
+        self.condition = "onChange"
+        self.body = """
+    const length = value.length;
+    if (length === 11) {
+      const phoneRegex = /^1[3-9]\d{9}$/;
+      return phoneRegex.test(value) || '必须是有效的11位手机号';
+    } else if (length === 19) {
+      const startsWith622 = /^622/;
+      return startsWith622.test(value) || '必须是有效的19位银行账号';
+    } else {
+      return '必须是有效的11位手机号或19位银行账号';
+    }
+"""
 
 
 @account_recognition
@@ -120,8 +140,13 @@ async def mobilephone_hook(value: str) -> Union[str, GatherCommand, None]:
 
 
 @image_account_recognition
-async def mage_account_hook(filePath) -> Union[str, None]:
-    return "6224584564546"
+async def image_account_hook(filePath) -> Union[str, None]:
+    return "622458"
+
+
+@account_mobilephone_recognition
+async def account_mobilephone_hook(filePath) -> Union[str, None]:
+    return "18536403990"
 
 
 @asr_method
@@ -226,7 +251,7 @@ async def ttsHook(content, params):
         return ""
 
 
-class SizeCompare(Rule):
+class SizeCompare(ServerRule):
 
     def __init__(self):
         self.errMsg = "转账金额必须大于3000"
@@ -235,6 +260,14 @@ class SizeCompare(Rule):
         return self.toResult(
             True if isinstance(value, float) and value > 3000 else False
         )
+
+
+class StartWithRule(ClientRule):
+    def __init__(self):
+        self.condition = "onSubmit"
+        self.body = """
+      return value.startsWith('185') || '手机号码必须以185开头';
+    """
 
 
 @on_message
@@ -467,9 +500,12 @@ async def main(message: Message):
             content=res["output"] if res is not None else "未收到客户输入结果"
         ).send()
     if message.content == "18":
-        # 必须实现71行的 @account_recognition
+        # 必须实现 @account_recognition @image_account_recognition
         res = await AccountInput(
-            timeout=180, rules=[FixedLength(length=6, errMsg="账号长度不满足6位的要求")]
+            content="请输入付款账号",
+            rules=[FixedLength(length=6, errMsg="账号长度不满足6位的要求")],
+            timeout=180,
+            placeholder="银行账号",
         ).send()
         logger.info(f"客户输入账号 {res}")
         if res:
@@ -482,23 +518,26 @@ async def main(message: Message):
             await Message(content="{:.2f}".format(float(res))).send()
     if message.content == "20":
         # 必须实现 @modilephone_recognition
-        res = await MobilePhoneInput().send()
+        res = await MobilePhoneInput(timeout=600, rules=[StartWithRule()]).send()
         if res:
             await Message(content=str(res)).send()
 
     if message.content == "21":
-        # 必须实现 @composite_recognition
-        res = await CompositeInput(
-            content="请输入", optionals=[MobilePhoneInput, AccountInput]
+        # 必须实现 @account_mobilephone_recognition
+        res = await AccountAndMobilePhoneInput(
+            rules=[AccountAndMobilePhoneRule()], timeout=180
         ).send()
         if res:
             await Message(content=str(res)).send()
     if message.content == "22":
         accountInput = AccountInput(
-            rules=[FixedLength(length=6, errMsg="账号长度不满足6位的要求")], timeout=60
+            content="请输入付款账号",
+            rules=[FixedLength(length=6, errMsg="账号长度不满足6位的要求")],
+            timeout=60,
+            placeholder="银行账号",
         )
         asyncio.create_task(accountInput.send())
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
         await accountInput.cancel()
     if message.content == "23":
         gatherCommand = GatherCommand(action="scan", timeout=90, speechContent="扫一扫")

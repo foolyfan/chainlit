@@ -1,8 +1,9 @@
 import asyncio
 import re
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Type, TypedDict, TypeVar, Union, cast
+from typing import List, Literal, Optional, Union, cast
 
 from chainlit.action import Action
 from chainlit.config import config
@@ -19,6 +20,7 @@ from chainlit.message import AskMessageBase, Message
 from chainlit.session import WebsocketSession
 from chainlit.telemetry import trace_event
 from chainlit.user_session import user_session
+from dataclasses_json import DataClassJsonMixin
 from literalai.helper import utc_now
 from literalai.step import MessageStepType
 
@@ -32,9 +34,11 @@ class ValueTypeEnum(Enum):
     BOOL = "bool"
 
 
-class ValidateResult(TypedDict):
+@dataclass
+class ValidateResult(DataClassJsonMixin):
     value: bool
-    errMsg: Optional[str]
+    errMsg: Optional[str] = None
+    speechContent: Optional[str] = None
 
 
 class UnknowInputTypeException(Exception):
@@ -42,8 +46,39 @@ class UnknowInputTypeException(Exception):
         super().__init__("未知的输入类型")
 
 
-class Rule(ABC):
+class Rule(DataClassJsonMixin, ABC):
     errMsg: str
+
+
+"""
+客户端校验规则
+"""
+
+TriggerType = Literal["onChange", "onSubmit"]
+
+"""
+自定义函数校验，仅包括函数体内容，参数为输入域的值，返回值为校验结果；示例如下：
+(value) => {
+  return {
+    value: false,
+    errMsg: '校验失败'
+  }
+}
+"""
+
+
+@dataclass
+class ClientRule(Rule, DataClassJsonMixin):
+    condition: TriggerType
+    body: str
+
+
+"""
+服务端校验规则
+"""
+
+
+class ServerRule(Rule, ABC):
 
     @abstractmethod
     def validate(self, value: ValueType) -> ValidateResult:
@@ -51,16 +86,22 @@ class Rule(ABC):
 
     def toResult(self, res: bool) -> ValidateResult:
         return (
-            {"value": True, "errMsg": None}
+            ValidateResult(value=True)
             if res
-            else {"value": False, "errMsg": self.errMsg}
+            else ValidateResult(value=False, errMsg=self.errMsg)
         )
+
+
+"""
+基础输入场
+"""
 
 
 class InputBase(AskMessageBase, ABC):
     fieldType: InputFieldType = "text"
     raise_on_timeout: bool = False
     valueType: ValueTypeEnum = ValueTypeEnum.STR
+    placeholder: str = "请输入内容"
 
     def __init__(
         self,
@@ -78,6 +119,9 @@ class InputBase(AskMessageBase, ABC):
         self.speechContent = speechContent
         self.actions = actions
 
+        # 规则
+        self._serverRules: List[ServerRule] = []
+
         # 状态和任务
         self._canceled: bool = False
         self._task: Union[asyncio.Task, None] = None
@@ -88,17 +132,30 @@ class InputBase(AskMessageBase, ABC):
             self.author = config.ui.name
         if not getattr(self, "actions", None):
             self.actions = []
+        self._serverRules = []
         self._cmd_tasks = []
         self._canceled = False
 
         super().__post_init__()
 
+    """
+    支持语音识别
+    """
+
     @abstractmethod
     async def recognation(self, value: str) -> Optional[Union[str, GatherCommand]]:
         pass
 
+    """
+    输入场涉及action调用，需要根据客户选择的不同action返回对应的收集指令
+    """
+
     async def actionhook(self, value: Action) -> Optional[GatherCommand]:
         return None
+
+    """
+    收集指令产生的结果转换为指定的字符串
+    """
 
     async def transfomer_cmd_res(self, cmd: GatherCommandResponse) -> Optional[str]:
         return None
@@ -137,30 +194,32 @@ class InputBase(AskMessageBase, ABC):
         return value
 
     async def _processRules(self, value: Optional[str]) -> ValueType:
-
         if value is None:
             return value
 
         _value = self._transform(value)
 
-        if not self.rules:
+        if not len(self._serverRules):
             return _value
 
         errors = []
-        for rule in self.rules:
+        speechContents = []
+        for rule in self._serverRules:
             ruleRes = rule.validate(_value)
-            if not ruleRes["value"] and ruleRes["errMsg"] is not None:
-                errors.append(ruleRes["errMsg"])
+            if not ruleRes.value:
+                if ruleRes.errMsg is not None:
+                    errors.append(ruleRes.errMsg)
+                if ruleRes.speechContent is not None:
+                    speechContents.append(ruleRes.speechContent)
 
         if not len(errors):
             return _value
 
         self.content = "；\n".join(errors) + ";\n请重新输入"
-        self.speechContent = "请重新输入"
+        self.speechContent = "；".join(speechContents)
         return None
 
     async def _processInput(self, res: Union[InputResponse, None]) -> ValueType:
-
         if res is None:
             return res
 
@@ -211,7 +270,22 @@ class InputBase(AskMessageBase, ABC):
             action_keys.append(action.id)
             await action.send(for_id=str(step_dict["id"]))
 
-        spec = InputSpec(type=self.fieldType, timeout=self.timeout, keys=action_keys)
+        clientRules: List[ClientRule] = []
+
+        if self.rules is not None:
+            for rule in self.rules:
+                if isinstance(rule, ServerRule):
+                    self._serverRules.append(rule)
+                if isinstance(rule, ClientRule):
+                    clientRules.append(rule)
+
+        spec = InputSpec(
+            type=self.fieldType,
+            timeout=self.timeout,
+            placeholder=self.placeholder,
+            keys=action_keys,
+            rules=clientRules,
+        )
 
         processRes = None
 
@@ -239,8 +313,8 @@ class InputBase(AskMessageBase, ABC):
                     break
 
                 if not self._isOnline():
+                    logger.info("用户不在线")
                     break
-
                 self._task = asyncio.create_task(
                     context.emitter.update_input(step_dict, spec, self.raise_on_timeout)
                 )
@@ -258,19 +332,23 @@ class InputBase(AskMessageBase, ABC):
         return True if WebsocketSession.get_by_id(user_session.get("id")) else False
 
 
-class NumberInput(InputBase):
+class NumberInput(InputBase, ABC):
     fieldType: InputFieldType = "number"
-    # 当valueType为float时会使用该参数设置允许输入的小数位数
-    decimalPlaces: int = -1
+    placeholder: str = "请输入数字"
+
+    async def send(self) -> ValueType:
+        return await super().input_send()
 
 
-class TextInput(InputBase):
+class TextInput(InputBase, ABC):
     fieldType = "text"
-    valueType: ValueTypeEnum = ValueTypeEnum.STR
-    length: Optional[int]
+    placeholder: str = "请输入文本"
+
+    async def send(self) -> ValueType:
+        return await super().input_send()
 
 
-class FixedLength(Rule):
+class FixedLength(ServerRule):
 
     def __init__(self, length: int, errMsg: str):
         self.errMsg = errMsg
@@ -288,20 +366,25 @@ class AccountInput(TextInput):
 
     def __init__(
         self,
-        rules: Optional[List[Rule]] = [],
+        rules: Optional[List[Rule]] = None,
         timeout: int = 60,
         content: str = "请扫描或录入账号",
         speechContent: str = "请扫描或录入账号",
+        placeholder: Optional[str] = "银行账号",
     ):
-        self.rules = rules if rules is not None else []
+        if rules is None:
+            rules = []
+        self.rules = rules
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
+        if placeholder is not None:
+            self.placeholder = placeholder
         self.actions = [Action(label="扫一扫", name="scan", value="scan")]
+
         super().__post_init__()
 
     async def actionhook(self, action: Action) -> Union[GatherCommand, None]:
-        logger.info(f"actionhook {action}")
         return GatherCommand(action="scan") if action.name == "scan" else None
 
     async def recognation(self, value: str) -> Optional[Union[str, GatherCommand]]:
@@ -317,53 +400,48 @@ class AccountInput(TextInput):
 
         return None
 
-    async def send(self) -> ValueType:
-        return await super().input_send()
 
-
-class ChinesePhoneNumberRule(Rule):
-
-    def __init__(self):
-        self.errMsg = "手机号码格式不正确"
-
-    def validate(self, value: ValueType) -> ValidateResult:
-        try:
-            if not isinstance(value, str):
-                return self.toResult(False)
-            # 正则表达式匹配模式，支持 13x、14x、15x、16x、17x、18x、19x 号段
-            pattern = re.compile(r"^1[3-9]\d{9}$")
-            res = bool(pattern.match(value))
-            return self.toResult(res)
-        except Exception as e:
-            logger.error(f"{type(self).__name__} validate failed {str(e)}")
-            raise e
+ChinesePhoneNumberRule = ClientRule(
+    condition="onChange",
+    body="""
+  const regex = /^1[3-9]\d{9}$/;
+  return regex.test(value) || '手机号码格式不正确';
+""",
+)
 
 
 class MobilePhoneInput(TextInput):
 
     def __init__(
         self,
-        rules: Optional[List[Rule]] = [],
+        rules: Optional[List[Rule]] = None,
         timeout: int = 60,
         content: str = "请录入手机号码",
         speechContent: str = "请录入手机号码",
+        placeholder: Optional[str] = "手机号码",
     ):
-        self.rules = (
-            [ChinesePhoneNumberRule(), *rules]
-            if rules is not None
-            else [ChinesePhoneNumberRule()]
-        )
+        if rules is None:
+            rules = []
+        self.rules = [ChinesePhoneNumberRule, *rules]
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
+        if placeholder is not None:
+            self.placeholder = placeholder
         self.valueType = ValueTypeEnum.STR
         super().__post_init__()
 
     async def recognation(self, value: str) -> Union[str, GatherCommand]:
         return await config.code.on_recognation_input["__mobilephone__"](value)
 
-    async def send(self) -> ValueType:
-        return await super().input_send()
+
+DecimalPlaces = ClientRule(
+    condition="onChange",
+    body="""
+const regex = /^\d*\.?\d{0,2}$/;
+return regex.test(value) || '金额只可保留两位小数';
+""",
+)
 
 
 class AmountInput(NumberInput):
@@ -371,42 +449,82 @@ class AmountInput(NumberInput):
 
     def __init__(
         self,
-        rules: Optional[List[Rule]] = [],
+        rules: Optional[List[Rule]] = None,
         timeout: int = 60,
         content: str = "请录入金额",
         speechContent: str = "请录入金额",
+        placeholder: Optional[str] = "金额",
     ):
-        self.rules = rules if rules is not None else []
+        if rules is None:
+            rules = []
+        self.rules = [DecimalPlaces, *rules]
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
-        super().__post_init__()
+        if placeholder is not None:
+            self.placeholder = placeholder
 
-    async def send(self) -> ValueType:
-        return await super().input_send()
+        super().__post_init__()
 
     async def recognation(self, value: str) -> Union[str, GatherCommand]:
         return await config.code.on_recognation_input["__amount__"](value)
 
 
-InputType = Type[Union[TextInput, NumberInput]]
+class GeneralInput(InputBase, ABC):
 
-
-class CompositeInput(TextInput):
     def __init__(
         self,
         content: str,
+        placeholder: str,
+        recognation: str,
+        fieldType: InputFieldType,
+        valueType: ValueTypeEnum,
         speechContent: str = "",
         timeout: int = 60,
-        optionals: List[InputType] = [],
+        rules: Optional[List[Rule]] = None,
+        actions: Optional[List[Action]] = None,
     ):
         self.content = content
         self.timeout = timeout
         self.speechContent = speechContent
-        self.optionals = optionals
+        self.recognationName = recognation
+        if placeholder is not None:
+            self.placeholder = placeholder
+        self.fieldType = fieldType
+        self.valueType = valueType
+        if actions is not None:
+            self.actions = actions
+        if rules is None:
+            rules = []
 
-    async def send(self) -> ValueType:
-        return "复合输入场"
+        super().__post_init__()
 
     async def recognation(self, value: str) -> Union[str, GatherCommand]:
-        return await config.code.on_recognation_input["__composite__"](value)
+        return await config.code.on_recognation_input[
+            f"__general__{self.recognationName}__"
+        ](value)
+
+
+class AccountAndMobilePhoneInput(AccountInput):
+    def __init__(
+        self,
+        rules: Optional[List[Rule]] = None,
+        timeout: int = 60,
+        content: str = "请录入账号或手机号",
+        speechContent: str = "请录入账号或手机号",
+        placeholder: Optional[str] = "账号或手机号",
+    ):
+        if rules is None:
+            rules = []
+        self.rules = rules
+        self.content = content
+        self.timeout = timeout
+        self.speechContent = speechContent
+        if placeholder is not None:
+            self.placeholder = placeholder
+        self.actions = [Action(label="扫一扫", name="scan", value="scan")]
+
+        super().__post_init__()
+
+    async def recognation(self, value: str) -> Optional[Union[str, GatherCommand]]:
+        return await config.code.on_recognation_input["__account__mobilephone__"](value)

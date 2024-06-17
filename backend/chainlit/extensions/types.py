@@ -1,6 +1,6 @@
 import typing
 from dataclasses import dataclass
-from typing import Dict, List, Literal, TypedDict
+from typing import Dict, List, Literal, Optional, TypedDict
 
 from chainlit.types import ActionSpec, AskSpec
 from dataclasses_json import DataClassJsonMixin
@@ -39,9 +39,12 @@ InputFieldType = Literal["text", "number"]
 
 @dataclass
 class InputSpec(DataClassJsonMixin):
+    keys: List[str]
     timeout: int
     type: InputFieldType
-    keys: List[str]
+
+    placeholder: Optional[str] = None
+    rules: Optional[list] = None
 
 
 class InputResponse(TypedDict):

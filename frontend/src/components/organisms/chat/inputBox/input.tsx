@@ -1,5 +1,4 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import 'regenerator-runtime';
 
@@ -20,6 +19,7 @@ import { IAttachment, attachmentsState } from 'state/chat';
 import { projectSettingsState } from 'state/project';
 import { inputHistoryState } from 'state/userInputHistory';
 
+import { DefaultInputField } from './DefaultInputField';
 import { NumberInputField } from './NumberInputField';
 import { TextInputField } from './TextInputField';
 import SpeechButton from './speechButton';
@@ -66,8 +66,6 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
   const [isComposing, setIsComposing] = useState(false);
 
   const showSpeechToText = pSettings?.features.speech_to_text?.enabled;
-
-  const { t } = useTranslation();
 
   const [inputState, setInputState] = useState<'speech' | 'keyboard'>(
     'keyboard'
@@ -255,34 +253,50 @@ const Input = memo(({ onFileUpload, onSubmit, onReply }: Props) => {
           />
         ) : (
           <>
-            {(!input || input?.spec.type == 'text') && (
-              <TextInputField
-                ref={ref}
-                value={value}
-                onChange={(value) => setValue(value)}
-                onSubmit={submit}
-                onCompositionEnd={() => setIsComposing(false)}
-                onCompositionStart={() => setIsComposing(true)}
-                onFocus={abortAudioTask}
-                onKeyDown={handleKeyDown}
-                disabled={disabled && !loading}
-                placeholder={t(
-                  'components.organisms.chat.inputBox.input.placeholder'
+            {input ? (
+              <>
+                {input.spec.type == 'text' && (
+                  <TextInputField
+                    ref={ref}
+                    value={value}
+                    onChange={(value) => setValue(value)}
+                    onSubmit={submit}
+                    onCompositionEnd={() => setIsComposing(false)}
+                    onCompositionStart={() => setIsComposing(true)}
+                    onFocus={abortAudioTask}
+                    onKeyDown={handleKeyDown}
+                    disabled={disabled && !loading}
+                    placeholder={input.spec.placeholder}
+                    rules={input.spec.rules}
+                  />
                 )}
-              />
-            )}
-            {input && input.spec.type == 'number' && (
-              <NumberInputField
+                {input.spec.type == 'number' && (
+                  <NumberInputField
+                    ref={ref}
+                    value={value}
+                    onChange={(value) => setValue(value)}
+                    onSubmit={submit}
+                    onCompositionEnd={() => setIsComposing(false)}
+                    onCompositionStart={() => setIsComposing(true)}
+                    onFocus={abortAudioTask}
+                    onKeyDown={handleKeyDown}
+                    disabled={disabled && !loading}
+                    placeholder={input.spec.placeholder}
+                    rules={input.spec.rules}
+                  />
+                )}
+              </>
+            ) : (
+              <DefaultInputField
                 ref={ref}
                 value={value}
-                onChange={(value) => setValue(value)}
                 onSubmit={submit}
-                onCompositionEnd={() => setIsComposing(false)}
-                onCompositionStart={() => setIsComposing(true)}
-                onFocus={abortAudioTask}
-                onKeyDown={handleKeyDown}
                 disabled={disabled && !loading}
-                placeholder={'请输入数字'}
+                onChange={(value) => setValue(value)}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
+                onFocus={abortAudioTask}
               />
             )}
           </>

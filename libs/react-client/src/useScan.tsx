@@ -24,6 +24,8 @@ const useScan = () => {
       },
       (res) => {
         const { ret, data } = JSON.parse(res);
+        console.log('useScan', ret);
+
         if (ret == 0) {
           setImageFile(base64ToBlob(JSON.parse(data)['base64'], 'image/jpeg'));
           setStatus('finish');

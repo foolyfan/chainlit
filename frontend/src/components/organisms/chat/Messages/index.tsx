@@ -183,7 +183,7 @@ const Messages = ({
         data: {}
       });
     }
-  }, [gatherCommand, passwordStatus, text]);
+  }, [passwordStatus, text]);
 
   // 扫一扫
   const { sessionId } = useChatSession();
@@ -221,6 +221,12 @@ const Messages = ({
 
       clearImage();
     }
+    const time = Date.now();
+    console.log('useEffect triggered' + time);
+    console.log('gatherCommand:', gatherCommand);
+    console.log('scanStatus:', scanStatus);
+    console.log('imageFile:', imageFile);
+    console.log('useEffect triggere' + time);
     if (scanStatus == 'cancel') {
       replyCmdMessage({
         ...gatherCommand!.spec,
@@ -229,7 +235,7 @@ const Messages = ({
         data: {}
       });
     }
-  }, [gatherCommand, scanStatus, imageFile]);
+  }, [scanStatus, imageFile]);
 
   return !idToResume &&
     !messages.length &&

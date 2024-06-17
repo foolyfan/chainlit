@@ -47,9 +47,7 @@ from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.input import (
     AccountInput,
     AmountInput,
-    CompositeInput,
     FixedLength,
-    InputType,
     MobilePhoneInput,
     Rule,
     TextInput,
@@ -326,18 +324,26 @@ def image_account_recognition(
 
 
 @trace
-def text_recognition(
-    func: Callable[[str], Optional[Union[str, GatherCommand]]]
-) -> Callable[[str], Optional[Union[str, GatherCommand]]]:
-    wrap_user_function(func)
-    return func
+def general_input_recognition(name: str) -> Callable:
+
+    def decorator(
+        func: Callable[[str], Optional[Union[str, GatherCommand]]]
+    ) -> Callable[[str], Optional[Union[str, GatherCommand]]]:
+        config.code.on_recognation_input[f"__general__{name}__"] = wrap_user_function(
+            func
+        )
+        return func
+
+    return decorator
 
 
 @trace
-def composite_recognition(
+def account_mobilephone_recognition(
     func: Callable[[str], Optional[Union[str, GatherCommand]]]
 ) -> Callable[[str], Optional[Union[str, GatherCommand]]]:
-    wrap_user_function(func)
+    config.code.on_recognation_input["__account__mobilephone__"] = wrap_user_function(
+        func
+    )
     return func
 
 
