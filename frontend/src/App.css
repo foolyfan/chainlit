@@ -18,17 +18,12 @@
   white-space: break-spaces;
 }
 
-#root>.MuiBox-root {
-  /* background-color: #e6ebf9 !important; */
-  background-image: radial-gradient(at right top, #dbe4f9 20%, #ecf0fc 60%,#f6f7fc)
-}
-
 .step.MuiBox-root {
   background-color: transparent !important;
 }
 
-.MuiListItemButton-root ,
-.MuiAlert-standardInfo{
+.MuiListItemButton-root,
+.MuiAlert-standardInfo {
   background: linear-gradient(90deg, #f1f4ff 0%, #e8edff 100%);
   border-radius: 16px !important;
   padding: 10px 10px 10px 10px;

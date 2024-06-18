@@ -47,7 +47,7 @@ import {
   updateMessageContentById
 } from 'src/utils/message';
 
-import { useChatContext } from '.';
+import { uiSettingsCommandState, useChatContext } from '.';
 import { ChainlitAPI } from './api';
 import { type IToken } from './useChatData';
 
@@ -72,6 +72,7 @@ const useChatSession = () => {
   const setListActions = useSetRecoilState(listActionState);
   const setChatSettingsInputs = useSetRecoilState(chatSettingsInputsState);
   const setTokenCount = useSetRecoilState(tokenCountState);
+  const setUISettings = useSetRecoilState(uiSettingsCommandState);
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
   const idToResume = useRecoilValue(threadIdToResumeState);
   const setSpeechPrompts = useSetRecoilState(speechPromptsState);
@@ -448,9 +449,8 @@ const useChatSession = () => {
       socket.on('token_usage', (count: number) => {
         setTokenCount((old) => old + count);
       });
-      socket.on('change_theme', ({ msg, spec }) => {
-        console.log('change_theme', msg);
-        console.log('change_theme', spec);
+      socket.on('change_theme', ({ spec }) => {
+        setUISettings({ spec });
       });
     },
     [setSession, sessionId, chatProfile]

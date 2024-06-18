@@ -1,6 +1,6 @@
 import { atom } from 'recoil';
 
-type ThemeVariant = 'dark' | 'light';
+export type ThemeVariant = 'dark' | 'light';
 
 const defaultTheme = 'light';
 

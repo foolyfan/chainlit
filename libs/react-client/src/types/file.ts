@@ -70,3 +70,22 @@ export interface IGatherCommandResponse extends GatherCommandSpec {
   msg: string;
   data: any;
 }
+
+export interface UISettingsCommandOptions {
+  type: string;
+}
+
+export interface BrightnessModeOptions extends UISettingsCommandOptions {
+  mode: 'light' | 'dark';
+  type: 'mode';
+}
+
+export interface FontOptions extends UISettingsCommandOptions {
+  fontSize?: number;
+  fontFamily?: string;
+  type: 'font';
+}
+
+export interface IUISettingsCommandOptions {
+  spec: BrightnessModeOptions | FontOptions;
+}

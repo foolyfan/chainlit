@@ -552,4 +552,6 @@ async def main(message: Message):
     if message.content == "24":
         await UISettingsCommand(options=BrightnessModeOptions(mode="dark")).send()
     if message.content == "25":
+        await UISettingsCommand(options=BrightnessModeOptions(mode="light")).send()
+    if message.content == "26":
         await UISettingsCommand(options=FontOptions(fontSize=30)).send()

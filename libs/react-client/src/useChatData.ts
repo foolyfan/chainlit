@@ -13,7 +13,8 @@ import {
   listActionState,
   loadingState,
   sessionState,
-  tasklistState
+  tasklistState,
+  uiSettingsCommandState
 } from './state';
 
 export interface IToken {
@@ -38,6 +39,7 @@ const useChatData = () => {
     chatSettingsDefaultValueSelector
   );
   const input = useRecoilValue(inputState);
+  const uiSettingsCommand = useRecoilValue(uiSettingsCommandState);
 
   const connected = session?.socket.connected && !session?.error;
   const disabled = !connected || loading || askUser?.spec.type === 'file';
@@ -57,7 +59,8 @@ const useChatData = () => {
     loading,
     tasklists,
     gatherCommand,
-    input
+    input,
+    uiSettingsCommand
   };
 };
 

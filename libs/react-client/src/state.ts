@@ -15,6 +15,7 @@ import {
   ISpeechPromptMessage,
   IStep,
   ITasklistElement,
+  IUISettingsCommandOptions,
   IUser,
   ThreadHistory
 } from './types';
@@ -187,5 +188,12 @@ export const threadHistoryState = atom<ThreadHistory | undefined>({
 
 export const speechPromptsState = atom<ISpeechPromptMessage | undefined>({
   key: 'SpeechPrompts',
+  default: undefined
+});
+
+export const uiSettingsCommandState = atom<
+  IUISettingsCommandOptions | undefined
+>({
+  key: 'UISettingsCommand',
   default: undefined
 });

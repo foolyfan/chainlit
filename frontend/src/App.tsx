@@ -1,7 +1,7 @@
 import { useAuth } from 'api/auth';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router-dom';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { router } from 'router';
 import { Toaster } from 'sonner';
 import { makeTheme } from 'theme';
@@ -9,7 +9,11 @@ import { makeTheme } from 'theme';
 import { Box, GlobalStyles } from '@mui/material';
 import { Theme, ThemeProvider } from '@mui/material/styles';
 
-import { useChatSession } from '@chainlit/react-client';
+import {
+  BrightnessModeOptions,
+  useChatData,
+  useChatSession
+} from '@chainlit/react-client';
 
 import Hotkeys from 'components/Hotkeys';
 import SettingsModal from 'components/molecules/settingsModal';
@@ -18,7 +22,7 @@ import PromptPlayground from 'components/organisms/playground';
 
 import { apiClientState } from 'state/apiClient';
 import { projectSettingsState } from 'state/project';
-import { settingsState } from 'state/settings';
+import { ThemeVariant, settingsState } from 'state/settings';
 import { userEnvState } from 'state/user';
 
 import './App.css';
@@ -67,11 +71,20 @@ export function overrideTheme(theme: Theme) {
 }
 
 function App() {
-  const { theme: themeVariant } = useRecoilValue(settingsState);
+  const [settings, setSettings] = useRecoilState(settingsState);
   const pSettings = useRecoilValue(projectSettingsState);
   // @ts-expect-error custom property
   const fontFamily = window.theme?.font_family;
-  const theme = overrideTheme(makeTheme(themeVariant, fontFamily));
+  const [theme, setTheme] = useState<Theme>();
+  useEffect(() => {
+    switchTheme(settings.theme);
+    setTheme(() => overrideTheme(makeTheme(settings.theme, fontFamily)));
+  }, [settings.theme]);
+
+  useEffect(() => {
+    switchTheme();
+  });
+
   const { isAuthenticated, accessToken } = useAuth();
   const userEnv = useRecoilValue(userEnvState);
   const { connect, chatProfile, setChatProfile } = useChatSession();
@@ -84,6 +97,42 @@ function App() {
       ? !!chatProfile
       : true
     : false;
+
+  const { uiSettingsCommand } = useChatData();
+
+  const switchTheme = useCallback((mode?: ThemeVariant) => {
+    const rootElement: HTMLDivElement | null = document.querySelector(
+      '#root > .MuiBox-root'
+    )!;
+    if (!rootElement) {
+      return;
+    }
+    if (mode == 'dark') {
+      if (rootElement) {
+        rootElement.style.backgroundImage = 'none';
+      }
+    } else {
+      rootElement.style.backgroundImage =
+        'radial-gradient(at right top, #dbe4f9 20%, #ecf0fc 60%, #f6f7fc)';
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!uiSettingsCommand) {
+      return;
+    }
+    if (uiSettingsCommand.spec.type == 'mode') {
+      const mode = (uiSettingsCommand.spec as BrightnessModeOptions).mode;
+      switchTheme(mode);
+      setSettings((old) => ({
+        ...old,
+        theme: mode
+      }));
+    }
+    // if (uiSettingsCommand.spec.type == 'font') {
+    //   setPSettings((old) => ({ ...old! }));
+    // }
+  }, [uiSettingsCommand]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -104,6 +153,9 @@ function App() {
     setChatProfile(pSettings.chatProfiles[0].name);
   }
 
+  if (!theme) {
+    return null;
+  }
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyles
