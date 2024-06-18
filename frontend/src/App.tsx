@@ -11,6 +11,7 @@ import { Theme, ThemeProvider } from '@mui/material/styles';
 
 import {
   BrightnessModeOptions,
+  FontOptions,
   useChatData,
   useChatSession
 } from '@chainlit/react-client';
@@ -81,6 +82,8 @@ function App() {
     setTheme(() => overrideTheme(makeTheme(settings.theme, fontFamily)));
   }, [settings.theme]);
 
+  useEffect(() => {}, []);
+
   useEffect(() => {
     switchTheme();
   });
@@ -129,9 +132,12 @@ function App() {
         theme: mode
       }));
     }
-    // if (uiSettingsCommand.spec.type == 'font') {
-    //   setPSettings((old) => ({ ...old! }));
-    // }
+    if (uiSettingsCommand.spec.type == 'font') {
+      const font = uiSettingsCommand.spec as FontOptions;
+      setTheme(() =>
+        overrideTheme(makeTheme(settings.theme, font.fontFamily, font.fontSize))
+      );
+    }
   }, [uiSettingsCommand]);
 
   useEffect(() => {

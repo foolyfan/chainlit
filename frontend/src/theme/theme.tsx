@@ -4,7 +4,9 @@ import createTheme from '@mui/material/styles/createTheme';
 import { green, grey, primary, white } from './palette';
 
 const typography = {
-  fontFamily: ['Inter', 'sans-serif'].join(',')
+  fontFamily: ['Inter', 'sans-serif'].join(','),
+  // 单位rem
+  fontSize: 14
 };
 
 const components = {
@@ -53,9 +55,16 @@ const error = {
   contrastText: white
 };
 
-const darkTheme = (fontFamily?: string, breakpoints?: BreakpointsOptions) =>
+const darkTheme = (
+  fontFamily?: string,
+  fontSize?: number,
+  breakpoints?: BreakpointsOptions
+) =>
   createTheme({
-    typography: fontFamily ? { fontFamily } : typography,
+    typography: {
+      fontSize: fontSize ? fontSize : typography.fontSize,
+      fontFamily: fontFamily ? fontFamily : typography.fontFamily
+    },
     components,
     shape,
     breakpoints: breakpoints,
@@ -87,9 +96,16 @@ const darkTheme = (fontFamily?: string, breakpoints?: BreakpointsOptions) =>
     }
   });
 
-const lightTheme = (fontFamily?: string, breakpoints?: BreakpointsOptions) =>
+const lightTheme = (
+  fontFamily?: string,
+  fontSize?: number,
+  breakpoints?: BreakpointsOptions
+) =>
   createTheme({
-    typography: fontFamily ? { fontFamily } : typography,
+    typography: {
+      fontSize: fontSize ? fontSize : typography.fontSize,
+      fontFamily: fontFamily ? fontFamily : typography.fontFamily
+    },
     components,
     shape,
     breakpoints: breakpoints,
@@ -124,11 +140,12 @@ const lightTheme = (fontFamily?: string, breakpoints?: BreakpointsOptions) =>
 const makeTheme = (
   variant: 'dark' | 'light',
   fontFamily?: string,
+  fontSize?: number,
   breakpoints?: BreakpointsOptions
 ) =>
   variant === 'dark'
-    ? darkTheme(fontFamily, breakpoints)
-    : lightTheme(fontFamily, breakpoints);
+    ? darkTheme(fontFamily, fontSize, breakpoints)
+    : lightTheme(fontFamily, fontSize, breakpoints);
 
 const darkGreyButtonTheme = createTheme({
   typography,
