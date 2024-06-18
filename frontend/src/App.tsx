@@ -82,12 +82,6 @@ function App() {
     setTheme(() => overrideTheme(makeTheme(settings.theme, fontFamily)));
   }, [settings.theme]);
 
-  useEffect(() => {}, []);
-
-  useEffect(() => {
-    switchTheme();
-  });
-
   const { isAuthenticated, accessToken } = useAuth();
   const userEnv = useRecoilValue(userEnvState);
   const { connect, chatProfile, setChatProfile } = useChatSession();
@@ -124,8 +118,10 @@ function App() {
     if (!uiSettingsCommand) {
       return;
     }
+    console.log('11111111', uiSettingsCommand.spec.type);
     if (uiSettingsCommand.spec.type == 'mode') {
       const mode = (uiSettingsCommand.spec as BrightnessModeOptions).mode;
+
       switchTheme(mode);
       setSettings((old) => ({
         ...old,

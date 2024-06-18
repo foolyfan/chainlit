@@ -18,6 +18,16 @@
   white-space: break-spaces;
 }
 
+#root > .MuiBox-root {
+  /* background-color: #e6ebf9 !important; */
+  background-image: radial-gradient(
+    at right top,
+    #dbe4f9 20%,
+    #ecf0fc 60%,
+    #f6f7fc
+  );
+}
+
 .step.MuiBox-root {
   background-color: transparent !important;
 }
