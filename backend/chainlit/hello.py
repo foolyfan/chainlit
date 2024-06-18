@@ -385,7 +385,6 @@ async def main(message: Message):
                 ],
             ),
         ]
-        time.sleep(5)
         await Message(
             content="请核对以下转账信息符合您的预期。",
             elements=elements,
@@ -554,4 +553,6 @@ async def main(message: Message):
     if message.content == "25":
         await UISettingsCommand(options=BrightnessModeOptions(mode="light")).send()
     if message.content == "26":
-        await UISettingsCommand(options=FontOptions(fontSize=30)).send()
+        await UISettingsCommand(options=FontOptions(fontSize=24)).send()
+    if message.content == "27":
+        await UISettingsCommand(options=FontOptions(fontSize=14)).send()
