@@ -116,12 +116,17 @@ const InputBox = memo(
           width: '100%',
           maxWidth: '60rem',
           m: 'auto',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          borderTop: (theme) =>
+            theme.palette.mode == 'dark'
+              ? '1px solid #424242'
+              : '1px solid #E0E0E0'
         }}
       >
         {!autoScroll ? (
           <ScrollDownButton onClick={() => setAutoScroll(true)} />
         ) : null}
+
         <Box>
           <Input
             fileSpec={fileSpec}

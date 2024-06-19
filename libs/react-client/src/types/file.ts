@@ -89,3 +89,17 @@ export interface FontOptions extends UISettingsCommandOptions {
 export interface IUISettingsCommandOptions {
   spec: BrightnessModeOptions | FontOptions;
 }
+
+export interface PSPromptItem {
+  label: string;
+}
+
+export interface PSMessageItem {
+  value: any;
+  html: string;
+}
+
+export interface PreselectionSpec {
+  items: Array<PSPromptItem> | Array<PSMessageItem>;
+  type: 'prompt' | 'message';
+}

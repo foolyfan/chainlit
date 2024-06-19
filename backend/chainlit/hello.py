@@ -31,6 +31,8 @@ from chainlit.extensions.listaction import (
 from chainlit.extensions.message import (
     AskUserChoiceMessage,
     GatherCommand,
+    PreselectionMessage,
+    PSPromptItem,
     UISettingsCommand,
 )
 from chainlit.extensions.types import BrightnessModeOptions, FontOptions
@@ -556,3 +558,30 @@ async def main(message: Message):
         await UISettingsCommand(options=FontOptions(fontSize=24)).send()
     if message.content == "27":
         await UISettingsCommand(options=FontOptions(fontSize=14)).send()
+    if message.content == "28":
+        p = PreselectionMessage(
+            psType="prompt",
+            items=[
+                PSPromptItem(label="转账"),
+                PSPromptItem(label="18536403990"),
+                PSPromptItem(label="1852222"),
+            ],
+        )
+        await p.send()
+        res = await MobilePhoneInput(timeout=600, rules=[StartWithRule()]).send()
+        if res:
+            await Message(content=str(res)).send()
+            await p.clear_prompt()
+    if message.content == "29":
+        p = PreselectionMessage(
+            psType="prompt",
+            items=[
+                PSPromptItem(label="10000"),
+                PSPromptItem(label="5000.465"),
+                PSPromptItem(label="2000"),
+            ],
+        )
+        await p.send()
+        res = await AmountInput(rules=[SizeCompare()]).send()
+        if res:
+            await Message(content="{:.2f}".format(float(res))).send()

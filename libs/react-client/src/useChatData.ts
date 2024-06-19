@@ -12,6 +12,7 @@ import {
   inputState,
   listActionState,
   loadingState,
+  preselectionState,
   sessionState,
   tasklistState,
   uiSettingsCommandState
@@ -40,6 +41,7 @@ const useChatData = () => {
   );
   const input = useRecoilValue(inputState);
   const uiSettingsCommand = useRecoilValue(uiSettingsCommandState);
+  const preselection = useRecoilValue(preselectionState);
 
   const connected = session?.socket.connected && !session?.error;
   const disabled = !connected || loading || askUser?.spec.type === 'file';
@@ -60,7 +62,8 @@ const useChatData = () => {
     tasklists,
     gatherCommand,
     input,
-    uiSettingsCommand
+    uiSettingsCommand,
+    preselection
   };
 };
 

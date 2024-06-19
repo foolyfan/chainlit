@@ -17,6 +17,7 @@ import {
   ITasklistElement,
   IUISettingsCommandOptions,
   IUser,
+  PreselectionSpec,
   ThreadHistory
 } from './types';
 import { groupByDate } from './utils/group';
@@ -188,6 +189,11 @@ export const threadHistoryState = atom<ThreadHistory | undefined>({
 
 export const speechPromptsState = atom<ISpeechPromptMessage | undefined>({
   key: 'SpeechPrompts',
+  default: undefined
+});
+
+export const preselectionState = atom<PreselectionSpec | undefined>({
+  key: 'PreselectionSpec',
   default: undefined
 });
 

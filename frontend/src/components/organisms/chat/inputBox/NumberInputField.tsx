@@ -1,4 +1,11 @@
-import { ChangeEvent, forwardRef, useEffect, useRef, useState } from 'react';
+import {
+  ChangeEvent,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 
 import { InputAdornment, TextField } from '@mui/material';
 
@@ -14,8 +21,6 @@ interface Props {
   disabled?: boolean;
   onChange: (e: string) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
-  onCompositionStart?: () => void;
-  onCompositionEnd?: () => void;
   onFocus?: () => void;
   value: string;
   onSubmit: () => void;
@@ -24,40 +29,58 @@ interface Props {
 
 export const NumberInputField = forwardRef<HTMLDivElement | undefined, Props>(
   (
-    {
-      placeholder,
-      disabled,
-      onChange,
-      onKeyDown,
-      onCompositionStart,
-      onCompositionEnd,
-      value,
-      onFocus,
-      onSubmit,
-      rules
-    },
+    { placeholder, disabled, onChange, value, onFocus, onSubmit, rules },
     ref
   ) => {
     const innerRef = useRef<HTMLDivElement | null>(null);
-
-    const [innerValue, setInnerValue] = useState<string>(value);
+    const [isComposing, setIsComposing] = useState(false);
+    const [innerValue, setInnerValue] = useState<string>('');
     const { validateSubmit, validateChange, error, helperText } = useRules(
       innerValue,
       rules
     );
+    const onInnerChange = useCallback(
+      (value: string) => {
+        if (value) {
+          validateChange(value);
+        }
+        // 移除非数字和小数点的字符
+        value = value.replace(/[^0-9.]/g, '');
+        setInnerValue(value);
+        onChange(value);
+      },
+      [validateChange]
+    );
+    const handleChange = useCallback(
+      (e: ChangeEvent<HTMLInputElement>) => {
+        onInnerChange(e.target.value);
+      },
+      [onInnerChange]
+    );
 
-    const onInnerChange = (e: ChangeEvent<HTMLInputElement>) => {
-      let value = e.target.value;
-      // 移除非数字和小数点的字符
-      value = value.replace(/[^0-9.]/g, '');
-      setInnerValue(value);
-      validateChange(value);
-      onChange(value);
-    };
+    const handleSubmit = useCallback(() => {
+      if (validateSubmit(value)) {
+        onSubmit();
+      }
+    }, [validateSubmit, onSubmit]);
 
     useEffect(() => {
-      setInnerValue(value);
-    }, [value]);
+      onInnerChange(value);
+    }, [value, onInnerChange]);
+
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          if (!isComposing) {
+            e.preventDefault();
+            if (!error && validateSubmit(value)) {
+              onSubmit();
+            }
+          }
+        }
+      },
+      [value, error]
+    );
 
     return (
       <>
@@ -76,11 +99,11 @@ export const NumberInputField = forwardRef<HTMLDivElement | undefined, Props>(
           autoComplete="false"
           placeholder={placeholder}
           disabled={disabled}
-          onChange={onInnerChange}
-          onKeyDown={onKeyDown}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
           error={error}
-          onCompositionStart={onCompositionStart}
-          onCompositionEnd={onCompositionEnd}
+          onCompositionEnd={() => setIsComposing(false)}
+          onCompositionStart={() => setIsComposing(true)}
           value={innerValue}
           fullWidth
           onFocus={onFocus}
@@ -94,11 +117,7 @@ export const NumberInputField = forwardRef<HTMLDivElement | undefined, Props>(
             ),
             endAdornment: (
               <SubmitButton
-                onSubmit={() => {
-                  validateSubmit(value).then(() => {
-                    onSubmit();
-                  });
-                }}
+                onSubmit={handleSubmit}
                 disabled={disabled || !innerValue || error}
               />
             )

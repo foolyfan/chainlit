@@ -47,7 +47,7 @@ import {
   updateMessageContentById
 } from 'src/utils/message';
 
-import { uiSettingsCommandState, useChatContext } from '.';
+import { preselectionState, uiSettingsCommandState, useChatContext } from '.';
 import { ChainlitAPI } from './api';
 import { type IToken } from './useChatData';
 
@@ -76,6 +76,7 @@ const useChatSession = () => {
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
   const idToResume = useRecoilValue(threadIdToResumeState);
   const setSpeechPrompts = useSetRecoilState(speechPromptsState);
+  const setPreselection = useSetRecoilState(preselectionState);
   const { actionRef } = useChatContext();
 
   const _connect = useCallback(
@@ -449,8 +450,21 @@ const useChatSession = () => {
       socket.on('token_usage', (count: number) => {
         setTokenCount((old) => old + count);
       });
+
       socket.on('change_theme', ({ spec }) => {
         setUISettings({ spec });
+      });
+
+      socket.on('send_preselection', ({ msg, spec }) => {
+        if (spec.type == 'prompt') {
+          setPreselection(spec);
+        } else {
+          setMessages((oldMessages) => addMessage(oldMessages, msg));
+        }
+      });
+
+      socket.on('clear_prompt_preselection', () => {
+        setPreselection(undefined);
       });
     },
     [setSession, sessionId, chatProfile]

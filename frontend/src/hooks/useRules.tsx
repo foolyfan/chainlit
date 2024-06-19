@@ -34,38 +34,40 @@ const useRules = (value: string, rules?: Array<IRule>) => {
   }, [value]);
 
   const validateSubmit = useCallback(
-    (value: string): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        const innerValue = value.replace(/[\n\r]/g, '');
-        const result = submitRules.find(
-          (rule) => typeof rule(innerValue) === 'string'
-        );
+    (value: string): boolean => {
+      const innerValue = value.replace(/[\n\r]/g, '');
 
-        if (result) {
-          setError(true);
-          setHelperText(result(innerValue) as string);
-          reject();
-        } else {
-          setError(false);
-          setHelperText('');
-          resolve();
-        }
-      });
+      const result = submitRules.find(
+        (rule) => typeof rule(innerValue) === 'string'
+      );
+
+      if (result) {
+        setError(true);
+        setHelperText(result(innerValue) as string);
+        return false;
+      } else {
+        setError(false);
+        setHelperText('');
+        return true;
+      }
     },
     [submitRules]
   );
   const validateChange = useCallback(
-    (value: string) => {
+    (value: string): boolean => {
       const innerValue = value.replace(/[\n\r]/g, '');
+
       const result = changeRules.find(
         (rule) => typeof rule(innerValue) === 'string'
       );
       if (result) {
         setError(true);
         setHelperText(result(innerValue) as string);
+        return false;
       } else {
         setError(false);
         setHelperText('');
+        return true;
       }
     },
     [changeRules]

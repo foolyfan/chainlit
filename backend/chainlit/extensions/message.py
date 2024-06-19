@@ -11,6 +11,9 @@ from chainlit.extensions.types import (
     GatherCommandResponse,
     GatherCommandSpec,
     GatherCommandType,
+    PreselectionSpec,
+    PSMessageItem,
+    PSPromptItem,
     UISettingsCommandOptions,
 )
 from chainlit.logger import logger
@@ -181,3 +184,30 @@ class UISettingsCommand(MessageBase):
         step_dict = await self._create()
         spec = self.options
         await context.emitter.change_theme(step_dict, spec)
+
+
+class PreselectionMessage(MessageBase):
+
+    def __init__(
+        self,
+        items: Union[List[PSPromptItem], List[PSMessageItem]],
+        psType: Literal["message", "prompt"],
+    ):
+        self.items = items
+        self.psType = psType
+        self.author = config.ui.name
+        self.created_at = utc_now()
+        super().__post_init__()
+
+    async def send(self):
+        trace_event("change_theme")
+
+        step_dict = await self._create()
+        spec = PreselectionSpec(type=self.psType, items=self.items)
+        await context.emitter.send_preselection(step_dict, spec)
+        await context.emitter.task_end()
+
+    async def clear_prompt(self):
+        if self.psType != "prompt":
+            return
+        await context.emitter.clear("clear_prompt_preselection")

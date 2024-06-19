@@ -118,7 +118,7 @@ function App() {
     if (!uiSettingsCommand) {
       return;
     }
-    console.log('11111111', uiSettingsCommand.spec.type);
+
     if (uiSettingsCommand.spec.type == 'mode') {
       const mode = (uiSettingsCommand.spec as BrightnessModeOptions).mode;
 

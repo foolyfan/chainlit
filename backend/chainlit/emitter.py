@@ -4,12 +4,13 @@ from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 from chainlit.data import get_data_layer
 from chainlit.element import Element, File
-from chainlit.extensions.message import AskUserResponse
+from chainlit.extensions.message import AskUserResponse, PSMessageItem, PSPromptItem
 from chainlit.extensions.types import (
     GatherCommandResponse,
     GatherCommandSpec,
     InputResponse,
     InputSpec,
+    PreselectionSpec,
     UISettingsCommandOptions,
 )
 from chainlit.logger import logger
@@ -74,7 +75,11 @@ class BaseChainlitEmitter:
     def clear(
         self,
         event: Literal[
-            "clear_ask", "clear_gather_command", "clear_call_fn", "clear_input"
+            "clear_ask",
+            "clear_gather_command",
+            "clear_call_fn",
+            "clear_input",
+            "clear_prompt_preselection",
         ],
     ):
         pass
@@ -138,6 +143,9 @@ class BaseChainlitEmitter:
         pass
 
     async def change_theme(self, step_dict: StepDict, spec: UISettingsCommandOptions):
+        pass
+
+    async def send_preselection(self, step_dict: StepDict, spec: PreselectionSpec):
         pass
 
     async def send_action_response(
@@ -212,7 +220,11 @@ class ChainlitEmitter(BaseChainlitEmitter):
     def clear(
         self,
         event: Literal[
-            "clear_ask", "clear_gather_command", "clear_call_fn", "clear_input"
+            "clear_ask",
+            "clear_gather_command",
+            "clear_call_fn",
+            "clear_input",
+            "clear_prompt_preselection",
         ],
     ):
         return self.emit(event, {})
@@ -470,5 +482,11 @@ class ChainlitEmitter(BaseChainlitEmitter):
     def change_theme(self, step_dict: StepDict, spec: UISettingsCommandOptions):
         return self.emit(
             "change_theme",
+            {"msg": step_dict, "spec": spec.to_dict()},
+        )
+
+    def send_preselection(self, step_dict: StepDict, spec: PreselectionSpec):
+        return self.emit(
+            "send_preselection",
             {"msg": step_dict, "spec": spec.to_dict()},
         )

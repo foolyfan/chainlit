@@ -1,7 +1,7 @@
 import typing
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Literal, Optional, TypedDict
+from typing import Dict, List, Literal, Optional, TypedDict, Union
 
 from chainlit.types import ActionSpec, AskSpec
 from dataclasses_json import DataClassJsonMixin
@@ -71,3 +71,20 @@ class FontOptions(UISettingsCommandOptions, DataClassJsonMixin):
     type: str = "font"
     fontSize: Optional[int] = None
     fontFamily: Optional[str] = None
+
+
+@dataclass
+class PSPromptItem(DataClassJsonMixin):
+    label: str
+
+
+@dataclass
+class PSMessageItem(DataClassJsonMixin):
+    value: dict
+    html: Optional[str] = None
+
+
+@dataclass
+class PreselectionSpec(DataClassJsonMixin):
+    type: Literal["message", "prompt"]
+    items: Union[List[PSPromptItem], List[PSMessageItem]]

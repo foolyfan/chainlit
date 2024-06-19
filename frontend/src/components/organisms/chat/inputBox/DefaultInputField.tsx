@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { InputAdornment, TextField } from '@mui/material';
@@ -8,7 +8,6 @@ import { SubmitButton } from './SubmitButton';
 interface Props {
   disabled?: boolean;
   onChange: (e: string) => void;
-  onKeyDown?: (e: React.KeyboardEvent) => void;
   onCompositionStart?: () => void;
   onCompositionEnd?: () => void;
   onFocus?: () => void;
@@ -17,20 +16,20 @@ interface Props {
 }
 
 const DefaultInputField = forwardRef<HTMLDivElement | undefined, Props>(
-  (
-    {
-      disabled,
-      onChange,
-      onKeyDown,
-      onCompositionStart,
-      onCompositionEnd,
-      value,
-      onFocus,
-      onSubmit
-    },
-    ref
-  ) => {
+  ({ disabled, onChange, value, onFocus, onSubmit }, ref) => {
     const { t } = useTranslation();
+    const [isComposing, setIsComposing] = useState(false);
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          if (!isComposing) {
+            e.preventDefault();
+            onSubmit();
+          }
+        }
+      },
+      [value]
+    );
     return (
       <TextField
         inputRef={ref}
@@ -42,9 +41,9 @@ const DefaultInputField = forwardRef<HTMLDivElement | undefined, Props>(
         placeholder={t('components.organisms.chat.inputBox.input.placeholder')}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        onKeyDown={onKeyDown}
-        onCompositionStart={onCompositionStart}
-        onCompositionEnd={onCompositionEnd}
+        onKeyDown={handleKeyDown}
+        onCompositionEnd={() => setIsComposing(false)}
+        onCompositionStart={() => setIsComposing(true)}
         value={value}
         fullWidth
         onFocus={onFocus}
