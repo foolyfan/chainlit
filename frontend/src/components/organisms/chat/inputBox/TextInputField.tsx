@@ -70,13 +70,13 @@ export const TextInputField = forwardRef<HTMLDivElement | undefined, Props>(
         if (e.key === 'Enter' && !e.shiftKey) {
           if (!isComposing) {
             e.preventDefault();
-            if (!error && validateSubmit(value)) {
+            if (!error && validateSubmit(innerValue)) {
               onSubmit();
             }
           }
         }
       },
-      [value, error]
+      [innerValue, error]
     );
 
     return (
