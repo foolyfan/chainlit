@@ -81,7 +81,7 @@ class ClientRule(Rule, DataClassJsonMixin):
 class ServerRule(Rule, ABC):
 
     @abstractmethod
-    def validate(self, value: ValueType) -> ValidateResult:
+    async def validate(self, value: ValueType) -> ValidateResult:
         pass
 
     def toResult(self, res: bool) -> ValidateResult:
@@ -205,7 +205,7 @@ class InputBase(AskMessageBase, ABC):
         errors = []
         speechContents = []
         for rule in self._serverRules:
-            ruleRes = rule.validate(_value)
+            ruleRes = await rule.validate(_value)
             if not ruleRes.value:
                 if ruleRes.errMsg is not None:
                     errors.append(ruleRes.errMsg)
@@ -354,7 +354,7 @@ class FixedLength(ServerRule):
         self.errMsg = errMsg
         self.length = length
 
-    def validate(self, value: ValueType) -> ValidateResult:
+    async def validate(self, value: ValueType) -> ValidateResult:
         try:
             return self.toResult(isinstance(value, str) and len(value) == self.length)
         except TypeError as e:

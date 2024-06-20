@@ -67,9 +67,15 @@ class BrightnessModeOptions(UISettingsCommandOptions, DataClassJsonMixin):
 
 
 @dataclass
+class FontSizeOptions(DataClassJsonMixin):
+    type: Literal["add", "reduce"]
+    offset: int
+
+
+@dataclass
 class FontOptions(UISettingsCommandOptions, DataClassJsonMixin):
     type: str = "font"
-    fontSize: Optional[int] = None
+    fontSize: Optional[FontSizeOptions] = None
     fontFamily: Optional[str] = None
 
 

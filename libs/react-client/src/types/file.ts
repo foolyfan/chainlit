@@ -81,7 +81,10 @@ export interface BrightnessModeOptions extends UISettingsCommandOptions {
 }
 
 export interface FontOptions extends UISettingsCommandOptions {
-  fontSize?: number;
+  fontSize?: {
+    type: 'add' | 'reduce';
+    offset: number;
+  };
   fontFamily?: string;
   type: 'font';
 }

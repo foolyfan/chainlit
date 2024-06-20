@@ -35,7 +35,11 @@ from chainlit.extensions.message import (
     PSPromptItem,
     UISettingsCommand,
 )
-from chainlit.extensions.types import BrightnessModeOptions, FontOptions
+from chainlit.extensions.types import (
+    BrightnessModeOptions,
+    FontOptions,
+    FontSizeOptions,
+)
 from chainlit.logger import logger
 from chainlit.types import AskUserResponse
 from fastapi import HTTPException
@@ -263,7 +267,8 @@ class SizeCompare(ServerRule):
     def __init__(self):
         self.errMsg = "转账金额必须大于3000"
 
-    def validate(self, value: ValueType) -> ValidateResult:
+    async def validate(self, value: ValueType) -> ValidateResult:
+        await sleep(5)
         return self.toResult(
             True if isinstance(value, float) and value > 3000 else False
         )
@@ -555,9 +560,13 @@ async def main(message: Message):
     if message.content == "25":
         await UISettingsCommand(options=BrightnessModeOptions(mode="light")).send()
     if message.content == "26":
-        await UISettingsCommand(options=FontOptions(fontSize=24)).send()
+        await UISettingsCommand(
+            options=FontOptions(fontSize=FontSizeOptions(type="add", offset=4))
+        ).send()
     if message.content == "27":
-        await UISettingsCommand(options=FontOptions(fontSize=14)).send()
+        await UISettingsCommand(
+            options=FontOptions(fontSize=FontSizeOptions(type="reduce", offset=4))
+        ).send()
     if message.content == "28":
         p = PreselectionMessage(
             psType="prompt",

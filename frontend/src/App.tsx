@@ -128,11 +128,25 @@ function App() {
         theme: mode
       }));
     }
-    if (uiSettingsCommand.spec.type == 'font') {
+    console.log('uiSettingsCommand', uiSettingsCommand);
+
+    if (uiSettingsCommand.spec.type == 'font' && theme) {
       const font = uiSettingsCommand.spec as FontOptions;
-      setTheme(() =>
-        overrideTheme(makeTheme(settings.theme, font.fontFamily, font.fontSize))
-      );
+      const curFontSize = theme.typography.fontSize;
+      console.log('uiSettingsCommand curFontSize', curFontSize);
+      let newFontSize = curFontSize;
+      if (font.fontSize?.type == 'add') {
+        newFontSize = curFontSize + font.fontSize.offset;
+      }
+      if (font.fontSize?.type == 'reduce') {
+        newFontSize = curFontSize - font.fontSize.offset;
+      }
+      console.log('uiSettingsCommand newFontSize', newFontSize);
+      if (newFontSize > 0) {
+        setTheme(() =>
+          overrideTheme(makeTheme(settings.theme, font.fontFamily, newFontSize))
+        );
+      }
     }
   }, [uiSettingsCommand]);
 
