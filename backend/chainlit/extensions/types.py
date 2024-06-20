@@ -86,11 +86,14 @@ class PSPromptItem(DataClassJsonMixin):
 
 @dataclass
 class PSMessageItem(DataClassJsonMixin):
-    value: dict
-    html: Optional[str] = None
+    name: str
+    value: Union[dict, str]
+    src: str
+    display: str
 
 
 @dataclass
 class PreselectionSpec(DataClassJsonMixin):
     type: Literal["message", "prompt"]
     items: Union[List[PSPromptItem], List[PSMessageItem]]
+    forId: str

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 import tomli
 from chainlit.logger import logger
-from chainlit.session import WebsocketSession
 from chainlit.version import __version__
 from dataclasses_json import DataClassJsonMixin
 from fastapi.responses import StreamingResponse
@@ -262,6 +261,9 @@ class CodeSettings:
     set_chat_profiles: Optional[Callable[[Optional["User"]], List["ChatProfile"]]] = (
         None
     )
+    on_preselection_callback: Optional[
+        Dict[str, Callable[[Union[dict, str]], None]]
+    ] = None
 
 
 @dataclass()
@@ -410,7 +412,10 @@ def load_settings():
             "ui": ui_settings,
             "project": project_settings,
             "code": CodeSettings(
-                action_callbacks={}, list_action_callbacks={}, on_recognation_input={}
+                action_callbacks={},
+                list_action_callbacks={},
+                on_recognation_input={},
+                on_preselection_callback={},
             ),
         }
 

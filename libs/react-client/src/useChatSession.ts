@@ -456,10 +456,14 @@ const useChatSession = () => {
       });
 
       socket.on('send_preselection', ({ msg, spec }) => {
-        if (spec.type == 'prompt') {
-          setPreselection(spec);
-        } else {
+        setPreselection(spec);
+        if (spec.type == 'message') {
           setMessages((oldMessages) => addMessage(oldMessages, msg));
+        }
+        if (!isEmpty(msg.speechContent)) {
+          setSpeechPrompts({
+            content: msg.speechContent
+          });
         }
       });
 

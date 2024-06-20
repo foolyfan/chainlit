@@ -293,6 +293,12 @@ async def call_action(sid, action):
         )
 
 
+@socket.on("preselection_call")
+async def call_preselection(sid, name, value):
+    init_ws_context(sid)
+    await config.code.on_preselection_callback[name](value)
+
+
 @socket.on("chat_settings_change")
 async def change_settings(sid, settings: Dict[str, Any]):
     """Handle change settings submit from the UI."""

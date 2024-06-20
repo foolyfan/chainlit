@@ -3,7 +3,6 @@
 import asyncio
 import json
 import os
-import time
 import uuid
 from typing import List, Union
 
@@ -39,6 +38,7 @@ from chainlit.extensions.types import (
     BrightnessModeOptions,
     FontOptions,
     FontSizeOptions,
+    PSMessageItem,
 )
 from chainlit.logger import logger
 from chainlit.types import AskUserResponse
@@ -60,6 +60,7 @@ from chainlit import (
     image_account_recognition,
     mobilephone_recognition,
     on_message,
+    preselection_callback,
     sleep,
     tts_method,
 )
@@ -110,6 +111,24 @@ class AccountAndMobilePhoneRule(ClientRule):
       return '必须是有效的11位手机号或19位银行账号';
     }
 """
+
+
+@preselection_callback("first")
+async def first(value: Union[dict, str]):
+    logger.info(f"first callback: {value}")
+    await Message(content="I'm first").send()
+
+
+@preselection_callback("second")
+async def second(value: Union[dict, str]):
+    logger.info(f"second callback: {value}")
+
+
+async def third(value: Union[dict, str]):
+    logger.info(f"third callback: {value}")
+
+
+preselection_callback("third")(third)
 
 
 @account_recognition
@@ -288,7 +307,7 @@ async def main(message: Message):
     if message.content == "1":
 
         res = await AskUserChoiceMessage(
-            timeout=30,
+            timeout=180,
             choiceContent="请在以下收款人数据中做出选择：",
             layout=[{"field": "name", "width": 20}, {"field": "accNo", "width": 50}],
             choiceActions=[
@@ -594,3 +613,29 @@ async def main(message: Message):
         res = await AmountInput(rules=[SizeCompare()]).send()
         if res:
             await Message(content="{:.2f}".format(float(res))).send()
+    if message.content == "30":
+        p = PreselectionMessage(
+            content="还需要进行以下服务吗",
+            psType="message",
+            items=[
+                PSMessageItem(
+                    name="first",
+                    value="1",
+                    src='<div style="width: 100%">1. 开卡<div>',
+                    display="create",
+                ),
+                PSMessageItem(
+                    name="second",
+                    value="2",
+                    src='<div style="width: 100%">2. 转账<div>',
+                    display="create",
+                ),
+                PSMessageItem(
+                    name="third",
+                    value="3",
+                    src='<div style="width: 100%">3. 挂失<div>',
+                    display="create",
+                ),
+            ],
+        )
+        await p.send()

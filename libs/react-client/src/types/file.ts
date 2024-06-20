@@ -98,11 +98,14 @@ export interface PSPromptItem {
 }
 
 export interface PSMessageItem {
+  name: string;
   value: any;
-  html: string;
+  src: string;
+  display: string;
 }
 
 export interface PreselectionSpec {
   items: Array<PSPromptItem> | Array<PSMessageItem>;
   type: 'prompt' | 'message';
+  forId: string;
 }

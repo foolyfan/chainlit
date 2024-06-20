@@ -192,10 +192,14 @@ class PreselectionMessage(MessageBase):
         self,
         items: Union[List[PSPromptItem], List[PSMessageItem]],
         psType: Literal["message", "prompt"],
+        content: str = "",
+        speechContent: str = "",
     ):
         self.items = items
+        self.content = content
         self.psType = psType
         self.author = config.ui.name
+        self.speechContent = speechContent
         self.created_at = utc_now()
         super().__post_init__()
 
@@ -203,7 +207,7 @@ class PreselectionMessage(MessageBase):
         trace_event("change_theme")
 
         step_dict = await self._create()
-        spec = PreselectionSpec(type=self.psType, items=self.items)
+        spec = PreselectionSpec(type=self.psType, items=self.items, forId=self.id)
         await context.emitter.send_preselection(step_dict, spec)
         await context.emitter.task_end()
 

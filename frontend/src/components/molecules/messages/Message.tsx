@@ -10,15 +10,16 @@ import { AskUploadButton } from './components/AskUploadButton';
 import { AUTHOR_BOX_WIDTH, Author } from './components/Author';
 import { DetailsButton } from './components/DetailsButton';
 import { MessageActions } from './components/MessageActions';
+import { MessageChoices } from './components/MessageChoices';
 import { MessageContent } from './components/MessageContent';
 import { MessageListActions } from './components/MessageListActions';
 
-import type {
-  IAction,
-  ILayout,
-  IListAction,
-  IMessageElement,
-  IStep
+import {
+  type IAction,
+  type ILayout,
+  type IListAction,
+  type IMessageElement,
+  type IStep
 } from 'client-types/';
 
 import { Messages } from './Messages';
@@ -100,6 +101,7 @@ const Message = memo(
     const isUser = message.type === 'user_message';
     const isAsk = message.waitForAnswer;
     showAvatar = true;
+
     return (
       <Box
         ref={ref}
@@ -204,6 +206,7 @@ const Message = memo(
                             listActions={listActions}
                           />
                         }
+                        {<MessageChoices message={message} />}
                       </Box>
                     )}
                   </>

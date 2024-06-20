@@ -362,6 +362,15 @@ def action_callback(name: str) -> Callable:
     return decorator
 
 
+def preselection_callback(name: str) -> Callable:
+
+    def decorator(func: Callable[[Union[dict, str]], None]):
+        config.code.on_preselection_callback[name] = wrap_user_function(func)
+        return func
+
+    return decorator
+
+
 def on_settings_update(
     func: Callable[[Dict[str, Any]], Any]
 ) -> Callable[[Dict[str, Any]], Any]:

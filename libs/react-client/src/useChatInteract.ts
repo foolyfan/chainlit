@@ -25,7 +25,8 @@ import {
   IFileRef,
   IGatherCommandResponse,
   IListAction,
-  IStep
+  IStep,
+  PSMessageItem
 } from 'src/types';
 import { addMessage } from 'src/utils/message';
 
@@ -194,6 +195,15 @@ const useChatInteract = () => {
     [session?.socket]
   );
 
+  const callPreselection = useCallback(
+    (item: PSMessageItem) => {
+      const socket = session?.socket;
+      if (!socket) return;
+      socket.emit('preselection_call', item.name, item.value);
+    },
+    [session?.socket]
+  );
+
   const callListAction = useCallback(
     (action: IListAction) => {
       const socket = session?.socket;
@@ -252,7 +262,8 @@ const useChatInteract = () => {
     setIdToResume,
     updateChatSettings,
     addWaitingMessage,
-    replyCmdMessage
+    replyCmdMessage,
+    callPreselection
   };
 };
 
