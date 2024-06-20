@@ -1,6 +1,10 @@
+import { useRecoilValue } from 'recoil';
+
 import { List, ListItemButton, ListItemText } from '@mui/material';
 
 import { type IChoiceAction, type IChoiceLayout } from '@chainlit/react-client';
+
+import { settingsState } from 'state/settings';
 
 interface Props {
   choiceActions: IChoiceAction[];
@@ -9,6 +13,8 @@ interface Props {
 }
 
 export const DataListAction = ({ choiceActions, layout, onClick }: Props) => {
+  const { theme } = useRecoilValue(settingsState);
+
   return (
     <List sx={{ width: '100%' }}>
       {choiceActions.map((action, index) => {
@@ -22,7 +28,7 @@ export const DataListAction = ({ choiceActions, layout, onClick }: Props) => {
             <ListItemText primary={index + 1} sx={{ width: 30, flexGrow: 0 }} />
             {action.html ? (
               <div
-                className={`test-html`}
+                className={`html ${theme}`}
                 style={{
                   objectFit: 'cover',
                   maxWidth: '100%',
