@@ -7,13 +7,13 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
 import {
+  ChoiceSpec,
   type IAction,
   type ILayout,
   type IListAction,
   type IMessageElement,
   type IStep,
-  ListSpec,
-  PSMessageItem,
+  PreselectionSpec,
   useChatData
 } from '@chainlit/react-client';
 
@@ -106,18 +106,20 @@ const Message = memo(
     showAvatar = true;
 
     // 预选择提示语言
-    const { aiMessageHistory } = useChatData();
-    const [attach, setAttach] = useState<ListSpec<PSMessageItem>>();
+    const { operableMessages } = useChatData();
+    const [attach, setAttach] = useState<PreselectionSpec | ChoiceSpec>();
     useEffect(() => {
       if (attach) {
         return;
       }
-      if (aiMessageHistory[message.id]?.attach) {
+      if (operableMessages[message.id]?.attach) {
+        console.log('@@@@@@@@@', operableMessages[message.id].attach);
+
         setAttach({
-          ...(aiMessageHistory[message.id].attach as ListSpec<PSMessageItem>)
+          ...operableMessages[message.id].attach!
         });
       }
-    }, [aiMessageHistory[message.id]]);
+    }, [operableMessages[message.id]]);
 
     return (
       <Box
@@ -224,7 +226,9 @@ const Message = memo(
                           />
                         }
                         {attach ? (
-                          <MessagePreselections attach={attach} />
+                          <MessagePreselections
+                            attach={attach as PreselectionSpec}
+                          />
                         ) : null}
                       </Box>
                     )}

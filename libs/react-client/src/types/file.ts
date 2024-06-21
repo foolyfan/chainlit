@@ -115,3 +115,9 @@ export interface PreselectionSpec
   extends ListSpec<PSPromptItem | PSMessageItem> {
   type: 'prompt' | 'message';
 }
+
+export type ChoiceItem = ListDataItem;
+
+export interface ChoiceSpec extends ListSpec<ChoiceItem> {
+  timeout: number;
+}

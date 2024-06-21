@@ -2,7 +2,6 @@ import { useRecoilValue } from 'recoil';
 
 import {
   actionState,
-  aiMessageHistoryState,
   askUserState,
   avatarState,
   chatSettingsDefaultValueSelector,
@@ -13,6 +12,7 @@ import {
   inputState,
   listActionState,
   loadingState,
+  operableMessagesState,
   preselectionState,
   sessionState,
   tasklistState,
@@ -43,7 +43,7 @@ const useChatData = () => {
   const input = useRecoilValue(inputState);
   const uiSettingsCommand = useRecoilValue(uiSettingsCommandState);
   const preselection = useRecoilValue(preselectionState);
-  const aiMessageHistory = useRecoilValue(aiMessageHistoryState);
+  const operableMessages = useRecoilValue(operableMessagesState);
 
   const connected = session?.socket.connected && !session?.error;
   const disabled = !connected || loading || askUser?.spec.type === 'file';
@@ -66,7 +66,7 @@ const useChatData = () => {
     input,
     uiSettingsCommand,
     preselection,
-    aiMessageHistory
+    operableMessages
   };
 };
 

@@ -1,15 +1,15 @@
 import { memo, useCallback, useState } from 'react';
 
 import {
-  ListSpec,
   PSMessageItem,
+  PreselectionSpec,
   useChatInteract
 } from '@chainlit/react-client';
 
 import { ListFrame } from './ListFrame';
 
 interface Props {
-  attach: ListSpec<PSMessageItem>;
+  attach: PreselectionSpec;
 }
 
 const MessagePreselections: React.FC<Props> = memo(({ attach }: Props) => {
@@ -29,7 +29,11 @@ const MessagePreselections: React.FC<Props> = memo(({ attach }: Props) => {
   );
 
   return (
-    <ListFrame onClick={handleClick} disabled={history} items={attach.items} />
+    <ListFrame
+      onClick={handleClick}
+      disabled={history}
+      items={attach.items as PSMessageItem[]}
+    />
   );
 });
 

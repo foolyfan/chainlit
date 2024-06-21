@@ -1,5 +1,5 @@
 import { IFeedback } from './feedback';
-import { ListSpec, PSMessageItem, PSPromptItem } from './file';
+import { ChoiceSpec, PreselectionSpec } from './file';
 import { IGeneration } from './generation';
 
 type StepType =
@@ -51,7 +51,8 @@ export interface ISpeechPromptMessage {
   content: string;
 }
 
-export interface AIMessageHistory {
+export interface OperableMessage {
   step: IStep;
-  attach?: ListSpec<PSPromptItem | PSMessageItem>;
+  attach?: PreselectionSpec | ChoiceSpec;
+  timeout?: boolean;
 }

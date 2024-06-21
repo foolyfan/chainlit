@@ -48,7 +48,7 @@ import {
 } from 'src/utils/message';
 
 import {
-  aiMessageHistoryState,
+  operableMessagesState,
   preselectionState,
   uiSettingsCommandState,
   useChatContext
@@ -83,7 +83,7 @@ const useChatSession = () => {
   const setSpeechPrompts = useSetRecoilState(speechPromptsState);
   const setPreselection = useSetRecoilState(preselectionState);
   const { actionRef } = useChatContext();
-  const setAIMessageHistory = useSetRecoilState(aiMessageHistoryState);
+  const setOperableMessages = useSetRecoilState(operableMessagesState);
 
   const _connect = useCallback(
     ({
@@ -465,11 +465,11 @@ const useChatSession = () => {
         setPreselection(spec);
         if (spec.type == 'message') {
           setMessages((oldMessages) => addMessage(oldMessages, msg));
-          setAIMessageHistory((oldHistory) => {
-            const newHistory = { ...oldHistory };
-            newHistory[msg.id] = { step: msg };
-            newHistory[msg.id].attach = spec;
-            return newHistory;
+          setOperableMessages((oldMessages) => {
+            const newMessages = { ...oldMessages };
+            newMessages[msg.id] = { step: msg };
+            newMessages[msg.id].attach = spec;
+            return newMessages;
           });
         }
         if (!isEmpty(msg.speechContent)) {
@@ -481,6 +481,24 @@ const useChatSession = () => {
 
       socket.on('clear_prompt_advise', () => {
         setPreselection(undefined);
+      });
+
+      socket.on('ask_choice', ({ msg, spec }) => {
+        setMessages((oldMessages) => addMessage(oldMessages, msg));
+        setOperableMessages((oldMessages) => {
+          const newMessages = { ...oldMessages };
+          newMessages[msg.id] = { step: msg };
+          newMessages[msg.id].attach = spec;
+          return newMessages;
+        });
+      });
+
+      socket.on('ask_choice_timeout', ({ msg }) => {
+        setOperableMessages((oldMessages) => {
+          const newMessages = { ...oldMessages };
+          newMessages[msg.id].timeout = true;
+          return newMessages;
+        });
       });
     },
     [setSession, sessionId, chatProfile]

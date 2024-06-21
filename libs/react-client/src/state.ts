@@ -4,7 +4,6 @@ import { Socket } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  AIMessageHistory,
   IAction,
   IAsk,
   IAvatarElement,
@@ -18,6 +17,7 @@ import {
   ITasklistElement,
   IUISettingsCommandOptions,
   IUser,
+  OperableMessage,
   PreselectionSpec,
   ThreadHistory
 } from './types';
@@ -205,7 +205,7 @@ export const uiSettingsCommandState = atom<
   default: undefined
 });
 
-export const aiMessageHistoryState = atom<{ [key: string]: AIMessageHistory }>({
-  key: 'AIMessageHistory',
+export const operableMessagesState = atom<{ [key: string]: OperableMessage }>({
+  key: 'OperableMessage',
   default: {}
 });
