@@ -2,6 +2,7 @@ import { useRecoilValue } from 'recoil';
 
 import {
   actionState,
+  aiMessageHistoryState,
   askUserState,
   avatarState,
   chatSettingsDefaultValueSelector,
@@ -42,6 +43,7 @@ const useChatData = () => {
   const input = useRecoilValue(inputState);
   const uiSettingsCommand = useRecoilValue(uiSettingsCommandState);
   const preselection = useRecoilValue(preselectionState);
+  const aiMessageHistory = useRecoilValue(aiMessageHistoryState);
 
   const connected = session?.socket.connected && !session?.error;
   const disabled = !connected || loading || askUser?.spec.type === 'file';
@@ -63,7 +65,8 @@ const useChatData = () => {
     gatherCommand,
     input,
     uiSettingsCommand,
-    preselection
+    preselection,
+    aiMessageHistory
   };
 };
 

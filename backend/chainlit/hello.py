@@ -621,7 +621,7 @@ async def main(message: Message):
                 PSMessageItem(
                     name="first",
                     value="1",
-                    src='<div style="width: 100%">1. 开卡<div>',
+                    src='<div style="width: 100%;height:50px">1. 开卡<div>',
                     display="create",
                 ),
                 PSMessageItem(

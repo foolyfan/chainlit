@@ -93,19 +93,25 @@ export interface IUISettingsCommandOptions {
   spec: BrightnessModeOptions | FontOptions;
 }
 
-export interface PSPromptItem {
-  label: string;
-}
-
-export interface PSMessageItem {
-  name: string;
+export interface ListDataItem {
   value: any;
   src: string;
   display: string;
 }
 
-export interface PreselectionSpec {
-  items: Array<PSPromptItem> | Array<PSMessageItem>;
+export interface PSPromptItem extends ListDataItem {
+  label: string;
+}
+
+export interface PSMessageItem extends ListDataItem {
+  name: string;
+}
+
+export interface ListSpec<T extends ListDataItem> {
+  items: Array<T>;
+}
+
+export interface PreselectionSpec
+  extends ListSpec<PSPromptItem | PSMessageItem> {
   type: 'prompt' | 'message';
-  forId: string;
 }

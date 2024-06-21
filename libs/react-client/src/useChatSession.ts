@@ -47,7 +47,12 @@ import {
   updateMessageContentById
 } from 'src/utils/message';
 
-import { preselectionState, uiSettingsCommandState, useChatContext } from '.';
+import {
+  aiMessageHistoryState,
+  preselectionState,
+  uiSettingsCommandState,
+  useChatContext
+} from '.';
 import { ChainlitAPI } from './api';
 import { type IToken } from './useChatData';
 
@@ -78,6 +83,7 @@ const useChatSession = () => {
   const setSpeechPrompts = useSetRecoilState(speechPromptsState);
   const setPreselection = useSetRecoilState(preselectionState);
   const { actionRef } = useChatContext();
+  const setAIMessageHistory = useSetRecoilState(aiMessageHistoryState);
 
   const _connect = useCallback(
     ({
@@ -459,6 +465,12 @@ const useChatSession = () => {
         setPreselection(spec);
         if (spec.type == 'message') {
           setMessages((oldMessages) => addMessage(oldMessages, msg));
+          setAIMessageHistory((oldHistory) => {
+            const newHistory = { ...oldHistory };
+            newHistory[msg.id] = { step: msg };
+            newHistory[msg.id].attach = spec;
+            return newHistory;
+          });
         }
         if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({

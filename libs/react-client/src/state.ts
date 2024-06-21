@@ -4,6 +4,7 @@ import { Socket } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
+  AIMessageHistory,
   IAction,
   IAsk,
   IAvatarElement,
@@ -202,4 +203,9 @@ export const uiSettingsCommandState = atom<
 >({
   key: 'UISettingsCommand',
   default: undefined
+});
+
+export const aiMessageHistoryState = atom<{ [key: string]: AIMessageHistory }>({
+  key: 'AIMessageHistory',
+  default: {}
 });

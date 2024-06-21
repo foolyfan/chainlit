@@ -6,21 +6,24 @@ import { CircularProgress } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
-import { AskUploadButton } from './components/AskUploadButton';
-import { AUTHOR_BOX_WIDTH, Author } from './components/Author';
-import { DetailsButton } from './components/DetailsButton';
-import { MessageActions } from './components/MessageActions';
-import { MessageChoices } from './components/MessageChoices';
-import { MessageContent } from './components/MessageContent';
-import { MessageListActions } from './components/MessageListActions';
-
 import {
   type IAction,
   type ILayout,
   type IListAction,
   type IMessageElement,
-  type IStep
-} from 'client-types/';
+  type IStep,
+  ListSpec,
+  PSMessageItem,
+  useChatData
+} from '@chainlit/react-client';
+
+import { AskUploadButton } from './components/AskUploadButton';
+import { AUTHOR_BOX_WIDTH, Author } from './components/Author';
+import { DetailsButton } from './components/DetailsButton';
+import { MessageActions } from './components/MessageActions';
+import { MessageContent } from './components/MessageContent';
+import { MessageListActions } from './components/MessageListActions';
+import { MessagePreselections } from './components/MessagePreselections';
 
 import { Messages } from './Messages';
 
@@ -101,6 +104,20 @@ const Message = memo(
     const isUser = message.type === 'user_message';
     const isAsk = message.waitForAnswer;
     showAvatar = true;
+
+    // 预选择提示语言
+    const { aiMessageHistory } = useChatData();
+    const [attach, setAttach] = useState<ListSpec<PSMessageItem>>();
+    useEffect(() => {
+      if (attach) {
+        return;
+      }
+      if (aiMessageHistory[message.id]?.attach) {
+        setAttach({
+          ...(aiMessageHistory[message.id].attach as ListSpec<PSMessageItem>)
+        });
+      }
+    }, [aiMessageHistory[message.id]]);
 
     return (
       <Box
@@ -206,7 +223,9 @@ const Message = memo(
                             listActions={listActions}
                           />
                         }
-                        {<MessageChoices message={message} />}
+                        {attach ? (
+                          <MessagePreselections attach={attach} />
+                        ) : null}
                       </Box>
                     )}
                   </>

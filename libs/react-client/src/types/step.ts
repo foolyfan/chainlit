@@ -1,4 +1,5 @@
 import { IFeedback } from './feedback';
+import { ListSpec, PSMessageItem, PSPromptItem } from './file';
 import { IGeneration } from './generation';
 
 type StepType =
@@ -48,4 +49,9 @@ export type ILayout = IChoiceLayout[];
 
 export interface ISpeechPromptMessage {
   content: string;
+}
+
+export interface AIMessageHistory {
+  step: IStep;
+  attach?: ListSpec<PSPromptItem | PSMessageItem>;
 }

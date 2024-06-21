@@ -196,10 +196,13 @@ const useChatInteract = () => {
   );
 
   const callPreselection = useCallback(
-    (item: PSMessageItem) => {
+    (item: PSMessageItem): Promise<void> | void => {
       const socket = session?.socket;
       if (!socket) return;
-      socket.emit('preselection_call', item.name, item.value);
+      return new Promise<void>((resolve) => {
+        socket.emit('preselection_call', item.name, item.value);
+        resolve();
+      });
     },
     [session?.socket]
   );
