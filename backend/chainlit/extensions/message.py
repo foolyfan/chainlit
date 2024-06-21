@@ -207,11 +207,11 @@ class PreselectionMessage(MessageBase):
         trace_event("change_theme")
 
         step_dict = await self._create()
-        spec = PreselectionSpec(type=self.psType, items=self.items, forId=self.id)
-        await context.emitter.send_preselection(step_dict, spec)
+        spec = PreselectionSpec(type=self.psType, items=self.items)
+        await context.emitter.advise(step_dict, spec)
         await context.emitter.task_end()
 
     async def clear_prompt(self):
         if self.psType != "prompt":
             return
-        await context.emitter.clear("clear_prompt_preselection")
+        await context.emitter.clear("clear_prompt_advise")

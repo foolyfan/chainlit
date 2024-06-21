@@ -79,7 +79,7 @@ class BaseChainlitEmitter:
             "clear_gather_command",
             "clear_call_fn",
             "clear_input",
-            "clear_prompt_preselection",
+            "clear_prompt_advise",
         ],
     ):
         pass
@@ -145,7 +145,7 @@ class BaseChainlitEmitter:
     async def change_theme(self, step_dict: StepDict, spec: UISettingsCommandOptions):
         pass
 
-    async def send_preselection(self, step_dict: StepDict, spec: PreselectionSpec):
+    async def advise(self, step_dict: StepDict, spec: PreselectionSpec):
         pass
 
     async def send_action_response(
@@ -224,7 +224,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
             "clear_gather_command",
             "clear_call_fn",
             "clear_input",
-            "clear_prompt_preselection",
+            "clear_prompt_advise",
         ],
     ):
         return self.emit(event, {})
@@ -485,8 +485,8 @@ class ChainlitEmitter(BaseChainlitEmitter):
             {"msg": step_dict, "spec": spec.to_dict()},
         )
 
-    def send_preselection(self, step_dict: StepDict, spec: PreselectionSpec):
+    def advise(self, step_dict: StepDict, spec: PreselectionSpec):
         return self.emit(
-            "send_preselection",
+            "advise",
             {"msg": step_dict, "spec": spec.to_dict()},
         )

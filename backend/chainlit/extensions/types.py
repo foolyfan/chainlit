@@ -80,20 +80,27 @@ class FontOptions(UISettingsCommandOptions, DataClassJsonMixin):
 
 
 @dataclass
-class PSPromptItem(DataClassJsonMixin):
-    label: str
-
-
-@dataclass
-class PSMessageItem(DataClassJsonMixin):
-    name: str
+class ListDataItem(DataClassJsonMixin):
     value: Union[dict, str]
     src: str
     display: str
 
 
 @dataclass
-class PreselectionSpec(DataClassJsonMixin):
-    type: Literal["message", "prompt"]
+class PSPromptItem(DataClassJsonMixin):
+    label: str
+
+
+@dataclass
+class PSMessageItem(ListDataItem, DataClassJsonMixin):
+    name: str
+
+
+@dataclass
+class ListSpec(DataClassJsonMixin):
     items: Union[List[PSPromptItem], List[PSMessageItem]]
-    forId: str
+
+
+@dataclass
+class PreselectionSpec(ListSpec, DataClassJsonMixin):
+    type: Literal["message", "prompt"]

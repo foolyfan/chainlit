@@ -461,7 +461,7 @@ const useChatSession = () => {
         setUISettings({ spec });
       });
 
-      socket.on('send_preselection', ({ msg, spec }) => {
+      socket.on('advise', ({ msg, spec }) => {
         setPreselection(spec);
         if (spec.type == 'message') {
           setMessages((oldMessages) => addMessage(oldMessages, msg));
@@ -479,7 +479,7 @@ const useChatSession = () => {
         }
       });
 
-      socket.on('clear_prompt_preselection', () => {
+      socket.on('clear_prompt_advise', () => {
         setPreselection(undefined);
       });
     },
