@@ -1,39 +1,21 @@
-import { MessageContext } from 'contexts/MessageContext';
-import { memo, useContext } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
+import { memo } from 'react';
 
-import type {
-  IAction,
-  ILayout,
-  IListAction,
-  IMessageElement,
-  IStep
-} from 'client-types/';
+import type { IMessageElement, IStep } from 'client-types/';
 
 import { Message } from './Message';
 
 interface Props {
   messages: IStep[];
   elements: IMessageElement[];
-  actions: IAction[];
-  listActions: IListAction[];
   indent: number;
   isRunning?: boolean;
-  layout?: ILayout;
   scrollTop?: () => void;
 }
 
 const Messages = memo(
-  ({
-    messages,
-    elements,
-    actions,
-    listActions,
-    indent,
-    isRunning,
-    layout,
-    scrollTop
-  }: Props) => {
-    const messageContext = useContext(MessageContext);
+  ({ messages, elements, indent, isRunning, scrollTop }: Props) => {
+    const messageContext = useMessageContext();
 
     const isRoot = indent === 0;
     let previousAuthor = '';
@@ -75,9 +57,6 @@ const Messages = memo(
             <Message
               message={m}
               elements={elements}
-              actions={actions}
-              listActions={listActions}
-              layout={layout}
               showAvatar={showAvatar}
               showBorder={showBorder}
               key={m.id}

@@ -1,8 +1,6 @@
-import { useAuth } from 'api/auth';
-import { MessageContext } from 'contexts/MessageContext';
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
+import { useCallback, useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { v4 as uuidv4 } from 'uuid';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -10,7 +8,9 @@ import Stack from '@mui/material/Stack';
 import {
   type IAction,
   type IStep,
+  MessageSpec,
   useChatContext,
+  useChatData,
   useChatInteract
 } from '@chainlit/react-client';
 
@@ -18,113 +18,72 @@ import { projectSettingsState } from 'state/project';
 
 import { ActionButton } from './ActionButton';
 import { ActionDrawerButton } from './ActionDrawerButton';
-import { ActionMask } from './ActionMask';
 
 interface Props {
   message: IStep;
-  actions: IAction[];
+  attach: MessageSpec;
+  disabled: boolean;
 }
 
-const MessageActions = ({ message, actions }: Props) => {
-  const [displayedActions, setDisplayedActions] = useState<IAction[]>([]);
-  const [displayedDrawerActions, setDisplayedDrawerActions] = useState<
-    IAction[]
-  >([]);
+const MessageActions = ({ message, attach, disabled }: Props) => {
+  const [innerActions, setInnerActions] = useState<IAction[]>([]);
+  const [innerDrawerActions, setInnerDrawerActions] = useState<IAction[]>([]);
 
-  const { askUser } = useContext(MessageContext);
-
-  const [history, setHistory] = useState<boolean>(false);
-
-  const { abortAudioTask, setActionRef } = useChatContext();
-  const { addWaitingMessage, replyMessage } = useChatInteract();
+  const { abortAudioTask } = useChatContext();
+  const { addWaitingMessage, replyAskMessage, callAction } = useChatInteract();
+  const { userFutureMessage } = useChatData();
   const projectSettings = useRecoilValue(projectSettingsState);
 
-  const ref = useRef({
-    toHistory: (status: boolean = true) => setHistory(status)
-  });
+  const { createUserMessage } = useMessageContext();
+  const handleClick = useCallback((item: IAction) => {
+    abortAudioTask();
+    if (userFutureMessage.type == 'question') {
+      callAction(item);
+    }
+    if (userFutureMessage.type == 'reply') {
+      replyAskMessage(
+        message.id,
+        createUserMessage(`${item.label}`),
+        'touch',
+        item.data
+      );
+      addWaitingMessage(projectSettings!.ui.name);
+    }
+  }, []);
 
   useEffect(() => {
-    const scopedActions = actions.filter((a) => {
-      if (a.forId) {
-        return a.forId === message.id;
-      }
-      return true;
-    });
-    if (!scopedActions.length) {
-      return;
+    if (attach.actions) {
+      setInnerActions(attach.actions.filter((a) => !a.collapsed));
+      setInnerDrawerActions(attach.actions.filter((a) => a.collapsed));
     }
-    if (actions.length < displayedActions.length) {
-      setHistory(true);
-      return;
-    }
-    setActionRef(ref);
-    setDisplayedActions(scopedActions.filter((a) => !a.collapsed));
-    setDisplayedDrawerActions(scopedActions.filter((a) => a.collapsed));
-  }, [actions]);
-
-  const { user } = useAuth();
-  const onReply = useCallback(
-    async (
-      msg: string,
-      spec?: {
-        asr?: boolean;
-        action?: IAction;
-      }
-    ) => {
-      const message: IStep = {
-        threadId: '',
-        id: uuidv4(),
-        name: user?.identifier || 'User',
-        type: 'user_message',
-        output: msg,
-        createdAt: new Date().toISOString()
-      };
-
-      replyMessage(message, spec);
-      addWaitingMessage(projectSettings!.ui.name);
-    },
-    [user, replyMessage]
-  );
-
-  const handleClick = useCallback(
-    (action: IAction) => {
-      setHistory(true);
-      abortAudioTask();
-      onReply(action.label ? action.label : '点击按钮', {
-        action
-      });
-    },
-    [askUser, abortAudioTask, onReply]
-  );
+  }, [attach]);
 
   return (
-    <>
-      {displayedActions.length || displayedDrawerActions.length ? (
-        <ActionMask show={history} />
-      ) : null}
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="start"
-        justifyContent="space-between"
-        width="100%"
-      >
-        <Box id="actions-list">
-          {displayedActions.map((action) => (
-            <ActionButton
-              key={action.id}
-              action={action}
-              margin={'2px 8px 6px 0'}
-              onClick={() => handleClick(action)}
-              display={history}
-            />
-          ))}
-          {displayedDrawerActions.length ? (
-            <ActionDrawerButton actions={displayedDrawerActions} />
-          ) : null}
-        </Box>
-      </Stack>
-    </>
+    <Stack
+      direction="row"
+      spacing={1}
+      alignItems="start"
+      justifyContent="space-between"
+      width="100%"
+    >
+      <Box id="actions-list">
+        {innerActions.map((action) => (
+          <ActionButton
+            key={action.id}
+            action={action}
+            margin={'2px 8px 6px 0'}
+            onClick={() => handleClick(action)}
+            disabled={disabled}
+          />
+        ))}
+        {innerDrawerActions.length ? (
+          <ActionDrawerButton
+            actions={innerDrawerActions}
+            disabled={disabled}
+          />
+        ) : null}
+      </Box>
+    </Stack>
   );
 };
 

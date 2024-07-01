@@ -1,15 +1,14 @@
+import { useAuth } from 'api/auth';
 import { memo, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
-  IAction,
-  IAsk,
   IAvatarElement,
   IFeedback,
   IFunction,
-  IListAction,
   IMessageElement,
   IStep,
   ITool,
@@ -26,37 +25,27 @@ import { settingsState } from 'state/settings';
 
 interface Props {
   loading: boolean;
-  actions: IAction[];
-  listActions: IListAction[];
   elements: IMessageElement[];
   avatars: IAvatarElement[];
   messages: IStep[];
-  askUser?: IAsk;
   autoScroll?: boolean;
   onFeedbackUpdated: (
     message: IStep,
     onSuccess: () => void,
     feedback: IFeedback
   ) => void;
-  callAction?: (action: IAction) => void;
-  callListAction?: (action: IListAction) => void;
   setAutoScroll?: (autoScroll: boolean) => void;
   hidden?: boolean;
 }
 
 const MessageContainer = memo(
   ({
-    askUser,
     loading,
     avatars,
-    actions,
-    listActions,
     autoScroll,
     elements,
     messages,
     onFeedbackUpdated,
-    callAction,
-    callListAction,
     setAutoScroll,
     hidden
   }: Props) => {
@@ -132,40 +121,17 @@ const MessageContainer = memo(
       },
       [setSideView, navigate]
     );
-
-    const messageActions = useMemo(
-      () =>
-        actions.map((action) => ({
-          ...action,
-          onClick: async () => {
-            try {
-              callAction?.(action);
-            } catch (err) {
-              if (err instanceof Error) {
-                toast.error(err.message);
-              }
-            }
-          }
-        })),
-      [actions]
-    );
-
-    const messageListActions = useMemo(
-      () =>
-        listActions.map((action) => ({
-          ...action,
-          onClick: async () => {
-            try {
-              callListAction?.(action);
-            } catch (err) {
-              if (err instanceof Error) {
-                toast.error(err.message);
-              }
-            }
-          }
-        })),
-      [listActions]
-    );
+    const { user } = useAuth();
+    const createUserMessage = useCallback((output: string): IStep => {
+      return {
+        threadId: '',
+        id: uuidv4(),
+        name: user?.identifier || 'User',
+        type: 'user_message',
+        output,
+        createdAt: new Date().toISOString()
+      };
+    }, []);
 
     const onError = useCallback((error: string) => toast.error(error), [toast]);
 
@@ -174,7 +140,6 @@ const MessageContainer = memo(
     const memoizedContext = useMemo(() => {
       return {
         uploadFile,
-        askUser,
         allowHtml: projectSettings?.features?.unsafe_allow_html,
         latex: projectSettings?.features?.latex,
         avatars,
@@ -188,13 +153,13 @@ const MessageContainer = memo(
         onElementRefClick,
         onError,
         onFeedbackUpdated,
-        onPlaygroundButtonClick
+        onPlaygroundButtonClick,
+        createUserMessage
       };
     }, [
       appSettings.defaultCollapseContent,
       appSettings.expandAll,
       appSettings.hideCot,
-      askUser,
       avatars,
       enableFeedback,
       highlightedMessage,
@@ -204,14 +169,12 @@ const MessageContainer = memo(
       onElementRefClick,
       onError,
       onFeedbackUpdated,
-      onPlaygroundButtonClick
+      onPlaygroundButtonClick,
+      createUserMessage
     ]);
 
     return (
       <CMessageContainer
-        actions={messageActions}
-        listActions={messageListActions}
-        layout={askUser?.spec.layout}
         elements={elements}
         messages={messages}
         autoScroll={autoScroll}

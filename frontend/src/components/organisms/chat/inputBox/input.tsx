@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import 'regenerator-runtime';
 
@@ -7,16 +7,16 @@ import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import { Box, Chip, IconButton, Stack } from '@mui/material';
 
 import {
-  FileSpec,
-  IGatherCommandResponse,
+  InputSpec,
   PSPromptItem,
+  UserInputType,
   useChatContext,
   useChatData
 } from '@chainlit/react-client';
 
 import { Attachments } from 'components/molecules/attachments';
 
-import { IAttachment, attachmentsState } from 'state/chat';
+import { attachmentsState } from 'state/chat';
 import { projectSettingsState } from 'state/project';
 
 import { DefaultInputField } from './DefaultInputField';
@@ -25,14 +25,10 @@ import { TextInputField } from './TextInputField';
 import SpeechButton from './speechButton';
 
 interface Props {
-  fileSpec: FileSpec;
   onFileUpload: (payload: File[]) => void;
   onFileUploadError: (error: string) => void;
-  onSubmit: (message: string, attachments?: IAttachment[]) => void;
-  onReply: (
-    message: string,
-    spec?: { asr?: boolean; cmdRes?: IGatherCommandResponse }
-  ) => void;
+  onSubmit: (message: string) => void;
+  onReply: (msg: string, inputType: UserInputType, data?: any) => void;
 }
 
 // function getLineCount(el: HTMLDivElement) {
@@ -50,14 +46,13 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
   // const setInputHistory = useSetRecoilState(inputHistoryState);
 
   const { abortAudioTask } = useChatContext();
-
-  const ref = useRef<HTMLDivElement | null>(null);
   const {
-    askUser,
     disabled: _disabled,
     gatherCommand,
     loading,
-    input
+    userFutureMessage,
+    operableMessages,
+    preselection
   } = useChatData();
 
   const disabled = _disabled || !!attachments.find((a) => !a.uploaded);
@@ -66,11 +61,11 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
 
   const showSpeechToText = pSettings?.features.speech_to_text?.enabled;
 
-  const [inputState, setInputState] = useState<'speech' | 'keyboard'>(
-    'keyboard'
-  );
+  // 用户输入模式，切换输入框和录入语音按钮
+  const [inputState, setInputState] = useState<UserInputType>('keyboard');
 
-  const [asrInput, setAsrInput] = useState<boolean>(false);
+  // 语音输入标志
+  const [speech, setSpeechInput] = useState<boolean>(false);
 
   const [speechRecognitionRuning, setSpeechRecognitionRuning] =
     useState<boolean>(false);
@@ -104,27 +99,18 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
   // }, []);
 
   const clearInput = useCallback(() => {
-    setAsrInput(false);
+    setSpeechInput(false);
     setValue('');
-  }, [setAsrInput, setValue]);
+  }, []);
 
   const submit = useCallback(() => {
-    console.log('submit', value);
-
     if (value === '' || disabled) {
       return;
     }
-    if (input) {
-      onReply(value, {
-        asr: asrInput
-      });
-      clearInput();
-      return;
-    }
-    if (askUser) {
-      onReply(value);
+    if (userFutureMessage.type == 'reply') {
+      onReply(value, speech ? 'speech' : 'keyboard');
     } else {
-      onSubmit(value, attachments);
+      onSubmit(value);
     }
     setAttachments([]);
     clearInput();
@@ -132,15 +118,20 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
     value,
     disabled,
     setValue,
-    askUser,
     attachments,
     setAttachments,
     onSubmit,
     gatherCommand,
-    asrInput,
+    speech,
     onReply,
     clearInput
   ]);
+
+  useEffect(() => {
+    if (value != '' && inputState == 'speech') {
+      submit();
+    }
+  }, [value]);
 
   // const handleKeyDown = useCallback(
   //   (e: React.KeyboardEvent) => {
@@ -159,12 +150,6 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
   //     setValue(content);
   //   }
   // }, []);
-
-  useEffect(() => {
-    if (value != '' && inputState == 'speech') {
-      submit();
-    }
-  }, [value]);
 
   // const startAdornment = (
   //   <>
@@ -191,10 +176,26 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
   //   </>
   // );
 
-  const { preselection } = useChatData();
   const handleClick = useCallback((label: string) => {
     setValue(label);
   }, []);
+
+  const [input, setInput] = useState<InputSpec>();
+  useEffect(() => {
+    if (userFutureMessage.type == 'question') {
+      setInput(undefined);
+    }
+    if (
+      userFutureMessage.type == 'reply' &&
+      operableMessages[userFutureMessage.parent!].active &&
+      operableMessages[userFutureMessage.parent!].attach?.__type__ ==
+        'InputSpec'
+    ) {
+      const inputSpec = operableMessages[userFutureMessage.parent!]
+        .attach as InputSpec;
+      setInput(inputSpec);
+    }
+  }, [userFutureMessage, operableMessages]);
 
   return (
     <>
@@ -269,7 +270,7 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
           {inputState == 'speech' ? (
             <SpeechButton
               onSpeech={(text) => {
-                setAsrInput(true);
+                setSpeechInput(true);
                 setValue(text);
               }}
               onSpeechRecognitionRuning={(state) => {
@@ -280,28 +281,26 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
             <>
               {input ? (
                 <>
-                  {input.spec.type == 'text' && (
+                  {input.type == 'text' && (
                     <TextInputField
-                      ref={ref}
                       value={value}
                       onChange={(value) => setValue(value)}
                       onSubmit={submit}
                       onFocus={abortAudioTask}
                       disabled={disabled && !loading}
-                      placeholder={input.spec.placeholder}
-                      rules={input.spec.rules}
+                      placeholder={input.placeholder}
+                      rules={input.rules}
                     />
                   )}
-                  {input.spec.type == 'number' && (
+                  {input.type == 'number' && (
                     <NumberInputField
-                      ref={ref}
                       value={value}
                       onChange={(value) => setValue(value)}
                       onSubmit={submit}
                       onFocus={abortAudioTask}
                       disabled={disabled && !loading}
-                      placeholder={input.spec.placeholder}
-                      rules={input.spec.rules}
+                      placeholder={input.placeholder}
+                      rules={input.rules}
                     />
                   )}
                 </>

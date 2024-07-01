@@ -1,5 +1,11 @@
 import { IFeedback } from './feedback';
-import { ChoiceSpec, PreselectionSpec } from './file';
+import {
+  AskSpec,
+  ChoiceSpec,
+  InputSpec,
+  MessageSpec,
+  PreselectionSpec
+} from './file';
 import { IGeneration } from './generation';
 
 type StepType =
@@ -40,19 +46,12 @@ export interface IStep {
   indent?: number;
 }
 
-export type IChoiceLayout = {
-  field: string;
-  width: number;
-};
-
-export type ILayout = IChoiceLayout[];
-
 export interface ISpeechPromptMessage {
   content: string;
 }
 
 export interface OperableMessage {
+  active: boolean;
   step: IStep;
-  attach?: PreselectionSpec | ChoiceSpec;
-  timeout?: boolean;
+  attach?: PreselectionSpec | ChoiceSpec | AskSpec | InputSpec | MessageSpec;
 }

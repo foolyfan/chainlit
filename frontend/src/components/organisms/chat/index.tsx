@@ -218,7 +218,6 @@ const Chat = () => {
             setAutoScroll={setAutoScroll}
           />
           <InputBox
-            fileSpec={fileSpec}
             onFileUpload={onFileUpload}
             onFileUploadError={onFileUploadError}
             autoScroll={autoScroll}

@@ -1,6 +1,3 @@
-import { MessageContext } from 'contexts/MessageContext';
-import { useContext } from 'react';
-
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 
@@ -10,38 +7,25 @@ interface ActionProps {
   action: IAction;
   margin: number | string;
   onClick?: () => void;
-  display?: boolean;
+  disabled: boolean;
 }
 
-const ActionButton = ({ action, margin, onClick, display }: ActionProps) => {
-  const { askUser, loading } = useContext(MessageContext);
-  const isAskingAction = askUser?.spec.type === 'action';
-  const isDisabled = isAskingAction && !askUser?.spec.keys?.includes(action.id);
-  const handleClick = () => {
-    if (display) {
-      return;
-    }
-    if (isAskingAction) {
-      onClick?.();
-    } else {
-      action.onClick();
-      onClick?.();
-    }
-  };
-
+const ActionButton = ({ action, margin, onClick, disabled }: ActionProps) => {
   return (
     <Tooltip title={action.description} placement="top">
       <span>
         <Button
           size="small"
           variant="outlined"
-          sx={{
-            textTransform: 'none',
-            margin
-          }}
+          sx={[
+            {
+              textTransform: 'none',
+              margin
+            }
+          ]}
           id={action.id}
-          onClick={handleClick}
-          disabled={loading || isDisabled}
+          onClick={onClick}
+          disabled={disabled}
         >
           {action.label || action.name}
         </Button>

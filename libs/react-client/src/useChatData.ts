@@ -1,22 +1,19 @@
 import { useRecoilValue } from 'recoil';
 
 import {
-  actionState,
-  askUserState,
   avatarState,
   chatSettingsDefaultValueSelector,
   chatSettingsInputsState,
   chatSettingsValueState,
   elementState,
   gatherCommandState,
-  inputState,
-  listActionState,
   loadingState,
   operableMessagesState,
   preselectionState,
   sessionState,
   tasklistState,
-  uiSettingsCommandState
+  uiSettingsCommandState,
+  userFutureMessageState
 } from './state';
 
 export interface IToken {
@@ -30,28 +27,22 @@ const useChatData = () => {
   const elements = useRecoilValue(elementState);
   const avatars = useRecoilValue(avatarState);
   const tasklists = useRecoilValue(tasklistState);
-  const actions = useRecoilValue(actionState);
-  const listActions = useRecoilValue(listActionState);
   const session = useRecoilValue(sessionState);
-  const askUser = useRecoilValue(askUserState);
   const gatherCommand = useRecoilValue(gatherCommandState);
   const chatSettingsInputs = useRecoilValue(chatSettingsInputsState);
   const chatSettingsValue = useRecoilValue(chatSettingsValueState);
   const chatSettingsDefaultValue = useRecoilValue(
     chatSettingsDefaultValueSelector
   );
-  const input = useRecoilValue(inputState);
   const uiSettingsCommand = useRecoilValue(uiSettingsCommandState);
   const preselection = useRecoilValue(preselectionState);
   const operableMessages = useRecoilValue(operableMessagesState);
+  const userFutureMessage = useRecoilValue(userFutureMessageState);
 
   const connected = session?.socket.connected && !session?.error;
-  const disabled = !connected || loading || askUser?.spec.type === 'file';
+  const disabled = !connected || loading;
 
   return {
-    actions,
-    listActions,
-    askUser,
     avatars,
     chatSettingsDefaultValue,
     chatSettingsInputs,
@@ -63,10 +54,10 @@ const useChatData = () => {
     loading,
     tasklists,
     gatherCommand,
-    input,
     uiSettingsCommand,
     preselection,
-    operableMessages
+    operableMessages,
+    userFutureMessage
   };
 };
 

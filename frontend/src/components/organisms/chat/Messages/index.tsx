@@ -4,9 +4,7 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { toast } from 'sonner';
 
 import {
-  IAction,
   IFeedback,
-  IListAction,
   IProjectSettings,
   IStep,
   accessTokenState,
@@ -38,11 +36,9 @@ const Messages = ({
   projectSettings,
   setAutoScroll
 }: MessagesProps): JSX.Element => {
-  const { elements, askUser, avatars, loading, actions, listActions } =
-    useChatData();
+  const { elements, avatars, loading } = useChatData();
 
   const { messages } = useChatMessages();
-  const { callAction, callListAction } = useChatInteract();
   const { idToResume } = useChatSession();
   const accessToken = useRecoilValue(accessTokenState);
   const setMessages = useSetRecoilState(messagesState);
@@ -50,68 +46,6 @@ const Messages = ({
   const { gatherCommand } = useChatData();
 
   const { t } = useTranslation();
-
-  const callActionWithToast = useCallback(
-    (action: IAction) => {
-      const promise = callAction(action);
-      promise?.then();
-      // if (promise) {
-      //   toast.promise(promise, {
-      //     loading: `${t('components.organisms.chat.Messages.index.running')} ${
-      //       action.name
-      //     }`,
-      //     success: (res) => {
-      //       if (res.response) {
-      //         return res.response;
-      //       } else {
-      //         return `${action.name} ${t(
-      //           'components.organisms.chat.Messages.index.executedSuccessfully'
-      //         )}`;
-      //       }
-      //     },
-      //     error: (res) => {
-      //       if (res.response) {
-      //         return res.response;
-      //       } else {
-      //         return `${action.name} ${t(
-      //           'components.organisms.chat.Messages.index.failed'
-      //         )}`;
-      //       }
-      //     }
-      //   });
-      // }
-    },
-    [callAction]
-  );
-
-  const callListActionWithToast = useCallback(
-    (action: IListAction) => {
-      const promise = callListAction(action);
-      promise?.then();
-      // if (promise) {
-      //   toast.promise(promise, {
-      //     loading: `${t('components.organisms.chat.Messages.index.running')}`,
-      //     success: (res) => {
-      //       if (res.response) {
-      //         return res.response;
-      //       } else {
-      //         return `${t(
-      //           'components.organisms.chat.Messages.index.executedSuccessfully'
-      //         )}`;
-      //       }
-      //     },
-      //     error: (res) => {
-      //       if (res.response) {
-      //         return res.response;
-      //       } else {
-      //         return `${t('components.organisms.chat.Messages.index.failed')}`;
-      //       }
-      //     }
-      //   });
-      // }
-    },
-    [callListAction]
-  );
 
   const onFeedbackUpdated = useCallback(
     async (message: IStep, onSuccess: () => void, feedback: IFeedback) => {
@@ -221,12 +155,6 @@ const Messages = ({
 
       clearImage();
     }
-    const time = Date.now();
-    console.log('useEffect triggered' + time);
-    console.log('gatherCommand:', gatherCommand);
-    console.log('scanStatus:', scanStatus);
-    console.log('imageFile:', imageFile);
-    console.log('useEffect triggere' + time);
     if (scanStatus == 'cancel') {
       replyCmdMessage({
         ...gatherCommand!.spec,
@@ -256,15 +184,10 @@ const Messages = ({
       <MessageContainer
         avatars={avatars}
         loading={loading}
-        askUser={askUser}
-        actions={actions}
-        listActions={listActions}
         elements={elements}
         messages={messages}
         autoScroll={autoScroll}
         onFeedbackUpdated={onFeedbackUpdated}
-        callAction={callActionWithToast}
-        callListAction={callListActionWithToast}
         setAutoScroll={setAutoScroll}
         hidden={Boolean(
           gatherCommand &&

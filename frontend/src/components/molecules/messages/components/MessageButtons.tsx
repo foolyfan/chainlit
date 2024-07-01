@@ -1,5 +1,4 @@
-import { MessageContext } from 'contexts/MessageContext';
-import { useContext } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
 import { grey } from 'theme/palette';
 
 import Stack from '@mui/material/Stack';
@@ -19,7 +18,7 @@ interface Props {
 
 const MessageButtons = ({ message }: Props) => {
   const isDark = useIsDarkMode();
-  const { showFeedbackButtons: showFbButtons } = useContext(MessageContext);
+  const { showFeedbackButtons: showFbButtons } = useMessageContext();
 
   const showPlaygroundButton = !!message.generation;
   const isUser = message.type === 'user_message';

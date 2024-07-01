@@ -42,7 +42,6 @@ from chainlit.element import (
     Text,
     Video,
 )
-from chainlit.extensions import list_action_callback
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
 from chainlit.extensions.input import (
     AccountInput,
@@ -53,11 +52,6 @@ from chainlit.extensions.input import (
     TextInput,
     ValidateResult,
     ValueType,
-)
-from chainlit.extensions.listaction import (
-    ChoiceAction,
-    ChoiceImageAction,
-    ExternalAction,
 )
 from chainlit.extensions.message import AskUserChoiceMessage, GatherCommand
 from chainlit.logger import logger
@@ -456,7 +450,6 @@ __all__ = [
     "on_chat_resume",
     "on_stop",
     "action_callback",
-    "list_action_callback",
     "author_rename",
     "on_settings_update",
     "password_auth_callback",
@@ -471,19 +464,14 @@ __all__ = [
     "LlamaIndexCallbackHandler",
     "HaystackAgentCallbackHandler",
     "instrument_openai",
-    "DataItem",
     "PreviewInfoGroup",
-    "ChoiceImageAction",
-    "ExternalAction",
     "asr_method",
     "tts_method",
     "AmountInput",
     "TextInput",
     "MobilePhoneInput",
     "AccountInput",
-    "CompositeInput",
     "ValidateResult",
-    "InputType",
     "Rule",
     "FixedLength",
 ]

@@ -1,32 +1,36 @@
+import { cloneDeep } from 'lodash';
 import { useCallback } from 'react';
-import { useRecoilValue, useResetRecoilState, useSetRecoilState } from 'recoil';
+import {
+  useRecoilState,
+  useRecoilValue,
+  useResetRecoilState,
+  useSetRecoilState
+} from 'recoil';
 import {
   accessTokenState,
-  actionState,
-  askUserState,
   avatarState,
   chatSettingsInputsState,
   chatSettingsValueState,
   elementState,
   firstUserInteraction,
   gatherCommandState,
-  inputState,
   loadingState,
   messagesState,
+  operableMessagesState,
   sessionIdState,
   sessionState,
   tasklistState,
   threadIdToResumeState,
-  tokenCountState
+  tokenCountState,
+  userFutureMessageState
 } from 'src/state';
 import {
+  BaseSpec,
   IAction,
-  IAskResponse,
-  IFileRef,
   IGatherCommandResponse,
-  IListAction,
   IStep,
-  PSMessageItem
+  PSMessageItem,
+  UserInputType
 } from 'src/types';
 import { addMessage } from 'src/utils/message';
 
@@ -36,10 +40,8 @@ import { useChatContext } from './chatContext';
 const useChatInteract = () => {
   const accessToken = useRecoilValue(accessTokenState);
   const session = useRecoilValue(sessionState);
-  const askUser = useRecoilValue(askUserState);
   const gatherCommand = useRecoilValue(gatherCommandState);
   const sessionId = useRecoilValue(sessionIdState);
-  const input = useRecoilValue(inputState);
 
   const resetChatSettings = useResetRecoilState(chatSettingsInputsState);
   const resetSessionId = useResetRecoilState(sessionIdState);
@@ -51,11 +53,14 @@ const useChatInteract = () => {
   const setElements = useSetRecoilState(elementState);
   const setAvatars = useSetRecoilState(avatarState);
   const setTasklists = useSetRecoilState(tasklistState);
-  const setActions = useSetRecoilState(actionState);
   const setTokenCount = useSetRecoilState(tokenCountState);
   const setIdToResume = useSetRecoilState(threadIdToResumeState);
+  const [operableMessages, setOperableMessages] = useRecoilState(
+    operableMessagesState
+  );
+  const setUserFutureMessage = useSetRecoilState(userFutureMessageState);
 
-  const { abortAudioTask, actionRef } = useChatContext();
+  const { abortAudioTask } = useChatContext();
 
   const clear = useCallback(() => {
     session?.socket.emit('clear_session');
@@ -67,83 +72,38 @@ const useChatInteract = () => {
     setElements([]);
     setAvatars([]);
     setTasklists([]);
-    setActions([]);
     setTokenCount(0);
     resetChatSettings();
     resetChatSettingsValue();
   }, [session]);
 
   const sendMessage = useCallback(
-    (message: IStep, fileReferences?: IFileRef[]) => {
+    (message: IStep) => {
       abortAudioTask();
 
       setMessages((oldMessages) => addMessage(oldMessages, message));
       console.log('emit ui_message', message);
-      session?.socket.emit('ui_message', { message, fileReferences });
+      session?.socket.emit('ui_message', { message });
     },
     [session?.socket, abortAudioTask]
   );
 
-  const replyMessage = useCallback(
-    (
-      message: IStep,
-      spec?: {
-        asr?: boolean;
-        action?: IAction | IListAction;
-      }
-    ) => {
-      abortAudioTask();
-      if (askUser) {
-        setMessages((oldMessages) => addMessage(oldMessages, message));
-        let responseMessage: IAskResponse | undefined = undefined;
-        if (
-          askUser.spec.type == 'list_action' ||
-          askUser.spec.type == 'action'
-        ) {
-          responseMessage = spec?.action
-            ? {
-                id: spec?.action.id,
-                forId: spec?.action.forId,
-                value: spec?.action.id,
-                type: 'click'
-              }
-            : {
-                id: message.id,
-                type: 'text',
-                forId: '',
-                value: message.output
-              };
-        }
-        console.log('reply askUser message', responseMessage || message);
-        askUser.callback(responseMessage || message);
-
-        if (actionRef) {
-          actionRef.current.toHistory();
-        }
-      }
-      if (input) {
-        console.log('reply input message', message);
-        console.log('reply input message', spec);
-        setMessages((oldMessages) => addMessage(oldMessages, message));
-
-        input.callback(
-          spec?.action
-            ? {
-                id: message.id,
-                type: 'click',
-                forId: spec.action.id,
-                value: spec?.action.id
-              }
-            : {
-                id: message.id,
-                type: spec?.asr ? 'asr_res' : 'input',
-                forId: '',
-                value: message.output
-              }
-        );
-      }
+  const replyAskMessage = useCallback(
+    (parentId: string, message: IStep, type: UserInputType, data?: any) => {
+      setMessages((oldMessages) => addMessage(oldMessages, message));
+      console.log(`reply ask parent ${parentId} message ${message}`);
+      (operableMessages[parentId].attach as BaseSpec).callback!({
+        data: type == 'touch' ? data : message.output,
+        type
+      });
+      setOperableMessages((oldMessages) => {
+        const newMessages = cloneDeep(oldMessages);
+        newMessages[parentId].active = false;
+        return newMessages;
+      });
+      setUserFutureMessage({ type: 'question' });
     },
-    [askUser, input, abortAudioTask]
+    [operableMessages]
   );
 
   const replyCmdMessage = useCallback(
@@ -174,61 +134,16 @@ const useChatInteract = () => {
       const socket = session?.socket;
       if (!socket) return;
 
-      const promise = new Promise<{
-        id: string;
-        status: boolean;
-        response?: string;
-      }>((resolve, reject) => {
-        socket.once('action_response', (response) => {
-          if (response.status) {
-            resolve(response);
-          } else {
-            reject(response);
-          }
-        });
-      });
-
       socket.emit('action_call', action);
-
-      return promise;
     },
     [session?.socket]
   );
 
   const callPreselection = useCallback(
-    (item: PSMessageItem): Promise<void> | void => {
+    (item: PSMessageItem) => {
       const socket = session?.socket;
       if (!socket) return;
-      return new Promise<void>((resolve) => {
-        socket.emit('preselection_call', item.name, item.value);
-        resolve();
-      });
-    },
-    [session?.socket]
-  );
-
-  const callListAction = useCallback(
-    (action: IListAction) => {
-      const socket = session?.socket;
-      if (!socket) return;
-
-      const promise = new Promise<{
-        id: string;
-        status: boolean;
-        response?: string;
-      }>((resolve, reject) => {
-        socket.once('choice_action_response', (response) => {
-          if (response.status) {
-            resolve(response);
-          } else {
-            reject(response);
-          }
-        });
-      });
-
-      socket.emit('choice_action_call', action);
-
-      return promise;
+      socket.emit('preselection_call', item.name, item.data);
     },
     [session?.socket]
   );
@@ -257,16 +172,15 @@ const useChatInteract = () => {
   return {
     uploadFile,
     callAction,
-    callListAction,
     clear,
     sendMessage,
-    replyMessage,
     stopTask,
     setIdToResume,
     updateChatSettings,
     addWaitingMessage,
     replyCmdMessage,
-    callPreselection
+    callPreselection,
+    replyAskMessage
   };
 };
 

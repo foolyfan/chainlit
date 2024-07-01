@@ -6,9 +6,7 @@ import { toast } from 'sonner';
 import { Alert, Box, Button, Skeleton, Stack } from '@mui/material';
 
 import {
-  IAction,
   IFeedback,
-  IListAction,
   IMessageElement,
   IStep,
   IThread,
@@ -110,8 +108,6 @@ const Thread = ({ thread, error, isLoading }: Props) => {
   }
 
   const elements = thread.elements;
-  const actions: IAction[] = [];
-  const listActions: IListAction[] = [];
   const messages = nestMessages(steps);
 
   return (
@@ -149,8 +145,6 @@ const Thread = ({ thread, error, isLoading }: Props) => {
         <MessageContainer
           loading={false}
           avatars={[]}
-          listActions={listActions}
-          actions={actions}
           elements={(elements || []) as IMessageElement[]}
           onFeedbackUpdated={onFeedbackUpdated}
           messages={messages}

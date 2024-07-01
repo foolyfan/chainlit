@@ -1,7 +1,6 @@
 import { isEmpty } from 'lodash';
 import {
   ReactNode,
-  RefObject,
   createContext,
   useCallback,
   useContext,
@@ -25,8 +24,6 @@ interface ChatProviderProps {
 }
 interface ChatContextType {
   abortAudioTask: () => void;
-  actionRef: React.RefObject<any>;
-  setActionRef: (ref: React.RefObject<any>) => void;
 }
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
@@ -87,13 +84,8 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
     }
   }, [ttsRuning, ttsAbortRef]);
 
-  const actionRef = useRef<any | undefined>(undefined);
-  const setActionRef = useCallback((ref: RefObject<any>) => {
-    actionRef.current = ref.current;
-  }, []);
-
   return (
-    <ChatContext.Provider value={{ abortAudioTask, actionRef, setActionRef }}>
+    <ChatContext.Provider value={{ abortAudioTask }}>
       {children}
     </ChatContext.Provider>
   );
@@ -106,4 +98,4 @@ const useChatContext = () => {
   return context;
 };
 
-export { useChatContext, ChatProvider };
+export { ChatProvider, useChatContext };

@@ -1,10 +1,8 @@
 import asyncio
 import json
 import time
-import typing
 import uuid
 from abc import ABC
-from dataclasses import dataclass
 from typing import Awaitable, Callable, Dict, List, Optional, Union, cast
 
 from chainlit.action import Action
@@ -12,17 +10,12 @@ from chainlit.config import config
 from chainlit.context import context
 from chainlit.data import get_data_layer
 from chainlit.element import ElementBased
+from chainlit.extensions.exceptions import AskTimeout
+from chainlit.extensions.types import AskSpec, BaseResponse, MessageSpec
 from chainlit.logger import logger
 from chainlit.step import StepDict
 from chainlit.telemetry import trace_event
-from chainlit.types import (
-    AskActionSpec,
-    AskFileResponse,
-    AskFileSpec,
-    AskSpec,
-    AskUserResponse,
-    FileDict,
-)
+from chainlit.types import AskFileResponse, AskFileSpec, FileDict
 from literalai import BaseGeneration
 from literalai.helper import utc_now
 from literalai.step import MessageStepType
@@ -45,6 +38,7 @@ class MessageBase(ABC):
     indent: Optional[int] = None
     generation: Optional[BaseGeneration] = None
     speechContent: str = ""
+    actions: Optional[List[Action]] = None
 
     def __post_init__(self) -> None:
         trace_event(f"init {self.__class__.__name__}")
@@ -164,9 +158,8 @@ class MessageBase(ABC):
             self.streaming = False
 
         step_dict = await self._create()
-        await context.emitter.send_step(step_dict)
-
-        return self.id
+        spec = MessageSpec(actions=self.actions)
+        await context.emitter.send_step(step_dict, spec)
 
     async def stream_token(self, token: str, is_sequence=False):
         """
@@ -258,39 +251,13 @@ class Message(MessageBase):
 
         context.session.root_message = self
 
-        # Create tasks for all actions and elements
-        tasks = [action.send(for_id=self.id) for action in self.actions]
-        tasks.extend(element.send(for_id=self.id) for element in self.elements)
+        # Create tasks for elements
+        tasks = [element.send(for_id=self.id) for element in self.elements]
 
         # Run all tasks concurrently
         await asyncio.gather(*tasks)
 
         return self.id
-
-    async def update(self):
-        """
-        Send the message to the UI and persist it in the cloud if a project ID is configured.
-        Return the ID of the message.
-        """
-        trace_event("send_message")
-        await super().update()
-
-        # Update tasks for all actions and elements
-        tasks = [
-            action.send(for_id=self.id)
-            for action in self.actions
-            if action.forId is None
-        ]
-        tasks.extend(element.send(for_id=self.id) for element in self.elements)
-
-        # Run all tasks concurrently
-        await asyncio.gather(*tasks)
-
-        return True
-
-    async def remove_actions(self):
-        for action in self.actions:
-            await action.remove()
 
 
 class ErrorMessage(MessageBase):
@@ -368,7 +335,7 @@ class AskUserMessage(AskMessageBase):
         self.speechContent = speechContent
         super().__post_init__()
 
-    async def send(self) -> Union[StepDict, None]:
+    async def send(self) -> str:
         """
         Sends the question to ask to the UI and waits for the reply.
         """
@@ -382,20 +349,21 @@ class AskUserMessage(AskMessageBase):
         if self.streaming:
             self.streaming = False
 
-        self.wait_for_answer = True
-
         step_dict = await self._create()
 
-        spec = AskSpec(type="text", timeout=self.timeout)
+        spec = AskSpec(timeout=self.timeout)
 
-        res = cast(
-            Union[None, StepDict],
-            await context.emitter.send_ask_user(step_dict, spec, self.raise_on_timeout),
-        )
-
-        self.wait_for_answer = False
-
-        return res
+        try:
+            # 只会返回keyboard或语音的文本信息
+            return cast(
+                BaseResponse,
+                await context.emitter.ask_user(step_dict, spec, self.timeout),
+            ).data
+        except TimeoutError as e:
+            raise AskTimeout() from None
+        except Exception as e:
+            logger.error(f"Unknow Error: {e}")
+            raise e
 
 
 class AskFileMessage(AskMessageBase):
@@ -468,10 +436,7 @@ class AskFileMessage(AskMessageBase):
             timeout=self.timeout,
         )
 
-        res = cast(
-            Union[None, List[FileDict]],
-            await context.emitter.send_ask_user(step_dict, spec, self.raise_on_timeout),
-        )
+        res = cast(Union[None, List[FileDict]], None)
 
         self.wait_for_answer = False
 
@@ -500,7 +465,7 @@ class AskActionMessage(AskMessageBase):
         self,
         content: str,
         actions: List[Action],
-        choiceHook: Callable[[AskUserResponse, List[Action]], Awaitable[typing.Any]],
+        textReply: Callable[[str, List[Action]], Awaitable[Union[dict, str]]],
         timeoutContent: str = "任务超时",
         author=config.ui.name,
         disable_feedback=False,
@@ -510,7 +475,7 @@ class AskActionMessage(AskMessageBase):
     ):
         self.content = content
         self.actions = actions
-        self.choiceHook = choiceHook
+        self.textReply = textReply
         self.author = author
         self.disable_feedback = disable_feedback
         self.timeout = timeout
@@ -520,7 +485,7 @@ class AskActionMessage(AskMessageBase):
 
         super().__post_init__()
 
-    async def send(self) -> Union[typing.Any, None]:
+    async def send(self) -> Union[dict, str]:
         """
         Sends the question to ask to the UI and waits for the reply
         """
@@ -535,31 +500,24 @@ class AskActionMessage(AskMessageBase):
         if config.code.author_rename:
             self.author = await config.code.author_rename(self.author)
 
-        self.wait_for_answer = True
-
         step_dict = await self._create()
 
-        action_keys = []
-
-        for action in self.actions:
-            action_keys.append(action.id)
-            await action.send(for_id=str(step_dict["id"]))
-
-        spec = AskActionSpec(type="action", timeout=self.timeout, keys=action_keys)
-
-        res = cast(
-            Union[AskUserResponse, None],
-            await context.emitter.send_ask_user(step_dict, spec, self.raise_on_timeout),
+        spec = AskSpec(
+            actions=self.actions,
+            timeout=self.timeout,
         )
 
-        for action in self.actions:
-            await action.remove()
-        if res is None:
-            self.content = self.timeoutContent
-        else:
-            res = await self.choiceHook(res, self.actions)
-        self.wait_for_answer = False
-
-        await self.update()
-
-        return res
+        try:
+            res = cast(
+                BaseResponse,
+                await context.emitter.ask_user(step_dict, spec, self.timeout),
+            )
+            if res.type == "keyboard" or res.type == "speech":
+                return await self.textReply(res.data, cast(List[Action], self.actions))
+            elif res.type == "touch":
+                return res.data
+        except TimeoutError as e:
+            raise AskTimeout() from None
+        except Exception as e:
+            logger.error(f"Unknow Error: {e}")
+            raise e

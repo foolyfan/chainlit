@@ -1,5 +1,4 @@
-import { MessageContext } from 'contexts/MessageContext';
-import { useContext } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
 
 import Terminal from '@mui/icons-material/Terminal';
 import IconButton from '@mui/material/IconButton';
@@ -12,7 +11,7 @@ interface Props {
 }
 
 const PlaygroundButton = ({ step }: Props) => {
-  const { onPlaygroundButtonClick } = useContext(MessageContext);
+  const { onPlaygroundButtonClick } = useMessageContext();
 
   return (
     <Tooltip title="Inspect in prompt playground">

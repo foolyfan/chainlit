@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { List, ListItemButton } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -20,7 +20,7 @@ const ListItemFrame = ({ children }: { children: React.ReactNode }) => (
 );
 
 interface Props<T extends ListDataItem> {
-  onClick: (item: T) => void;
+  onClick: (item: T, index: number) => void;
   disabled: boolean;
   items: Array<T>;
 }
@@ -31,11 +31,13 @@ export const ListFrame = <T extends ListDataItem>({
   items
 }: Props<T>) => {
   const { abortAudioTask } = useChatContext();
+  const [selected, setSelected] = useState<number>(-1);
 
   const handleClick = useCallback(
-    (item: T) => {
+    (item: T, index: number) => {
       abortAudioTask();
-      onClick(item);
+      setSelected(index);
+      onClick(item, index);
     },
     [abortAudioTask, onClick]
   );
@@ -47,10 +49,12 @@ export const ListFrame = <T extends ListDataItem>({
           <ListItemButton
             key={index}
             sx={{
-              marginTop: '10px'
+              marginTop: '10px',
+              backgroundImage: () => (index == selected ? 'none' : '')
             }}
+            selected={index == selected}
             disabled={disabled}
-            onClick={() => handleClick(item)}
+            onClick={() => handleClick(item, index)}
           >
             <ListItemFrame>
               <div

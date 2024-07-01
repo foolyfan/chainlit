@@ -1,0 +1,2 @@
+class AskTimeout(Exception):
+    pass

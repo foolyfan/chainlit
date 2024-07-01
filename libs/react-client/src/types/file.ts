@@ -1,5 +1,4 @@
-import { IAskResponse, IInputResponse } from './action';
-import { IChoiceLayout, IStep } from './step';
+import { IAction, IInputResponse } from './action';
 
 export interface FileSpec {
   accept?: string[] | Record<string, string[]>;
@@ -11,23 +10,7 @@ export interface ActionSpec {
   keys?: string[];
 }
 
-export interface ListActionSpec extends ActionSpec {
-  layout?: IChoiceLayout[];
-}
-
-export interface IFileRef {
-  id: string;
-}
-
-export interface IAsk {
-  callback: (payload: IStep | IFileRef[] | IAskResponse) => void;
-  spec: {
-    type: 'text' | 'file' | 'action' | 'list_action';
-    timeout: number;
-  } & FileSpec &
-    ActionSpec &
-    ListActionSpec;
-}
+export type UserInputType = 'keyboard' | 'speech' | 'touch';
 
 export interface IRule {
   condition: 'onSubmit' | 'onChange';
@@ -94,7 +77,7 @@ export interface IUISettingsCommandOptions {
 }
 
 export interface ListDataItem {
-  value: any;
+  data: any;
   src: string;
   display: string;
 }
@@ -107,7 +90,17 @@ export interface PSMessageItem extends ListDataItem {
   name: string;
 }
 
-export interface ListSpec<T extends ListDataItem> {
+export interface BaseSpec {
+  callback?: (payload: { type: UserInputType; data: any }) => void;
+  __type__:
+    | 'PreselectionSpec'
+    | 'ChoiceSpec'
+    | 'AskSpec'
+    | 'InputSpec'
+    | 'MessageSpec';
+}
+
+export interface ListSpec<T extends ListDataItem> extends BaseSpec {
   items: Array<T>;
 }
 
@@ -120,4 +113,19 @@ export type ChoiceItem = ListDataItem;
 
 export interface ChoiceSpec extends ListSpec<ChoiceItem> {
   timeout: number;
+}
+
+export interface MessageSpec extends BaseSpec {
+  actions?: Array<IAction>;
+}
+
+export interface AskSpec extends MessageSpec {
+  timeout: number;
+}
+
+export interface InputSpec extends MessageSpec {
+  type: 'text' | 'number';
+  timeout: number;
+  placeholder: string;
+  rules?: Array<IRule>;
 }

@@ -263,7 +263,7 @@ async def message(sid, payload: UIMessagePayload):
 async def process_action(action: Action):
     callback = config.code.action_callbacks.get(action.name)
     if callback:
-        res = await callback(action)
+        res = await callback(action.data)
         return res
     else:
         logger.warning("No callback found for action %s", action.name)
@@ -294,9 +294,9 @@ async def call_action(sid, action):
 
 
 @socket.on("preselection_call")
-async def call_preselection(sid, name, value):
+async def call_preselection(sid, name, data):
     init_ws_context(sid)
-    await config.code.on_preselection_callback[name](value)
+    await config.code.on_preselection_callback[name](data)
 
 
 @socket.on("chat_settings_change")

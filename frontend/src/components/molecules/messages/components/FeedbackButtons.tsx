@@ -1,6 +1,5 @@
-import { MessageContext } from 'contexts/MessageContext';
-import { useContext, useState } from 'react';
-import { useMemo } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
+import { useMemo, useState } from 'react';
 
 import StickyNote2Outlined from '@mui/icons-material/StickyNote2Outlined';
 import ThumbDownAlt from '@mui/icons-material/ThumbDownAlt';
@@ -24,7 +23,7 @@ interface Props {
 }
 
 const FeedbackButtons = ({ message }: Props) => {
-  const { onFeedbackUpdated } = useContext(MessageContext);
+  const { onFeedbackUpdated } = useMessageContext();
   const [showFeedbackDialog, setShowFeedbackDialog] = useState<number>();
   const [commentInput, setCommentInput] = useState<string>();
 

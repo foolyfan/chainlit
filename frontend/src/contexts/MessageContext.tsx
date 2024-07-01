@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 
 import { IMessageContext } from 'types/messageContext';
 
@@ -17,6 +17,14 @@ const defaultMessageContext = {
   uiName: ''
 };
 
-const MessageContext = createContext<IMessageContext>(defaultMessageContext);
+const MessageContext = createContext<IMessageContext | undefined>(undefined);
 
-export { MessageContext, defaultMessageContext };
+const useMessageContext = () => {
+  const context = useContext(MessageContext);
+  if (!context) {
+    throw new Error('useMessageContext must be used within a MessageProvider');
+  }
+  return context;
+};
+
+export { MessageContext, defaultMessageContext, useMessageContext };

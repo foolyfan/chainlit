@@ -72,6 +72,16 @@ export function overrideTheme(theme: Theme) {
 }
 
 function App() {
+  // debug tool
+  // const snapshot = useRecoilSnapshot();
+  // useEffect(() => {
+  //   for (const node of snapshot.getNodes_UNSTABLE({ isModified: true })) {
+  //     if (node.key == 'OperableMessage') {
+  //       console.log(node.key, snapshot.getLoadable(node));
+  //     }
+  //   }
+  // }, [snapshot]);
+
   const [settings, setSettings] = useRecoilState(settingsState);
   const pSettings = useRecoilValue(projectSettingsState);
   // @ts-expect-error custom property

@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Optional, Union
 
 from chainlit.context import context
 from chainlit.telemetry import trace_event
@@ -13,6 +13,8 @@ class Action(DataClassJsonMixin):
     name: str
     # The value associated with the action. This is useful to differentiate between multiple actions with the same name.
     value: str
+    # 大模型识别或执行后台任务预定义数据
+    data: Union[dict, str]
     # The label of the action. This is what the user will see. If not provided the name will be used.
     label: str = ""
     # The description of the action. This is what the user will see when they hover the action.

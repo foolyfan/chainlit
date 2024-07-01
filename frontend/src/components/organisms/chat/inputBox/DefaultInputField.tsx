@@ -34,7 +34,6 @@ const DefaultInputField = forwardRef<HTMLDivElement | undefined, Props>(
       <TextField
         inputRef={ref}
         id="chat-input"
-        autoFocus
         multiline
         variant="standard"
         autoComplete="false"

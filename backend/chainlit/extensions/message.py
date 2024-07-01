@@ -1,13 +1,13 @@
 import asyncio
-import typing
-from dataclasses import dataclass
 from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
-from chainlit.extensions.listaction import LA, ChoiceImageAction
+from chainlit.extensions.exceptions import AskTimeout
 from chainlit.extensions.types import (
-    AskListActionSpec,
+    BaseResponse,
+    ChoiceItem,
+    ChoiceSpec,
     GatherCommandResponse,
     GatherCommandSpec,
     GatherCommandType,
@@ -19,25 +19,19 @@ from chainlit.extensions.types import (
 from chainlit.logger import logger
 from chainlit.message import AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
-from chainlit.types import AskUserResponse
-from dataclasses_json import DataClassJsonMixin
 from literalai.helper import utc_now
+from socketio.exceptions import TimeoutError
 
 
 class AskUserChoiceMessage(AskMessageBase):
     """
-    Ask the user to select an action before continuing.
-    If the user does not answer in time (see timeout), a TimeoutError will be raised or None will be returned depending on raise_on_timeout.
+    textReply的返回值类型为ChoiceItem的data类型
     """
 
     def __init__(
         self,
-        choiceActions: List[LA],
-        layout: List[typing.Dict[Literal["field", "width"], typing.Any]],
-        choiceHook: Callable[
-            [AskUserResponse, List[LA]],
-            Awaitable[typing.Any],
-        ],
+        items: List[ChoiceItem],
+        textReply: Callable[[str, List[ChoiceItem]], Awaitable[Union[dict, str]]],
         choiceContent: str = "请在以下数据中做出选择：",
         timeoutContent: str = "选择任务超时",
         author=config.ui.name,
@@ -47,24 +41,17 @@ class AskUserChoiceMessage(AskMessageBase):
         speechContent: str = "",
     ):
         self.content = choiceContent
-        self.layout = layout
         self.author = author
         self.disable_feedback = disable_feedback
-        self.choiceHook = choiceHook
+        self.textReply = textReply
         self.timeout = timeout
         self.timeoutContent = timeoutContent
         self.raise_on_timeout = raise_on_timeout
-        self.choiceActions = choiceActions
+        self.items = items
         self.speechContent = speechContent
         super().__post_init__()
 
-    async def _create(self):
-        for listAction in self.choiceActions:
-            if isinstance(listAction, ChoiceImageAction):
-                await listAction._create()
-        return await super()._create()
-
-    async def send(self) -> Union[typing.Any, None]:
+    async def send(self) -> Union[dict, str]:
         """
         Sends the question to ask to the UI and waits for the reply
         """
@@ -83,32 +70,21 @@ class AskUserChoiceMessage(AskMessageBase):
 
         step_dict = await self._create()
 
-        action_keys = []
-
-        for action in self.choiceActions:
-            action_keys.append(action.id)
-            await action.send(for_id=str(step_dict["id"]))
-        spec = AskListActionSpec(
-            type="list_action",
-            timeout=self.timeout,
-            keys=action_keys,
-            layout=self.layout,
-        )
-
-        res = cast(
-            Union[AskUserResponse, None],
-            await context.emitter.send_ask_user(step_dict, spec, self.raise_on_timeout),
-        )
-
-        for action in self.choiceActions:
-            await action.remove()
-        if res is None:
-            self.content = self.timeoutContent
-            self.wait_for_answer = False
-            await self.update()
-        else:
-            res = await self.choiceHook(res, self.choiceActions)
-        return res
+        spec = ChoiceSpec(items=self.items, timeout=self.timeout)
+        try:
+            res = cast(
+                BaseResponse,
+                await context.emitter.ask_user(step_dict, spec, self.timeout),
+            )
+            if res.type == "keyboard" or res.type == "speech":
+                return await self.textReply(res.data, self.items)
+            elif res.type == "touch":
+                return res.data
+        except TimeoutError as e:
+            raise AskTimeout() from None
+        except Exception as e:
+            logger.error(f"Unknow Error: {e}")
+            raise e
 
 
 class GatherCommand(MessageBase):
@@ -201,10 +177,11 @@ class PreselectionMessage(MessageBase):
         self.author = config.ui.name
         self.speechContent = speechContent
         self.created_at = utc_now()
+        # TODO speechReply
         super().__post_init__()
 
     async def send(self):
-        trace_event("change_theme")
+        trace_event("advise_preselection")
 
         step_dict = await self._create()
         spec = PreselectionSpec(type=self.psType, items=self.items)

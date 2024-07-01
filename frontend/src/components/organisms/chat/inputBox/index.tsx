@@ -6,22 +6,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box } from '@mui/material';
 
 import {
-  FileSpec,
-  IGatherCommandResponse,
   IProjectSettings,
   IStep,
+  UserInputType,
+  useChatData,
   useChatInteract
 } from '@chainlit/react-client';
 
 import ScrollDownButton from 'components/atoms/buttons/scrollDownButton';
 
-import { IAttachment } from 'state/chat';
 import { inputHistoryState } from 'state/userInputHistory';
 
 import Input from './input';
 
 interface Props {
-  fileSpec: FileSpec;
   onFileUpload: (payload: File[]) => void;
   onFileUploadError: (error: string) => void;
   setAutoScroll: (autoScroll: boolean) => void;
@@ -31,7 +29,6 @@ interface Props {
 
 const InputBox = memo(
   ({
-    fileSpec,
     onFileUpload,
     onFileUploadError,
     setAutoScroll,
@@ -41,20 +38,21 @@ const InputBox = memo(
     const setInputHistory = useSetRecoilState(inputHistoryState);
 
     const { user } = useAuth();
-    const { sendMessage, replyMessage, addWaitingMessage } = useChatInteract();
-    // const tokenCount = useRecoilValue(tokenCountState);
+    const { sendMessage, replyAskMessage, addWaitingMessage } =
+      useChatInteract();
+    const createUserMessage = useCallback((output: string): IStep => {
+      return {
+        threadId: '',
+        id: uuidv4(),
+        name: user?.identifier || 'User',
+        type: 'user_message',
+        output,
+        createdAt: new Date().toISOString()
+      };
+    }, []);
 
     const onSubmit = useCallback(
-      async (msg: string, attachments?: IAttachment[]) => {
-        const message: IStep = {
-          threadId: '',
-          id: uuidv4(),
-          name: user?.identifier || 'User',
-          type: 'user_message',
-          output: msg,
-          createdAt: new Date().toISOString()
-        };
-
+      async (msg: string) => {
         setInputHistory((old) => {
           const MAX_SIZE = 50;
           const inputs = [...(old.inputs || [])];
@@ -72,36 +70,31 @@ const InputBox = memo(
           };
         });
 
-        const fileReferences = attachments
-          ?.filter((a) => !!a.serverId)
-          .map((a) => ({ id: a.serverId! }));
-
         setAutoScroll(true);
-        sendMessage(message, fileReferences);
+        sendMessage(createUserMessage(msg));
         addWaitingMessage(projectSettings!.ui.name);
       },
       [user, projectSettings, sendMessage]
     );
 
-    const onReply = useCallback(
-      async (
-        msg: string,
-        spec?: { asr?: boolean; cmdRes?: IGatherCommandResponse }
-      ) => {
-        const message: IStep = {
-          threadId: '',
-          id: uuidv4(),
-          name: user?.identifier || 'User',
-          type: 'user_message',
-          output: msg,
-          createdAt: new Date().toISOString()
-        };
+    const { userFutureMessage } = useChatData();
 
-        replyMessage(message, spec);
+    const onReply = useCallback(
+      async (msg: string, inputType: UserInputType, data?: any) => {
+        if (userFutureMessage.type != 'reply') {
+          return;
+        }
+
+        replyAskMessage(
+          userFutureMessage.parent!,
+          createUserMessage(msg),
+          inputType,
+          data
+        );
         addWaitingMessage(projectSettings!.ui.name);
         setAutoScroll(true);
       },
-      [user, replyMessage]
+      [user, replyAskMessage, userFutureMessage]
     );
 
     return (
@@ -129,7 +122,6 @@ const InputBox = memo(
 
         <Box>
           <Input
-            fileSpec={fileSpec}
             onFileUpload={onFileUpload}
             onFileUploadError={onFileUploadError}
             onSubmit={onSubmit}

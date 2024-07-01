@@ -1,5 +1,4 @@
-import { MessageContext } from 'contexts/MessageContext';
-import { useContext } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
 
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -17,7 +16,7 @@ interface Props {
 }
 
 const DetailsButton = ({ message, opened, onClick, loading }: Props) => {
-  const messageContext = useContext(MessageContext);
+  const messageContext = useMessageContext();
 
   const nestedCount = message.steps?.length;
   const nested = !!nestedCount && !messageContext.hideCot;

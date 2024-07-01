@@ -12,7 +12,13 @@ import { ActionButton } from './ActionButton';
 
 const ICON_SIZE = '16px';
 
-const ActionDrawerButton = ({ actions }: { actions: IAction[] }) => {
+const ActionDrawerButton = ({
+  actions,
+  disabled
+}: {
+  actions: IAction[];
+  disabled: boolean;
+}) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   return (
@@ -51,6 +57,7 @@ const ActionDrawerButton = ({ actions }: { actions: IAction[] }) => {
               onClick={() => setAnchorEl(null)}
               action={action}
               margin={0}
+              disabled={disabled}
             />
           ))}
         </Stack>

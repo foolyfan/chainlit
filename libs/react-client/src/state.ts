@@ -4,13 +4,9 @@ import { Socket } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  IAction,
-  IAsk,
   IAvatarElement,
   ICallFn,
   IGatherCommand,
-  IInput,
-  IListAction,
   IMessageElement,
   ISpeechPromptMessage,
   IStep,
@@ -56,16 +52,6 @@ export const sessionState = atom<ISession | undefined>({
   default: undefined
 });
 
-export const actionState = atom<IAction[]>({
-  key: 'Actions',
-  default: []
-});
-
-export const listActionState = atom<Array<IListAction>>({
-  key: 'ListActions',
-  default: []
-});
-
 export const messagesState = atom<IStep[]>({
   key: 'Messages',
   dangerouslyAllowMutability: true,
@@ -80,16 +66,6 @@ export const tokenCountState = atom<number>({
 export const loadingState = atom<boolean>({
   key: 'Loading',
   default: false
-});
-
-export const askUserState = atom<IAsk | undefined>({
-  key: 'AskUser',
-  default: undefined
-});
-
-export const inputState = atom<IInput | undefined>({
-  key: 'Input',
-  default: undefined
 });
 
 export const gatherCommandState = atom<IGatherCommand | undefined>({
@@ -208,4 +184,14 @@ export const uiSettingsCommandState = atom<
 export const operableMessagesState = atom<{ [key: string]: OperableMessage }>({
   key: 'OperableMessage',
   default: {}
+});
+
+export const userFutureMessageState = atom<{
+  type: 'question' | 'reply';
+  parent?: string;
+}>({
+  key: 'UserFutureMessageType',
+  default: {
+    type: 'question'
+  }
 });

@@ -10,6 +10,7 @@ import aiofiles
 import httpx
 from chainlit.element import Image, Text
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
+from chainlit.extensions.exceptions import AskTimeout
 from chainlit.extensions.input import (
     AccountAndMobilePhoneInput,
     AccountInput,
@@ -21,12 +22,6 @@ from chainlit.extensions.input import (
     ValidateResult,
     ValueType,
 )
-from chainlit.extensions.listaction import (
-    LA,
-    ChoiceAction,
-    ChoiceImageAction,
-    ExternalAction,
-)
 from chainlit.extensions.message import (
     AskUserChoiceMessage,
     GatherCommand,
@@ -36,6 +31,7 @@ from chainlit.extensions.message import (
 )
 from chainlit.extensions.types import (
     BrightnessModeOptions,
+    ChoiceItem,
     FontOptions,
     FontSizeOptions,
     PSMessageItem,
@@ -50,11 +46,9 @@ from chainlit import (
     AskActionMessage,
     AskUserMessage,
     Message,
-    Task,
-    TaskList,
-    TaskStatus,
     account_mobilephone_recognition,
     account_recognition,
+    action_callback,
     amount_recognition,
     asr_method,
     image_account_recognition,
@@ -66,19 +60,14 @@ from chainlit import (
 )
 
 
-async def choiceFirst(res, choices: List[ChoiceAction]):
-    logger.info(f"用户选择结果：{res}")
+async def choiceFirst(res: str, choices: List[ChoiceItem]) -> Union[dict, str]:
     logger.info(f"默认选择第一条")
-    return choices[0]
+    return choices[0].data
 
 
-async def choiceResultConfirm(res: AskUserResponse, actions):
-    logger.info(f"用户确认结果：{res}")
-    if res["type"] == "text":
-        logger.info("调用AI选择")
-        return actions[1]
-    else:
-        return actions[0]
+async def choiceResultConfirm(res: str, actions: List[Action]):
+    logger.info(f"默认选择第一一个按钮")
+    return actions[0].data
 
 
 async def confirmTradePreviewInfo(res: AskUserResponse, actions):
@@ -88,11 +77,6 @@ async def confirmTradePreviewInfo(res: AskUserResponse, actions):
         return actions[1]
     else:
         return actions[0]
-
-
-async def choiceBranch(res, choices: List[LA]):
-    logger.info(f"用户选择机构结果 {res}")
-    return choices[0]
 
 
 class AccountAndMobilePhoneRule(ClientRule):
@@ -113,6 +97,11 @@ class AccountAndMobilePhoneRule(ClientRule):
 """
 
 
+"""
+静态注册
+"""
+
+
 @preselection_callback("first")
 async def first(value: Union[dict, str]):
     logger.info(f"first callback: {value}")
@@ -122,10 +111,17 @@ async def first(value: Union[dict, str]):
 @preselection_callback("second")
 async def second(value: Union[dict, str]):
     logger.info(f"second callback: {value}")
+    await Message(content="I'm second").send()
+
+
+"""
+动态或运行时注册
+"""
 
 
 async def third(value: Union[dict, str]):
     logger.info(f"third callback: {value}")
+    await Message(content="I'm third").send()
 
 
 preselection_callback("third")(third)
@@ -287,7 +283,7 @@ class SizeCompare(ServerRule):
         self.errMsg = "转账金额必须大于3000"
 
     async def validate(self, value: ValueType) -> ValidateResult:
-        await sleep(5)
+        # await sleep(5)
         return self.toResult(
             True if isinstance(value, float) and value > 3000 else False
         )
@@ -301,75 +297,57 @@ class StartWithRule(ClientRule):
     """
 
 
+@action_callback(name="5continue")
+async def continueActionCallback(data: dict):
+    logger.info(f"执行5continue后台任务 {data}")
+
+
 @on_message
 async def main(message: Message):
     logger.info(f"收到消息 {message.content}")
     if message.content == "1":
-
-        res = await AskUserChoiceMessage(
-            timeout=180,
-            choiceContent="请在以下收款人数据中做出选择：",
-            layout=[{"field": "name", "width": 20}, {"field": "accNo", "width": 50}],
-            choiceActions=[
-                ChoiceAction(data={"name": "张三", "accNo": "652154155112"}),
-                ChoiceAction(data={"accNo": "652154155582", "name": "李四"}),
-                ChoiceAction(data={"accNo": "652154155578", "name": "王五"}),
-            ],
-            choiceHook=choiceFirst,
-        ).send()
-
-        if res is not None:
-            await Message(
-                content=f"根据您的要求，我将使用以下数据：\n姓名：{res.data['name']}\n账号：{res.data['accNo']}\n作为选择收款人的结果。"
-            ).send()
-            res = await AskActionMessage(
-                content="请确认以上收款人信息",
-                actions=[
-                    Action(name="continue", value="continue", label="确认"),
-                    Action(name="cancel", value="cancel", label="取消"),
+        try:
+            res1 = await AskUserChoiceMessage(
+                timeout=180,
+                choiceContent="请在以下收款人数据中做出选择：",
+                items=[
+                    ChoiceItem(
+                        src="1.  张三     652154155112", display="", data="张三"
+                    ),
+                    ChoiceItem(
+                        src="2.  李四     652154155582", display="", data="李四"
+                    ),
+                    ChoiceItem(
+                        src="3.  王五     652154155578", display="", data="王五"
+                    ),
                 ],
-                choiceHook=choiceResultConfirm,
-                timeout=30,
+                textReply=choiceFirst,
             ).send()
+            await Message(content=res1).send()
+        except AskTimeout:
+            await Message(content="收款人选择已超时").send()
+            return
 
     if message.content == "2":
-        res = await AskActionMessage(
+        res2 = await AskActionMessage(
             content="Pick an action!",
             actions=[
-                Action(name="continue", value="continue", label="✅ Continue"),
-                Action(name="cancel", value="cancel", label="❌ Cancel"),
+                Action(
+                    name="continue",
+                    value="continue",
+                    label="✅ Continue",
+                    data="data continue",
+                ),
+                Action(
+                    name="cancel", value="cancel", label="❌ Cancel", data="data cancel"
+                ),
             ],
-            choiceHook=choiceResultConfirm,
+            textReply=choiceResultConfirm,
         ).send()
-    if message.content == "3":
-        # Create the TaskList
-        task_list = TaskList()
-        task_list.status = "Running..."
-
-        # Create a task and put it in the running state
-        task1 = Task(title="Processing data", status=TaskStatus.RUNNING)
-        await task_list.add_task(task1)
-        # Create another task that is in the ready state
-        task2 = Task(title="Performing calculations", status=TaskStatus.READY)
-        await task_list.add_task(task2)
-
-        # Optional: link a message to each task to allow task navigation in the chat history
-        message_id = await Message(content="Started processing data").send()
-        task1.forId = message_id
-
-        # Update the task list in the interface
-        await task_list.send()
-
-        # Perform some action on your end
-        await sleep(1)
-
-        # Update the task statuses
-        task1.status = TaskStatus.DONE
-        task2.status = TaskStatus.FAILED
-        task_list.status = "Failed"
-        await task_list.send()
+        await Message(content=res2).send()
     if message.content == "4":
-        res = await AskUserMessage(content="你好，请录入你的姓名!", timeout=30).send()
+        res4 = await AskUserMessage(content="你好，请录入你的姓名!", timeout=30).send()
+        await Message(content=res4).send()
     if message.content == "5":
         text_content = "Hello, this is a text element."
         elements = [Text(name="simple_text", content=text_content, display="inline")]
@@ -378,8 +356,18 @@ async def main(message: Message):
             content="Check out this text element!",
             elements=elements,
             actions=[
-                Action(name="update", value="update", label="修改"),
-                Action(name="continue", value="continue", label="确认"),
+                Action(
+                    name="5update",
+                    value="update",
+                    label="修改",
+                    data={"testKey": "testValue"},
+                ),
+                Action(
+                    name="5continue",
+                    value="continue",
+                    label="确认",
+                    data={"testKey": "testValue"},
+                ),
             ],
         ).send()
     if message.content == "6":
@@ -416,24 +404,8 @@ async def main(message: Message):
             elements=elements,
             speechContent="请核对以下转账信息符合您的预期",
         ).send()
-        res = await AskActionMessage(
-            actions=[
-                Action(name="update", value="update", label="修改"),
-                Action(name="submit", value="submit", label="确认"),
-            ],
-            content="选择确认后系统将进行转账操作；若不符合，请指出错误",
-            timeout=30,
-            choiceHook=confirmTradePreviewInfo,
-        ).send()
-        if res is not None:
-            if res.value == "update":
-                res = await AskUserMessage(content="请描述错误", timeout=20).send()
-            if res is not None:
-                logger.info("AI识别修改信息，进行修改流程")
-                await Message(content="正在进行修改").send()
-                await Message(content="修改完成").send()
-            else:
-                await Message(content="交易成功").send()
+        await Message(content="交易成功").send()
+
     if message.content == "7":
         image1 = Image(path="./voucher.png", name="image1", display="inline")
         # Attach the image to the message
@@ -442,123 +414,93 @@ async def main(message: Message):
             elements=[image1],
         ).send()
     if message.content == "8":
-        res = await GatherCommand(action="capture_idcard", timeout=90).send()
-        logger.info(f"身份证正反面 {res}")
+        res8 = await GatherCommand(action="capture_idcard", timeout=90).send()
+        logger.info(f"身份证正反面 {res8}")
     if message.content == "9":
-        res = await GatherCommand(action="face_recognition", timeout=10).send()
-        logger.info(f"人脸识别 {res}")
+        res9 = await GatherCommand(action="face_recognition", timeout=10).send()
+        logger.info(f"人脸识别 {res9}")
     if message.content == "10":
-        res = await GatherCommand(action="custom_card", timeout=10).send()
-        logger.info(f"定制卡面 {res}")
+        res10 = await GatherCommand(action="custom_card", timeout=10).send()
+        logger.info(f"定制卡面 {res10}")
     if message.content == "11":
-        res = await GatherCommand(action="password", timeout=10).send()
-        logger.info(f"密码 {res}")
-        if res:
-            if res.code == "00":
-                logger.info(f"客户输入成功 {res.data['value']}")
+        res11 = await GatherCommand(action="password", timeout=10).send()
+        logger.info(f"密码 {res11}")
+        if res11:
+            if res11.code == "00":
+                logger.info(f"客户输入成功 {res11.data['value']}")
             else:
                 logger.info("客户取消输入")
         else:
             logger.info(f"客户输入超时")
 
     if message.content == "12":
-        res = await GatherCommand(
+        res12 = await GatherCommand(
             action="scan", timeout=90, speechContent="扫一扫"
         ).send()
-        if res:
-            if res.code == "00":
-                logger.info(f"客户扫描成功 {res}")
+        if res12:
+            if res12.code == "00":
+                logger.info(f"客户扫描成功 {res12}")
             else:
                 logger.info("客户取消扫描")
         else:
             logger.info(f"客户输入超时")
-        logger.info(f"扫一扫 {res}")
-    if message.content == "13":
-        res = await AskUserChoiceMessage(
-            timeout=5,
-            choiceContent="请选择开户网点：",
-            layout=[
-                {"field": "name", "width": 30},
-                {"field": "address", "width": 30},
-                {"field": "workData", "width": 30},
-            ],
-            choiceActions=[
-                ChoiceAction(
-                    data={
-                        "name": "北京分行营业部",
-                        "address": "北京市东城区朝阳门北大街8号富华大厦E座1楼",
-                        "workData": "周一至周日:\n09:00-17:00",
-                    }
-                ),
-                ExternalAction(label="新增网点", data={"label": "新增网点按钮"}),
-                ChoiceImageAction(
-                    path="./voucher.png",
-                    imageName="凭证图片",
-                    data={"label": "凭证图片描述"},
-                ),
-            ],
-            choiceHook=choiceBranch,
-            speechContent="请选择",
-        ).send()
-        res = await Message(content="选择完成").send()
+        logger.info(f"扫一扫 {res12}")
     if message.content == "14":
         speechContent = "程序意外终止"
-        res = await AskUserMessage(
+        await AskUserMessage(
             content="你好，请录入你的姓名!", timeout=30, speechContent=speechContent
         ).send()
     if message.content == "15":
         speechContent = "在Python中，raise语句用于主动抛出异常。当程序遇到错误条件或需要中断当前执行流程以应对某种问题时，开发者可以使用raise来引发一个异常。这使得程序能够以一种可控的方式处理错误情况，而不是让程序意外终止"
-        res = await Message(content="一条消息", speechContent=speechContent).send()
+        await Message(content="一条消息", speechContent=speechContent).send()
     if message.content == "16":
-        res = await AskActionMessage(
+        await AskActionMessage(
             content="Pick an action!",
             actions=[
-                Action(name="continue", value="continue", label="确认"),
-                Action(name="cancel", value="cancel", label="取消"),
+                Action(name="continue", value="continue", label="确认", data="确认"),
+                Action(name="cancel", value="cancel", label="取消", data="取消"),
             ],
-            choiceHook=choiceResultConfirm,
+            textReply=choiceResultConfirm,
             speechContent="请点击",
-            timeout=5,
+            timeout=20,
         ).send()
     if message.content == "17":
-        res = await AskUserMessage(
+        res17 = await AskUserMessage(
             content="你好，请录入你的姓名!",
             timeout=30,
             speechContent="长亭外，古道边，芳草碧连天。晚风拂柳笛声残，夕阳山外山。天之涯，地之角，知交半零落",
         ).send()
-        await Message(
-            content=res["output"] if res is not None else "未收到客户输入结果"
-        ).send()
+        await Message(content=res17).send()
     if message.content == "18":
         # 必须实现 @account_recognition @image_account_recognition
-        res = await AccountInput(
+        res18 = await AccountInput(
             content="请输入付款账号",
             rules=[FixedLength(length=6, errMsg="账号长度不满足6位的要求")],
             timeout=180,
             placeholder="银行账号",
         ).send()
-        logger.info(f"客户输入账号 {res}")
-        if res:
-            await Message(content=str(res)).send()
+        logger.info(f"客户输入账号 {res18}")
+        if res18:
+            await Message(content=str(res18)).send()
 
     if message.content == "19":
         # 必须实现 @amount_recognition
-        res = await AmountInput(rules=[SizeCompare()]).send()
-        if res:
-            await Message(content="{:.2f}".format(float(res))).send()
+        res19 = await AmountInput(rules=[SizeCompare()]).send()
+        if res19:
+            await Message(content="{:.2f}".format(float(res19))).send()
     if message.content == "20":
         # 必须实现 @modilephone_recognition
-        res = await MobilePhoneInput(timeout=600, rules=[StartWithRule()]).send()
-        if res:
-            await Message(content=str(res)).send()
+        res20 = await MobilePhoneInput(timeout=600, rules=[StartWithRule()]).send()
+        if res20:
+            await Message(content=str(res20)).send()
 
     if message.content == "21":
         # 必须实现 @account_mobilephone_recognition
-        res = await AccountAndMobilePhoneInput(
+        res21 = await AccountAndMobilePhoneInput(
             rules=[AccountAndMobilePhoneRule()], timeout=180
         ).send()
-        if res:
-            await Message(content=str(res)).send()
+        if res21:
+            await Message(content=str(res21)).send()
     if message.content == "22":
         accountInput = AccountInput(
             content="请输入付款账号",
@@ -596,10 +538,11 @@ async def main(message: Message):
             ],
         )
         await p.send()
-        res = await MobilePhoneInput(timeout=600, rules=[StartWithRule()]).send()
-        if res:
-            await Message(content=str(res)).send()
-            await p.clear_prompt()
+        res28 = await MobilePhoneInput(timeout=600, rules=[StartWithRule()]).send()
+        await p.clear_prompt()
+        if res28:
+            await Message(content=str(res28)).send()
+
     if message.content == "29":
         p = PreselectionMessage(
             psType="prompt",
@@ -610,30 +553,31 @@ async def main(message: Message):
             ],
         )
         await p.send()
-        res = await AmountInput(rules=[SizeCompare()]).send()
-        if res:
-            await Message(content="{:.2f}".format(float(res))).send()
+        res29 = await AmountInput(rules=[SizeCompare()]).send()
+        if res29:
+            await Message(content="{:.2f}".format(float(res29))).send()
     if message.content == "30":
+        # 用户点击后回调使用@preselection_callback注册的函数
         p = PreselectionMessage(
             content="还需要进行以下服务吗",
             psType="message",
             items=[
                 PSMessageItem(
                     name="first",
-                    value="1",
-                    src='<div style="width: 100%;height:50px">1. 开卡<div>',
+                    data="开卡",
+                    src='<div style="width: 100%;padding:8px">1. 开卡<div>',
                     display="create",
                 ),
                 PSMessageItem(
                     name="second",
-                    value="2",
-                    src='<div style="width: 100%">2. 转账<div>',
+                    data="转账",
+                    src='<div style="width: 100%;padding:8px">2. 转账<div>',
                     display="create",
                 ),
                 PSMessageItem(
                     name="third",
-                    value="3",
-                    src='<div style="width: 100%">3. 挂失<div>',
+                    data="挂失",
+                    src='<div style="width: 100%;padding:8px">3. 挂失<div>',
                     display="create",
                 ),
             ],

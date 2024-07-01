@@ -1,42 +1,30 @@
 import { MessageContext, defaultMessageContext } from 'contexts/MessageContext';
 import { memo, useCallback, useEffect, useRef } from 'react';
+import { IMessageContext } from 'types';
 
 import Box from '@mui/material/Box';
 
-import type {
-  IAction,
-  ILayout,
-  IListAction,
-  IMessageElement,
-  IStep
-} from 'client-types/';
-import { IMessageContext } from 'types/messageContext';
+import type { IMessageElement, IStep } from 'client-types/';
 
 import { Messages } from './Messages';
 
 interface Props {
-  actions: IAction[];
-  listActions: IListAction[];
   autoScroll?: boolean;
-  context: IMessageContext;
   elements: IMessageElement[];
   messages: IStep[];
-  layout?: ILayout;
+  context: IMessageContext;
   setAutoScroll?: (autoScroll: boolean) => void;
   hidden?: boolean;
 }
 
 const MessageContainer = memo(
   ({
-    actions,
-    listActions,
     autoScroll,
-    context,
     elements,
     messages,
-    layout,
     setAutoScroll,
-    hidden
+    hidden,
+    context
   }: Props) => {
     const ref = useRef<HTMLDivElement>();
 
@@ -78,9 +66,6 @@ const MessageContainer = memo(
             indent={0}
             messages={messages}
             elements={elements}
-            actions={actions}
-            listActions={listActions}
-            layout={layout}
             scrollTop={handleScrollTop}
           />
         </Box>

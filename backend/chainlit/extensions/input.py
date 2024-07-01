@@ -8,11 +8,12 @@ from typing import List, Literal, Optional, Union, cast
 from chainlit.action import Action
 from chainlit.config import config
 from chainlit.context import context
+from chainlit.extensions.exceptions import AskTimeout
 from chainlit.extensions.message import GatherCommand
 from chainlit.extensions.types import (
+    BaseResponse,
     GatherCommandResponse,
     InputFieldType,
-    InputResponse,
     InputSpec,
 )
 from chainlit.logger import logger
@@ -110,14 +111,12 @@ class InputBase(AskMessageBase, ABC):
         timeout: int = 60,
         speechContent: str = "",
         type: MessageStepType = "assistant_message",
-        actions: List[Action] = [],
     ):
         self.rules = rules
         self.content = content
         self.timeout = timeout
         self.type = type
         self.speechContent = speechContent
-        self.actions = actions
 
         # 规则
         self._serverRules: List[ServerRule] = []
@@ -130,8 +129,6 @@ class InputBase(AskMessageBase, ABC):
     def __post_init__(self) -> None:
         if not getattr(self, "author", None):
             self.author = config.ui.name
-        if not getattr(self, "actions", None):
-            self.actions = []
         self._serverRules = []
         self._cmd_tasks = []
         self._canceled = False
@@ -219,14 +216,16 @@ class InputBase(AskMessageBase, ABC):
         self.speechContent = "；".join(speechContents)
         return None
 
-    async def _processInput(self, res: Union[InputResponse, None]) -> ValueType:
+    async def _processInput(self, res: Optional[BaseResponse]) -> ValueType:
         if res is None:
             return res
 
-        if res["type"] == "click":
+        if res.type == "touch":
 
             action: Action = [
-                action for action in self.actions if res["value"] == action.id
+                action
+                for action in cast(List[Action], self.actions)
+                if res.data == action.data
             ][0]
             await context.emitter.task_start()
             actionRes = await self.actionhook(action)
@@ -237,11 +236,11 @@ class InputBase(AskMessageBase, ABC):
             actionCmd: GatherCommand = actionRes
             return await self._processRules(await self._processCmd(actionCmd))
 
-        if res["type"] == "input":
-            return await self._processRules(res["value"])
+        if res.type == "keyboard":
+            return await self._processRules(res.data)
 
-        if res["type"] == "asr_res":
-            hookRes = await self.recognation(res["value"])
+        if res.type == "speech":
+            hookRes = await self.recognation(res.data)
             if hookRes is None:
                 self.content = "语义解析失败，请重新录入"
             if isinstance(hookRes, GatherCommand):
@@ -264,11 +263,6 @@ class InputBase(AskMessageBase, ABC):
             self.author = await config.code.author_rename(self.author)
 
         step_dict = await self._create()
-        action_keys = []
-
-        for action in self.actions:
-            action_keys.append(action.id)
-            await action.send(for_id=str(step_dict["id"]))
 
         clientRules: List[ClientRule] = []
 
@@ -278,29 +272,24 @@ class InputBase(AskMessageBase, ABC):
                     self._serverRules.append(rule)
                 if isinstance(rule, ClientRule):
                     clientRules.append(rule)
-
         spec = InputSpec(
             type=self.fieldType,
             timeout=self.timeout,
             placeholder=self.placeholder,
-            keys=action_keys,
+            actions=self.actions,
             rules=clientRules,
         )
-
         processRes = None
 
+        # 用户输入超时，继续重发，直至输入完成；可通过取消函数中止
         try:
             if self._canceled:
                 return None
 
             self._task = asyncio.create_task(
-                context.emitter.send_input(step_dict, spec, self.raise_on_timeout)
+                context.emitter.send_input(step_dict, spec, self.timeout)
             )
-
-            res = cast(
-                Union[InputResponse, None],
-                await self._task,
-            )
+            res = cast(Optional[BaseResponse], await self._task)
 
             while True:
                 self._task = None
@@ -316,16 +305,13 @@ class InputBase(AskMessageBase, ABC):
                     logger.info("用户不在线")
                     break
                 self._task = asyncio.create_task(
-                    context.emitter.update_input(step_dict, spec, self.raise_on_timeout)
+                    context.emitter.update_input(step_dict, spec, self.timeout)
                 )
-                res = await self._task
+                res = cast(Optional[BaseResponse], await self._task)
         except asyncio.CancelledError:
             pass
-
         finally:
-            for action in self.actions:
-                await action.remove()
-            await context.emitter.clear("clear_input")
+            await context.emitter.clear("clear_input", {"msg": step_dict})
         return processRes
 
     def _isOnline(self) -> bool:
@@ -380,7 +366,7 @@ class AccountInput(TextInput):
         self.speechContent = speechContent
         if placeholder is not None:
             self.placeholder = placeholder
-        self.actions = [Action(label="扫一扫", name="scan", value="scan")]
+        self.actions = [Action(label="扫一扫", name="scan", value="scan", data="scan")]
 
         super().__post_init__()
 
@@ -522,7 +508,7 @@ class AccountAndMobilePhoneInput(AccountInput):
         self.speechContent = speechContent
         if placeholder is not None:
             self.placeholder = placeholder
-        self.actions = [Action(label="扫一扫", name="scan", value="scan")]
+        self.actions = [Action(label="扫一扫", name="scan", value="scan", data="scan")]
 
         super().__post_init__()
 

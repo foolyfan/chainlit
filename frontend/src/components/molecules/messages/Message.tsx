@@ -1,6 +1,6 @@
 import { keyframes } from '@emotion/react';
-import { MessageContext } from 'contexts/MessageContext';
-import { memo, useContext, useEffect, useRef, useState } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
+import { memo, useEffect, useRef, useState } from 'react';
 
 import { CircularProgress } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -8,21 +8,18 @@ import Stack from '@mui/material/Stack';
 
 import {
   ChoiceSpec,
-  type IAction,
-  type ILayout,
-  type IListAction,
   type IMessageElement,
   type IStep,
+  MessageSpec,
   PreselectionSpec,
   useChatData
 } from '@chainlit/react-client';
 
-import { AskUploadButton } from './components/AskUploadButton';
 import { AUTHOR_BOX_WIDTH, Author } from './components/Author';
 import { DetailsButton } from './components/DetailsButton';
 import { MessageActions } from './components/MessageActions';
+import { MessageChoices } from './components/MessageChoices';
 import { MessageContent } from './components/MessageContent';
-import { MessageListActions } from './components/MessageListActions';
 import { MessagePreselections } from './components/MessagePreselections';
 
 import { Messages } from './Messages';
@@ -30,14 +27,11 @@ import { Messages } from './Messages';
 interface Props {
   message: IStep;
   elements: IMessageElement[];
-  actions: IAction[];
-  listActions: IListAction[];
   indent: number;
   showAvatar?: boolean;
   showBorder?: boolean;
   isRunning?: boolean;
   isLast?: boolean;
-  layout?: ILayout;
   scrollTop?: () => void;
 }
 
@@ -45,14 +39,11 @@ const Message = memo(
   ({
     message,
     elements,
-    actions,
-    listActions,
     indent,
     showAvatar,
     showBorder,
     isRunning,
     isLast,
-    layout,
     scrollTop
   }: Props) => {
     const {
@@ -61,9 +52,8 @@ const Message = memo(
       highlightedMessage,
       defaultCollapseContent,
       allowHtml,
-      latex,
-      onError
-    } = useContext(MessageContext);
+      latex
+    } = useMessageContext();
 
     const [showDetails, setShowDetails] = useState(expandAll);
 
@@ -102,22 +92,55 @@ const Message = memo(
     }, [ref, scrollTop]);
 
     const isUser = message.type === 'user_message';
-    const isAsk = message.waitForAnswer;
     showAvatar = true;
 
-    // 预选择提示语言
+    const [history, setHistory] = useState<boolean>(false);
+
     const { operableMessages } = useChatData();
-    const [attach, setAttach] = useState<PreselectionSpec | ChoiceSpec>();
+    const [choiceAttach, setChoiceAttach] = useState<ChoiceSpec>();
+    const [preselectionAttach, setPreselectioAttach] =
+      useState<PreselectionSpec>();
+    const [actionAttach, setActionAttach] = useState<MessageSpec>();
+    // 可操作消息内容获取
     useEffect(() => {
-      if (attach) {
+      if (!operableMessages[message.id]) {
         return;
       }
-      if (operableMessages[message.id]?.attach) {
-        console.log('@@@@@@@@@', operableMessages[message.id].attach);
-
-        setAttach({
-          ...operableMessages[message.id].attach!
+      if (!operableMessages[message.id].active) {
+        return;
+      }
+      const attach = operableMessages[message.id]?.attach;
+      if (!attach) {
+        return;
+      }
+      if (preselectionAttach || choiceAttach || actionAttach) {
+        return;
+      }
+      if (attach.__type__ == 'PreselectionSpec') {
+        setPreselectioAttach({
+          ...(attach as PreselectionSpec)
         });
+      }
+      if (attach.__type__ == 'ChoiceSpec') {
+        setChoiceAttach({
+          ...(attach as ChoiceSpec)
+        });
+      }
+      if (
+        attach.__type__ == 'AskSpec' ||
+        attach.__type__ == 'MessageSpec' ||
+        (attach.__type__ == 'InputSpec' && (attach as MessageSpec).actions)
+      ) {
+        setActionAttach({
+          ...(attach as MessageSpec)
+        });
+      }
+    }, [operableMessages[message.id]]);
+
+    // 可操作消息是否在活动，超时后不活动
+    useEffect(() => {
+      if (operableMessages[message.id]) {
+        setHistory(!operableMessages[message.id].active);
       }
     }, [operableMessages[message.id]]);
 
@@ -204,9 +227,6 @@ const Message = memo(
                       onClick={() => setShowDetails(!showDetails)}
                       loading={isRunning && isLast}
                     />
-                    {!isRunning && isLast && isAsk && (
-                      <AskUploadButton onError={onError} />
-                    )}
                     {!isUser && (
                       <Box
                         sx={{
@@ -217,18 +237,22 @@ const Message = memo(
                           marginTop: 1
                         }}
                       >
-                        {<MessageActions message={message} actions={actions} />}
-                        {
-                          <MessageListActions
-                            layout={layout}
+                        {actionAttach ? (
+                          <MessageActions
+                            attach={actionAttach}
+                            disabled={history}
                             message={message}
-                            listActions={listActions}
                           />
-                        }
-                        {attach ? (
-                          <MessagePreselections
-                            attach={attach as PreselectionSpec}
+                        ) : null}
+                        {choiceAttach ? (
+                          <MessageChoices
+                            attach={choiceAttach}
+                            disabled={history}
+                            message={message}
                           />
+                        ) : null}
+                        {preselectionAttach ? (
+                          <MessagePreselections attach={preselectionAttach} />
                         ) : null}
                       </Box>
                     )}
@@ -241,8 +265,6 @@ const Message = memo(
         {message.steps && showDetails && (
           <Messages
             messages={message.steps}
-            actions={actions}
-            listActions={listActions}
             elements={elements}
             indent={indent + 1}
             isRunning={isRunning}
@@ -265,5 +287,7 @@ const flash = keyframes`
     background-color: transparent;
   }
 `;
+
+Message.displayName = 'Message';
 
 export { Message };

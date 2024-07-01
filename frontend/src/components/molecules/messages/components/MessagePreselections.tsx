@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
 
 import {
   PSMessageItem,
@@ -13,17 +13,11 @@ interface Props {
 }
 
 const MessagePreselections: React.FC<Props> = memo(({ attach }: Props) => {
-  const [history, setHistory] = useState<boolean>(false);
-
   const { callPreselection } = useChatInteract();
 
   const handleClick = useCallback(
     (item: PSMessageItem) => {
-      const res = callPreselection(item);
-      res &&
-        res.then(() => {
-          setHistory(true);
-        });
+      callPreselection(item);
     },
     [callPreselection]
   );
@@ -31,7 +25,7 @@ const MessagePreselections: React.FC<Props> = memo(({ attach }: Props) => {
   return (
     <ListFrame
       onClick={handleClick}
-      disabled={history}
+      disabled={false}
       items={attach.items as PSMessageItem[]}
     />
   );

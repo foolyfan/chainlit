@@ -15,7 +15,6 @@ from starlette.datastructures import Headers
 
 if TYPE_CHECKING:
     from chainlit.action import Action
-    from chainlit.extensions.listaction import LA
     from chainlit.types import ChatProfile, ThreadDict
     from chainlit.user import User
     from fastapi import Request, Response
@@ -237,8 +236,7 @@ class UISettings(DataClassJsonMixin):
 @dataclass()
 class CodeSettings:
     # Developer defined callbacks for each action. Key is the action name, value is the callback function.
-    action_callbacks: Dict[str, Callable[["Action"], Any]]
-    list_action_callbacks: Dict[str, Callable[["LA"], Any]]
+    action_callbacks: Dict[str, Callable[[Union[dict, str]], None]]
     # Module object loaded from the module_name
     module: Any = None
     # Bunch of callbacks defined by the developer
@@ -413,7 +411,6 @@ def load_settings():
             "project": project_settings,
             "code": CodeSettings(
                 action_callbacks={},
-                list_action_callbacks={},
                 on_recognation_input={},
                 on_preselection_callback={},
             ),

@@ -1,5 +1,4 @@
-import { MessageContext } from 'contexts/MessageContext';
-import { useContext } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -22,7 +21,7 @@ interface Props {
 export const AUTHOR_BOX_WIDTH = 26;
 
 const Author = ({ message, show, children }: Props) => {
-  const context = useContext(MessageContext);
+  const context = useMessageContext();
   const getColorForName = useColorForName(context.uiName);
 
   const isUser = message.type === 'user_message';

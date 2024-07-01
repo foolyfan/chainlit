@@ -132,6 +132,18 @@ const updateMessageById = (
   return nextMessages;
 };
 
+const removeWaitingMessage = (messages: IStep[]) => {
+  const nextMessages = [...messages];
+  const lastMessage = nextMessages.pop();
+  if (lastMessage?.type == 'waiting') {
+    return nextMessages;
+  }
+  if (lastMessage) {
+    nextMessages.push(lastMessage);
+  }
+  return nextMessages;
+};
+
 const deleteMessageById = (messages: IStep[], messageId: string) => {
   let nextMessages = [...messages];
 
@@ -203,5 +215,6 @@ export {
   isLastMessage,
   nestMessages,
   updateMessageById,
-  updateMessageContentById
+  updateMessageContentById,
+  removeWaitingMessage
 };

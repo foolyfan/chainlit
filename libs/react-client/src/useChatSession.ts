@@ -1,4 +1,4 @@
-import { debounce, isEmpty } from 'lodash';
+import { cloneDeep, debounce, isEmpty } from 'lodash';
 import { useCallback } from 'react';
 import {
   useRecoilState,
@@ -8,8 +8,6 @@ import {
 } from 'recoil';
 import io from 'socket.io-client';
 import {
-  actionState,
-  askUserState,
   avatarState,
   callFnState,
   chatProfileState,
@@ -18,8 +16,6 @@ import {
   elementState,
   firstUserInteraction,
   gatherCommandState,
-  inputState,
-  listActionState,
   loadingState,
   messagesState,
   sessionIdState,
@@ -30,11 +26,8 @@ import {
   tokenCountState
 } from 'src/state';
 import {
-  IAction,
   IAvatarElement,
-  IChoiceImageAction,
   IElement,
-  IListAction,
   IMessageElement,
   IStep,
   ITasklistElement,
@@ -43,6 +36,7 @@ import {
 import {
   addMessage,
   deleteMessageById,
+  removeWaitingMessage,
   updateMessageById,
   updateMessageContentById
 } from 'src/utils/message';
@@ -51,7 +45,7 @@ import {
   operableMessagesState,
   preselectionState,
   uiSettingsCommandState,
-  useChatContext
+  userFutureMessageState
 } from '.';
 import { ChainlitAPI } from './api';
 import { type IToken } from './useChatData';
@@ -65,16 +59,12 @@ const useChatSession = () => {
   const setFirstUserInteraction = useSetRecoilState(firstUserInteraction);
   const setLoading = useSetRecoilState(loadingState);
   const setMessages = useSetRecoilState(messagesState);
-  const setAskUser = useSetRecoilState(askUserState);
-  const setInput = useSetRecoilState(inputState);
   const setGatherCommand = useSetRecoilState(gatherCommandState);
   const setCallFn = useSetRecoilState(callFnState);
 
   const setElements = useSetRecoilState(elementState);
   const setAvatars = useSetRecoilState(avatarState);
   const setTasklists = useSetRecoilState(tasklistState);
-  const setActions = useSetRecoilState(actionState);
-  const setListActions = useSetRecoilState(listActionState);
   const setChatSettingsInputs = useSetRecoilState(chatSettingsInputsState);
   const setTokenCount = useSetRecoilState(tokenCountState);
   const setUISettings = useSetRecoilState(uiSettingsCommandState);
@@ -82,7 +72,7 @@ const useChatSession = () => {
   const idToResume = useRecoilValue(threadIdToResumeState);
   const setSpeechPrompts = useSetRecoilState(speechPromptsState);
   const setPreselection = useSetRecoilState(preselectionState);
-  const { actionRef } = useChatContext();
+  const setUserFutureMessage = useSetRecoilState(userFutureMessageState);
   const setOperableMessages = useSetRecoilState(operableMessagesState);
 
   const _connect = useCallback(
@@ -162,23 +152,25 @@ const useChatSession = () => {
         );
       });
 
-      socket.on('new_message', (message: IStep) => {
-        console.log('new_message', message);
-        setMessages((oldMessages) => {
-          const lastMessage = oldMessages.pop();
-
-          if (lastMessage?.type == 'waiting') {
-            return [...oldMessages];
-          }
-          if (lastMessage) {
-            oldMessages.push(lastMessage);
-          }
-          return oldMessages;
+      socket.on('new_message', ({ msg, spec }) => {
+        console.log('new_message', msg);
+        setMessages((oldMessages) =>
+          addMessage(removeWaitingMessage(oldMessages), msg)
+        );
+        setOperableMessages((oldMessages) => {
+          const newMessages = { ...oldMessages };
+          newMessages[msg.id] = {
+            active: true,
+            step: msg,
+            attach: {
+              ...spec
+            }
+          };
+          return newMessages;
         });
-        setMessages((oldMessages) => addMessage(oldMessages, message));
-        if (!isEmpty(message.speechContent)) {
+        if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({
-            content: message.speechContent!
+            content: msg.speechContent!
           });
         }
       });
@@ -220,91 +212,111 @@ const useChatSession = () => {
 
       socket.on('ask', ({ msg, spec }, callback) => {
         console.log('ask msg', msg, spec);
-        setMessages((oldMessages) => {
-          const lastMessage = oldMessages.pop();
-          if (lastMessage?.type == 'waiting') {
-            return [...oldMessages];
-          }
-          if (lastMessage) {
-            oldMessages.push(lastMessage);
-          }
-          return oldMessages;
-        });
-        setAskUser({ spec, callback });
-        setMessages((oldMessages) => addMessage(oldMessages, msg));
         if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({
             content: msg.speechContent
           });
         }
+        setMessages((oldMessages) =>
+          addMessage(removeWaitingMessage(oldMessages), msg)
+        );
+        setOperableMessages((oldMessages) => {
+          const newMessages = { ...oldMessages };
+          newMessages[msg.id] = {
+            active: true,
+            step: msg,
+            attach: {
+              ...spec,
+              callback
+            }
+          };
+          return newMessages;
+        });
+        setUserFutureMessage({ type: 'reply', parent: msg.id });
         setLoading(false);
       });
 
-      socket.on('ask_timeout', () => {
-        setAskUser(undefined);
+      socket.on('ask_timeout', ({ msg }) => {
+        console.log('ask_timeout', msg);
+
+        setOperableMessages((oldMessages) => {
+          const newMessages = cloneDeep(oldMessages);
+          newMessages[msg.id].active = false;
+          return newMessages;
+        });
+        setUserFutureMessage({ type: 'question' });
         setLoading(false);
-        if (actionRef) {
-          actionRef.current.toHistory();
-        }
       });
 
       socket.on('input', ({ msg, spec }, callback) => {
         console.log('input msg', msg, spec);
-        setMessages((oldMessages) => {
-          const lastMessage = oldMessages.pop();
-          if (lastMessage?.type == 'waiting') {
-            return [...oldMessages];
-          }
-          if (lastMessage) {
-            oldMessages.push(lastMessage);
-          }
-          return oldMessages;
-        });
-        setInput({ spec, callback });
-        setMessages((oldMessages) => addMessage(oldMessages, msg));
         if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({
             content: msg.speechContent
           });
         }
+        setMessages((oldMessages) =>
+          addMessage(removeWaitingMessage(oldMessages), msg)
+        );
+        setOperableMessages((oldMessages) => {
+          const newMessages = { ...oldMessages };
+          newMessages[msg.id] = {
+            active: true,
+            step: msg,
+            attach: {
+              ...spec,
+              callback
+            }
+          };
+          return newMessages;
+        });
+        setUserFutureMessage({ type: 'reply', parent: msg.id });
         setLoading(false);
       });
 
-      socket.on('input_timeout', () => {
+      socket.on('input_timeout', ({ msg }) => {
         console.log('input_timeout');
+        setOperableMessages((oldMessages) => {
+          const newMessages = cloneDeep(oldMessages);
+          newMessages[msg.id].active = false;
+          return newMessages;
+        });
+        setUserFutureMessage({ type: 'question' });
       });
       socket.on('update_input', ({ msg, spec }, callback) => {
         console.log('update_input', msg, spec);
-        setMessages((oldMessages) => {
-          const lastMessage = oldMessages.pop();
-          if (lastMessage?.type == 'waiting') {
-            return [...oldMessages];
-          }
-          if (lastMessage) {
-            oldMessages.push(lastMessage);
-          }
-          return oldMessages;
-        });
-        setInput({ spec, callback });
         setMessages((oldMessages) =>
-          updateMessageById(oldMessages, msg.id, msg)
+          updateMessageById(removeWaitingMessage(oldMessages), msg.id, msg)
         );
         if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({
             content: msg.speechContent
           });
         }
+        setOperableMessages((oldMessages) => {
+          const newMessages = { ...oldMessages };
+          newMessages[msg.id] = {
+            active: true,
+            step: msg,
+            attach: {
+              ...spec,
+              callback
+            }
+          };
+          return newMessages;
+        });
+        setUserFutureMessage({ type: 'reply', parent: msg.id });
         setLoading(false);
-        actionRef.current.toHistory(false);
       });
 
-      socket.on('clear_input', () => {
-        console.log('clear_input');
-
-        setInput(undefined);
-        if (actionRef) {
-          actionRef.current.toHistory();
-        }
+      socket.on('clear_input', ({ msg }) => {
+        console.log('clear_input', msg);
+        setOperableMessages((oldMessages) => {
+          const newMessages = cloneDeep(oldMessages);
+          newMessages[msg.id].active = false;
+          return newMessages;
+        });
+        setUserFutureMessage({ type: 'question' });
       });
 
       socket.on('gather_command_timeout', () => {
@@ -313,26 +325,13 @@ const useChatSession = () => {
 
       socket.on('gather_command', ({ msg, spec }, callback) => {
         console.log('gather_command', msg, spec, callback);
-        setMessages((oldMessages) => {
-          const lastMessage = oldMessages.pop();
-          if (lastMessage?.type == 'waiting') {
-            return [...oldMessages];
-          }
-          if (lastMessage) {
-            oldMessages.push(lastMessage);
-          }
-          return oldMessages;
-        });
+        setMessages((oldMessages) => removeWaitingMessage(oldMessages));
         setGatherCommand({ spec, callback });
         if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({
             content: msg.speechContent
           });
         }
-      });
-
-      socket.on('clear_ask', () => {
-        setAskUser(undefined);
       });
 
       socket.on('clear_gather_command', () => {
@@ -417,58 +416,31 @@ const useChatSession = () => {
         });
       });
 
-      socket.on('action', (action: IAction) => {
-        console.log('action', action);
-        setActions((old) => [...old, action]);
-      });
-
-      socket.on('remove_action', (action: IAction) => {
-        setActions((old) => {
-          const index = old.findIndex((a) => a.id === action.id);
-          if (index === -1) return old;
-          return [...old.slice(0, index), ...old.slice(index + 1)];
-        });
-      });
-
-      socket.on('list_action', (action: IListAction) => {
-        console.log('list_action', action);
-        if (action.type == 'image') {
-          const imageAction = action as IChoiceImageAction;
-          if (!imageAction.url && imageAction.chainlitKey) {
-            imageAction.url = client.getElementUrl(
-              imageAction.chainlitKey,
-              sessionId
-            );
-          }
-        }
-
-        setListActions((old) => [...old, action]);
-      });
-
-      socket.on('remove_list_action', (action: IListAction) => {
-        setListActions((old) => {
-          const index = old.findIndex((a) => a.id === action.id);
-          if (index === -1) return old;
-          return [...old.slice(0, index), ...old.slice(index + 1)];
-        });
-      });
-
       socket.on('token_usage', (count: number) => {
         setTokenCount((old) => old + count);
       });
 
       socket.on('change_theme', ({ spec }) => {
+        console.log('change_theme');
         setUISettings({ spec });
       });
 
       socket.on('advise', ({ msg, spec }) => {
-        setPreselection(spec);
+        console.log('advise', spec);
+        if (spec.type == 'prompt') {
+          setPreselection(spec);
+        }
         if (spec.type == 'message') {
           setMessages((oldMessages) => addMessage(oldMessages, msg));
           setOperableMessages((oldMessages) => {
             const newMessages = { ...oldMessages };
-            newMessages[msg.id] = { step: msg };
-            newMessages[msg.id].attach = spec;
+            newMessages[msg.id] = {
+              active: true,
+              step: msg,
+              attach: {
+                ...spec
+              }
+            };
             return newMessages;
           });
         }
@@ -480,25 +452,8 @@ const useChatSession = () => {
       });
 
       socket.on('clear_prompt_advise', () => {
+        console.log('clear_prompt_advise');
         setPreselection(undefined);
-      });
-
-      socket.on('ask_choice', ({ msg, spec }) => {
-        setMessages((oldMessages) => addMessage(oldMessages, msg));
-        setOperableMessages((oldMessages) => {
-          const newMessages = { ...oldMessages };
-          newMessages[msg.id] = { step: msg };
-          newMessages[msg.id].attach = spec;
-          return newMessages;
-        });
-      });
-
-      socket.on('ask_choice_timeout', ({ msg }) => {
-        setOperableMessages((oldMessages) => {
-          const newMessages = { ...oldMessages };
-          newMessages[msg.id].timeout = true;
-          return newMessages;
-        });
       });
     },
     [setSession, sessionId, chatProfile]

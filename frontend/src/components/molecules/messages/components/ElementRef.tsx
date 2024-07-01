@@ -1,5 +1,4 @@
-import { MessageContext } from 'contexts/MessageContext';
-import { useContext } from 'react';
+import { useMessageContext } from 'contexts/MessageContext';
 
 import Link from '@mui/material/Link';
 
@@ -10,7 +9,7 @@ interface Props {
 }
 
 const ElementRef = ({ element }: Props) => {
-  const { onElementRefClick } = useContext(MessageContext);
+  const { onElementRefClick } = useMessageContext();
 
   if (element.display === 'inline') {
     return <span style={{ fontWeight: 700 }}>{element.name}</span>;
