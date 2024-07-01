@@ -583,3 +583,59 @@ async def main(message: Message):
             ],
         )
         await p.send()
+    if message.content == "31":
+        # 附带elements的预选项
+        elements = [
+            PreviewInfoGroup(
+                name="付款账户信息",
+                items=[
+                    DataItem(label="户名", value="张三"),
+                    DataItem(label="账号", value="651541544514215", width="all"),
+                ],
+            ),
+            PreviewInfoGroup(
+                name="收款账户信息",
+                items=[
+                    DataItem(label="户名", value="李四"),
+                    DataItem(label="账号", value="651545466455215", width="all"),
+                    DataItem(label="银行", value="中国银行"),
+                ],
+            ),
+            PreviewInfoGroup(
+                name="转账信息",
+                items=[
+                    DataItem(label="金额", value="10,000.00 壹万元整", width="all"),
+                    DataItem(
+                        label="费用",
+                        value="0.00",
+                    ),
+                    DataItem(label="附言", value="转账"),
+                ],
+            ),
+        ]
+        p = PreselectionMessage(
+            content="还需要进行以下服务吗",
+            psType="message",
+            elements=elements,
+            items=[
+                PSMessageItem(
+                    name="first",
+                    data="开卡",
+                    src='<div style="width: 100%;padding:8px">1. 开卡<div>',
+                    display="create",
+                ),
+                PSMessageItem(
+                    name="second",
+                    data="转账",
+                    src='<div style="width: 100%;padding:8px">2. 转账<div>',
+                    display="create",
+                ),
+                PSMessageItem(
+                    name="third",
+                    data="挂失",
+                    src='<div style="width: 100%;padding:8px">3. 挂失<div>',
+                    display="create",
+                ),
+            ],
+        )
+        await p.send()

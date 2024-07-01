@@ -3,6 +3,7 @@ from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
+from chainlit.element import ElementBased
 from chainlit.extensions.exceptions import AskTimeout
 from chainlit.extensions.types import (
     BaseResponse,
@@ -169,6 +170,7 @@ class PreselectionMessage(MessageBase):
         items: Union[List[PSPromptItem], List[PSMessageItem]],
         psType: Literal["message", "prompt"],
         content: str = "",
+        elements: Optional[List[ElementBased]] = None,
         speechContent: str = "",
     ):
         self.items = items
@@ -176,6 +178,7 @@ class PreselectionMessage(MessageBase):
         self.psType = psType
         self.author = config.ui.name
         self.speechContent = speechContent
+        self.elements = elements
         self.created_at = utc_now()
         # TODO speechReply
         super().__post_init__()
@@ -185,6 +188,11 @@ class PreselectionMessage(MessageBase):
 
         step_dict = await self._create()
         spec = PreselectionSpec(type=self.psType, items=self.items)
+        # Create tasks for elements
+        tasks = [element.send(for_id=self.id) for element in self.elements]
+
+        # Run all tasks concurrently
+        await asyncio.gather(*tasks)
         await context.emitter.advise(step_dict, spec)
         await context.emitter.task_end()
 
