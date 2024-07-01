@@ -188,11 +188,13 @@ class PreselectionMessage(MessageBase):
 
         step_dict = await self._create()
         spec = PreselectionSpec(type=self.psType, items=self.items)
-        # Create tasks for elements
-        tasks = [element.send(for_id=self.id) for element in self.elements]
+        if self.elements:
+            # Create tasks for elements
+            tasks = [element.send(for_id=self.id) for element in self.elements]
 
-        # Run all tasks concurrently
-        await asyncio.gather(*tasks)
+            # Run all tasks concurrently
+            await asyncio.gather(*tasks)
+
         await context.emitter.advise(step_dict, spec)
         await context.emitter.task_end()
 
