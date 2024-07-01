@@ -106,7 +106,7 @@ class PSPromptItem(DataClassJsonMixin):
 @dataclass
 class PSMessageItem(ListDataItem, DataClassJsonMixin):
     """
-    消息的建议列表的条目，执行使用@preselection_callback(name='taskName')注册的后台任务，使用name区分不同的任务
+    消息的建议列表的条目，执行使用@predefined_procedure(name='taskName')注册的后台任务，使用name区分不同的任务
 
     Attributes：
       name (str): 钩子函数的参数

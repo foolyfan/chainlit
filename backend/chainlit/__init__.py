@@ -356,10 +356,10 @@ def action_callback(name: str) -> Callable:
     return decorator
 
 
-def preselection_callback(name: str) -> Callable:
+def predefined_procedure(name: str) -> Callable:
 
     def decorator(func: Callable[[Union[dict, str]], None]):
-        config.code.on_preselection_callback[name] = wrap_user_function(func)
+        config.code.on_predefined_procedure[name] = wrap_user_function(func)
         return func
 
     return decorator

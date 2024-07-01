@@ -139,11 +139,11 @@ const useChatInteract = () => {
     [session?.socket]
   );
 
-  const callPreselection = useCallback(
+  const callPredefinedProcedure = useCallback(
     (item: PSMessageItem) => {
       const socket = session?.socket;
       if (!socket) return;
-      socket.emit('preselection_call', item.name, item.data);
+      socket.emit('predefined_procedure_call', item.name, item.data);
     },
     [session?.socket]
   );
@@ -179,7 +179,7 @@ const useChatInteract = () => {
     updateChatSettings,
     addWaitingMessage,
     replyCmdMessage,
-    callPreselection,
+    callPredefinedProcedure,
     replyAskMessage
   };
 };

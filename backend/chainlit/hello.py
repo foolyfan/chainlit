@@ -54,8 +54,7 @@ from chainlit import (
     image_account_recognition,
     mobilephone_recognition,
     on_message,
-    preselection_callback,
-    sleep,
+    predefined_procedure,
     tts_method,
 )
 
@@ -102,13 +101,13 @@ class AccountAndMobilePhoneRule(ClientRule):
 """
 
 
-@preselection_callback("first")
+@predefined_procedure("first")
 async def first(value: Union[dict, str]):
     logger.info(f"first callback: {value}")
     await Message(content="I'm first").send()
 
 
-@preselection_callback("second")
+@predefined_procedure("second")
 async def second(value: Union[dict, str]):
     logger.info(f"second callback: {value}")
     await Message(content="I'm second").send()
@@ -124,7 +123,7 @@ async def third(value: Union[dict, str]):
     await Message(content="I'm third").send()
 
 
-preselection_callback("third")(third)
+predefined_procedure("third")(third)
 
 
 @account_recognition
@@ -557,7 +556,7 @@ async def main(message: Message):
         if res29:
             await Message(content="{:.2f}".format(float(res29))).send()
     if message.content == "30":
-        # 用户点击后回调使用@preselection_callback注册的函数
+        # 用户点击后回调使用@predefined_procedure注册的函数
         p = PreselectionMessage(
             content="还需要进行以下服务吗",
             psType="message",

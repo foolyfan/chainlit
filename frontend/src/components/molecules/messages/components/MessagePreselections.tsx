@@ -13,13 +13,13 @@ interface Props {
 }
 
 const MessagePreselections: React.FC<Props> = memo(({ attach }: Props) => {
-  const { callPreselection } = useChatInteract();
+  const { callPredefinedProcedure } = useChatInteract();
 
   const handleClick = useCallback(
     (item: PSMessageItem) => {
-      callPreselection(item);
+      callPredefinedProcedure(item);
     },
-    [callPreselection]
+    [callPredefinedProcedure]
   );
 
   return (

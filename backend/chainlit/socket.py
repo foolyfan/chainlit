@@ -293,10 +293,10 @@ async def call_action(sid, action):
         )
 
 
-@socket.on("preselection_call")
+@socket.on("predefined_procedure_call")
 async def call_preselection(sid, name, data):
     init_ws_context(sid)
-    await config.code.on_preselection_callback[name](data)
+    await config.code.on_predefined_procedure[name](data)
 
 
 @socket.on("chat_settings_change")
