@@ -4,7 +4,7 @@ import asyncio
 import json
 import os
 import uuid
-from typing import List, Union
+from typing import List, Optional, Union
 
 import aiofiles
 import httpx
@@ -36,6 +36,7 @@ from chainlit.extensions.types import (
     FontOptions,
     FontSizeOptions,
     PSMessageItem,
+    SubChoiceWidget,
 )
 from chainlit.logger import logger
 from chainlit.types import AskUserResponse
@@ -60,7 +61,9 @@ from chainlit import (
 )
 
 
-async def choiceFirst(res: str, choices: List[ChoiceItem]) -> Union[dict, str]:
+async def choiceFirst(
+    res: str, choices: List[ChoiceItem], widgets: Optional[List[SubChoiceWidget]]
+) -> Union[dict, str]:
     logger.info(f"默认选择第一条")
     return choices[0].data
 
@@ -303,7 +306,7 @@ async def main(message: Message):
                     ),
                 ],
                 textReply=choiceFirst,
-                widgets=[ButtonWidget(label="新增")],
+                widgets=[ButtonWidget(label="新增", data="新增")],
             ).send()
             await Message(content=res1).send()
         except AskTimeout:

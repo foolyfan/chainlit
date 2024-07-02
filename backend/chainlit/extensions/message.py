@@ -16,6 +16,7 @@ from chainlit.extensions.types import (
     PreselectionSpec,
     PSInputItem,
     PSMessageItem,
+    SubChoiceWidget,
     UISettingsCommandOptions,
 )
 from chainlit.logger import logger
@@ -23,8 +24,6 @@ from chainlit.message import AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
 from literalai.helper import utc_now
 from socketio.exceptions import TimeoutError
-
-CW = TypeVar("CW", bound="ChoiceWidget")
 
 
 class AskUserChoiceMessage(AskMessageBase):
@@ -35,7 +34,10 @@ class AskUserChoiceMessage(AskMessageBase):
     def __init__(
         self,
         items: List[ChoiceItem],
-        textReply: Callable[[str, List[ChoiceItem]], Awaitable[Union[dict, str]]],
+        textReply: Callable[
+            [str, List[ChoiceItem], Optional[List[SubChoiceWidget]]],
+            Awaitable[Union[dict, str]],
+        ],
         choiceContent: str = "请在以下数据中做出选择：",
         timeoutContent: str = "选择任务超时",
         author=config.ui.name,
@@ -43,7 +45,7 @@ class AskUserChoiceMessage(AskMessageBase):
         timeout=90,
         raise_on_timeout=False,
         speechContent: str = "",
-        widgets: Optional[List[CW]] = None,
+        widgets: Optional[List[SubChoiceWidget]] = None,
     ):
         self.content = choiceContent
         self.author = author
@@ -83,7 +85,7 @@ class AskUserChoiceMessage(AskMessageBase):
                 await context.emitter.ask_user(step_dict, spec, self.timeout),
             )
             if res.type == "keyboard" or res.type == "speech":
-                return await self.textReply(res.data, self.items)
+                return await self.textReply(res.data, self.items, self.widgets)
             elif res.type == "touch":
                 return res.data
         except TimeoutError as e:

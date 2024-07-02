@@ -47,6 +47,33 @@ class FontOptions(UISettingsCommandOptions, DataClassJsonMixin):
 
 
 @dataclass
+class ChoiceWidget(DataClassJsonMixin):
+    """
+    用户选择列表小部件
+
+    Attributes：:
+      __type__ (Literal["button"]): 小部件类型
+      data (Union[dict,str]): 该展示小部件的数据标识，用户操作后作为textReply的参数传递
+    """
+
+    __type__: Literal["button"]
+    data: Union[dict, str]
+
+
+SubChoiceWidget = TypeVar("SubChoiceWidget", bound="ChoiceWidget")
+
+
+@dataclass
+class ButtonWidget(ChoiceWidget, DataClassJsonMixin):
+    label: str
+
+    def __init__(self, label: str, data: Union[dict, str]):
+        self.__type__ = "button"
+        self.label = label
+        self.data = data
+
+
+@dataclass
 class BaseSpec(DataClassJsonMixin):
     """
     消息特性基类
@@ -76,11 +103,11 @@ class ListDataItem(DataClassJsonMixin):
     display: str
 
 
-T = TypeVar("T", bound=ListDataItem)
+SubListDataItem = TypeVar("SubListDataItem", bound=ListDataItem)
 
 
 @dataclass
-class ListSpec(Generic[T], BaseSpec, DataClassJsonMixin):
+class ListSpec(Generic[SubListDataItem], BaseSpec, DataClassJsonMixin):
     """
     通用列表，作为消息附加项进行展示
 
@@ -88,7 +115,7 @@ class ListSpec(Generic[T], BaseSpec, DataClassJsonMixin):
       items (List[T]): 展示的数据列表，T为ListDataItem的子类即可
     """
 
-    items: List[T]
+    items: List[SubListDataItem]
 
 
 @dataclass
@@ -158,10 +185,17 @@ class ChoiceSpec(ListSpec, DataClassJsonMixin):
     """
 
     timeout: int
+    widgets: Optional[List[ButtonWidget]]
 
-    def __init__(self, timeout: int, items: List[ChoiceItem]):
+    def __init__(
+        self,
+        timeout: int,
+        items: List[ChoiceItem],
+        widgets: Optional[List[ButtonWidget]] = None,
+    ):
         self.timeout = timeout
         self.items = items
+        self.widgets = widgets
         self.__type__ = "ChoiceSpec"
 
 
@@ -226,28 +260,14 @@ class AskSpec(MessageSpec, DataClassJsonMixin):
 
 
 @dataclass
-class BaseResponse(Generic[T], DataClassJsonMixin):
+class BaseResponse(Generic[SubListDataItem], DataClassJsonMixin):
     """
     通用返回，包括用户语音输入、文本输入、触摸或点击输入
 
     Attributes：
       type (Literal['keyboard' , 'speech' , 'touch']): 回复方式，键盘输入，语音，触摸或点击
-      data (Union[str, T]): 回复内容，包括文本和通用列表条目的data数据
+      data (Union[str, SubListDataItem]): 回复内容，包括文本和通用列表条目的data数据
     """
 
     type: Literal["keyboard", "speech", "touch"]
-    data: Union[str, T]
-
-
-@dataclass
-class ChoiceWidget(DataClassJsonMixin):
-    type: Literal["button"]
-
-
-@dataclass
-class ButtonWidget(ChoiceWidget, DataClassJsonMixin):
-    label: str
-
-    def __init__(self, label: str):
-        self.type = "button"
-        self.label = label
+    data: Union[str, SubListDataItem]
