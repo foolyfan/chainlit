@@ -26,7 +26,7 @@ from chainlit.extensions.message import (
     AskUserChoiceMessage,
     GatherCommand,
     PreselectionMessage,
-    PSPromptItem,
+    PSInputItem,
     UISettingsCommand,
 )
 from chainlit.extensions.types import (
@@ -111,6 +111,12 @@ async def first(value: Union[dict, str]):
 async def second(value: Union[dict, str]):
     logger.info(f"second callback: {value}")
     await Message(content="I'm second").send()
+
+
+@predefined_procedure("/action.do?id=4567890")
+async def action(value: Union[dict, str]):
+    logger.info(f"action.do: {value}")
+    await Message(content=f"I'm {value}").send()
 
 
 """
@@ -529,26 +535,27 @@ async def main(message: Message):
         ).send()
     if message.content == "28":
         p = PreselectionMessage(
-            psType="prompt",
+            psType="input",
             items=[
-                PSPromptItem(label="转账"),
-                PSPromptItem(label="18536403990"),
-                PSPromptItem(label="1852222"),
+                PSInputItem(label="转账"),
+                PSInputItem(label="18536403990"),
+                PSInputItem(label="1852222"),
             ],
         )
         await p.send()
         res28 = await MobilePhoneInput(timeout=600, rules=[StartWithRule()]).send()
-        await p.clear_prompt()
+        await p.clear_input()
         if res28:
             await Message(content=str(res28)).send()
 
     if message.content == "29":
+        # 给用户提供的预输入项
         p = PreselectionMessage(
-            psType="prompt",
+            psType="input",
             items=[
-                PSPromptItem(label="10000"),
-                PSPromptItem(label="5000.465"),
-                PSPromptItem(label="2000"),
+                PSInputItem(label="10000"),
+                PSInputItem(label="5000.465"),
+                PSInputItem(label="2000"),
             ],
         )
         await p.send()
@@ -583,39 +590,22 @@ async def main(message: Message):
         )
         await p.send()
     if message.content == "31":
-        # 附带elements的预选项
-        elements = [
-            PreviewInfoGroup(
-                name="付款账户信息",
-                items=[
-                    DataItem(label="户名", value="张三"),
-                    DataItem(label="账号", value="651541544514215", width="all"),
-                ],
-            ),
-            PreviewInfoGroup(
-                name="收款账户信息",
-                items=[
-                    DataItem(label="户名", value="李四"),
-                    DataItem(label="账号", value="651545466455215", width="all"),
-                    DataItem(label="银行", value="中国银行"),
-                ],
-            ),
-            PreviewInfoGroup(
-                name="转账信息",
-                items=[
-                    DataItem(label="金额", value="10,000.00 壹万元整", width="all"),
-                    DataItem(
-                        label="费用",
-                        value="0.00",
-                    ),
-                    DataItem(label="附言", value="转账"),
-                ],
-            ),
-        ]
+        # 用户点击后回调使用@predefined_procedure注册的函数
         p = PreselectionMessage(
             content="还需要进行以下服务吗",
             psType="message",
-            elements=elements,
+            elements=[
+                Text(
+                    name="simple_text",
+                    content="[执行预定义流程](/action.do?id=4567890)",
+                    display="inline",
+                ),
+                Text(
+                    name="simple_text",
+                    content="[打开百度](https://www.baidu.com/)",
+                    display="inline",
+                ),
+            ],
             items=[
                 PSMessageItem(
                     name="first",
@@ -638,3 +628,24 @@ async def main(message: Message):
             ],
         )
         await p.send()
+    if message.content == "32":
+        await Message(
+            content="调用预定义流程",
+            elements=[
+                Text(
+                    name="simple_text",
+                    content="[执行预定义流程](/action.do?id=4567890)",
+                    display="inline",
+                )
+            ],
+        ).send()
+        await Message(
+            content="打开正常链接",
+            elements=[
+                Text(
+                    name="simple_text",
+                    content="[打开百度](https://www.baidu.com/)",
+                    display="inline",
+                )
+            ],
+        ).send()

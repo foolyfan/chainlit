@@ -92,7 +92,7 @@ class ListSpec(Generic[T], BaseSpec, DataClassJsonMixin):
 
 
 @dataclass
-class PSPromptItem(DataClassJsonMixin):
+class PSInputItem(DataClassJsonMixin):
     """
     输入框辅助提示词条目
 
@@ -122,15 +122,15 @@ class PreselectionSpec(ListSpec, DataClassJsonMixin):
 
     Attributes：
       type (Literal["message", "prompt"]): 预选项具体的类型，message是消息的建议列表，prompt是输入框提示词列表
-      items (List[PSPromptItem], List[PSMessageItem]): 预选项列表数据
+      items (List[PSInputItem], List[PSMessageItem]): 预选项列表数据
     """
 
-    type: Literal["message", "prompt"]
+    type: Literal["message", "input"]
 
     def __init__(
         self,
-        type: Literal["message", "prompt"],
-        items: Union[List[PSPromptItem], List[PSMessageItem]],
+        type: Literal["message", "input"],
+        items: Union[List[PSInputItem], List[PSMessageItem]],
     ):
         self.type = type
         self.items = items
@@ -153,7 +153,7 @@ class ChoiceSpec(ListSpec, DataClassJsonMixin):
 
     Attributes：
       timeout (int): 客户进行选择的超时时间
-      items (List[PSPromptItem], List[PSMessageItem]): 选择列表数据
+      items (List[PSInputItem], List[PSMessageItem]): 选择列表数据
     """
 
     timeout: int

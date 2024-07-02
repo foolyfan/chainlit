@@ -16,11 +16,11 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 
+import { type IMessageElement, useChatInteract } from '@chainlit/react-client';
+
 import { InlineCode } from 'components/atoms/InlineCode';
 import { Code } from 'components/molecules/Code';
 import { ElementRef } from 'components/molecules/messages/components/ElementRef';
-
-import type { IMessageElement } from 'client-types/';
 
 interface Props {
   allowHtml?: boolean;
@@ -50,6 +50,29 @@ function Markdown({ refElements, allowHtml, latex, children }: Props) {
     return remarkPlugins;
   }, [latex]);
 
+  const { callPredefinedProcedure } = useChatInteract();
+
+  const handleClick = (event: MouseEvent, childProps: { href: string }) =>
+    // @ts-ignore: React.MouseEvent<HTMLAnchorElement, MouseEvent>
+    {
+      if (childProps.href.startsWith('/')) {
+        // 阻止默认行为，即阻止跳转
+        event.preventDefault();
+        // 调用预定义流程
+        callPredefinedProcedure(childProps.href, childProps.href);
+      }
+
+      // 判断 URL 是否以 "/predefined" 开头
+      // if (url.startsWith('/predefined')) {
+      //   // 不进行跳转
+      //   console.log('不进行跳转');
+      // } else {
+      //   // 进行跳转
+      //   console.log('进行跳转');
+      //   window.location.href = url;
+      // }
+    };
+
   return (
     <ReactMarkdown
       remarkPlugins={remarkPlugins}
@@ -65,7 +88,12 @@ function Markdown({ refElements, allowHtml, latex, children }: Props) {
           } else {
             return (
               // @ts-ignore
-              <Link {...props} target="_blank">
+              <Link
+                {...props}
+                target="_blank"
+                // @ts-ignore
+                onClick={(event) => handleClick(event, props)}
+              >
                 {children}
               </Link>
             );

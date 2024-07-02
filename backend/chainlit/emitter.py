@@ -76,7 +76,7 @@ class BaseChainlitEmitter:
             "clear_gather_command",
             "clear_call_fn",
             "clear_input",
-            "clear_prompt_advise",
+            "clear_input_advise",
         ],
         data: Optional[dict] = None,
     ):
@@ -223,7 +223,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
             "clear_gather_command",
             "clear_call_fn",
             "clear_input",
-            "clear_prompt_advise",
+            "clear_input_advise",
         ],
         data: Optional[dict] = None,
     ):

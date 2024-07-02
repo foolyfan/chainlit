@@ -17,7 +17,7 @@ const MessagePreselections: React.FC<Props> = memo(({ attach }: Props) => {
 
   const handleClick = useCallback(
     (item: PSMessageItem) => {
-      callPredefinedProcedure(item);
+      callPredefinedProcedure(item.name, item.data);
     },
     [callPredefinedProcedure]
   );

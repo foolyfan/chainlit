@@ -13,8 +13,8 @@ from chainlit.extensions.types import (
     GatherCommandSpec,
     GatherCommandType,
     PreselectionSpec,
+    PSInputItem,
     PSMessageItem,
-    PSPromptItem,
     UISettingsCommandOptions,
 )
 from chainlit.logger import logger
@@ -167,8 +167,8 @@ class PreselectionMessage(MessageBase):
 
     def __init__(
         self,
-        items: Union[List[PSPromptItem], List[PSMessageItem]],
-        psType: Literal["message", "prompt"],
+        items: Union[List[PSInputItem], List[PSMessageItem]],
+        psType: Literal["input", "message"],
         content: str = "",
         elements: Optional[List[ElementBased]] = None,
         speechContent: str = "",
@@ -198,7 +198,7 @@ class PreselectionMessage(MessageBase):
         await context.emitter.advise(step_dict, spec)
         await context.emitter.task_end()
 
-    async def clear_prompt(self):
-        if self.psType != "prompt":
+    async def clear_input(self):
+        if self.psType != "message":
             return
-        await context.emitter.clear("clear_prompt_advise")
+        await context.emitter.clear("clear_input_advise")

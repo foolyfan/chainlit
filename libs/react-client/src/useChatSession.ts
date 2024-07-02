@@ -427,7 +427,7 @@ const useChatSession = () => {
 
       socket.on('advise', ({ msg, spec }) => {
         console.log('advise', spec);
-        if (spec.type == 'prompt') {
+        if (spec.type == 'input') {
           setPreselection(spec);
         }
         if (spec.type == 'message') {
@@ -451,7 +451,7 @@ const useChatSession = () => {
         }
       });
 
-      socket.on('clear_prompt_advise', () => {
+      socket.on('clear_input_advise', () => {
         console.log('clear_prompt_advise');
         setPreselection(undefined);
       });

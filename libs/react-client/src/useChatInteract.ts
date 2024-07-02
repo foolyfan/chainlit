@@ -29,7 +29,6 @@ import {
   IAction,
   IGatherCommandResponse,
   IStep,
-  PSMessageItem,
   UserInputType
 } from 'src/types';
 import { addMessage } from 'src/utils/message';
@@ -140,10 +139,10 @@ const useChatInteract = () => {
   );
 
   const callPredefinedProcedure = useCallback(
-    (item: PSMessageItem) => {
+    (name: string, data: any) => {
       const socket = session?.socket;
       if (!socket) return;
-      socket.emit('predefined_procedure_call', item.name, item.data);
+      socket.emit('predefined_procedure_call', name, data);
     },
     [session?.socket]
   );

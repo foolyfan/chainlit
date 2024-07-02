@@ -8,7 +8,7 @@ import { Box, Chip, IconButton, Stack } from '@mui/material';
 
 import {
   InputSpec,
-  PSPromptItem,
+  PSInputItem,
   UserInputType,
   useChatContext,
   useChatData
@@ -199,7 +199,7 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
 
   return (
     <>
-      {preselection && preselection.type == 'prompt' ? (
+      {preselection && preselection.type == 'input' ? (
         <Stack
           direction="row"
           spacing={1}
@@ -210,10 +210,10 @@ const Input = memo(({ onSubmit, onReply }: Props) => {
           {preselection.items.map((item) => (
             <Chip
               size="small"
-              label={(item as PSPromptItem).label}
+              label={(item as PSInputItem).label}
               color="primary"
               variant="outlined"
-              onClick={() => handleClick((item as PSPromptItem).label)}
+              onClick={() => handleClick((item as PSInputItem).label)}
               sx={{
                 backgroundColor: (theme) => theme.palette.background.paper,
                 borderRadius: '0.25rem'

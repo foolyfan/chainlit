@@ -82,7 +82,7 @@ export interface ListDataItem {
   display: string;
 }
 
-export interface PSPromptItem extends ListDataItem {
+export interface PSInputItem extends ListDataItem {
   label: string;
 }
 
@@ -105,8 +105,8 @@ export interface ListSpec<T extends ListDataItem> extends BaseSpec {
 }
 
 export interface PreselectionSpec
-  extends ListSpec<PSPromptItem | PSMessageItem> {
-  type: 'prompt' | 'message';
+  extends ListSpec<PSInputItem | PSMessageItem> {
+  type: 'input' | 'message';
 }
 
 export type ChoiceItem = ListDataItem;
