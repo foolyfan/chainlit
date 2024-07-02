@@ -52,26 +52,12 @@ function Markdown({ refElements, allowHtml, latex, children }: Props) {
 
   const { callPredefinedProcedure } = useChatInteract();
 
-  const handleClick = (event: MouseEvent, childProps: { href: string }) =>
-    // @ts-ignore: React.MouseEvent<HTMLAnchorElement, MouseEvent>
-    {
-      if (childProps.href.startsWith('/')) {
-        // 阻止默认行为，即阻止跳转
-        event.preventDefault();
-        // 调用预定义流程
-        callPredefinedProcedure(childProps.href, childProps.href);
-      }
-
-      // 判断 URL 是否以 "/predefined" 开头
-      // if (url.startsWith('/predefined')) {
-      //   // 不进行跳转
-      //   console.log('不进行跳转');
-      // } else {
-      //   // 进行跳转
-      //   console.log('进行跳转');
-      //   window.location.href = url;
-      // }
-    };
+  const handleClick = (event: MouseEvent, childProps: { href: string }) => {
+    if (childProps.href.startsWith('/')) {
+      event.preventDefault();
+      callPredefinedProcedure(childProps.href);
+    }
+  };
 
   return (
     <ReactMarkdown

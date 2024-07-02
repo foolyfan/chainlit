@@ -66,7 +66,7 @@ class ListDataItem(DataClassJsonMixin):
     通用列表的条目
 
     Attributes：
-      data (Union[dict, str]): 该展示条目的数据标识，用于大模型从多条目识别指定条目使用
+      data (Union[dict, str]): 该展示条目的数据标识，该条目被用户选中后会被作为上下文参数传递到后续处理逻辑
       src (str): 该展示条目的内容或html链接
       display (str): src内容使用的CSS文件内的类名标识
     """
@@ -106,13 +106,11 @@ class PSInputItem(DataClassJsonMixin):
 @dataclass
 class PSMessageItem(ListDataItem, DataClassJsonMixin):
     """
-    消息的建议列表的条目，执行使用@predefined_procedure(name='taskName')注册的后台任务，使用name区分不同的任务
+    消息的建议列表的条目，执行使用@predefined_procedure注解的函数
 
     Attributes：
-      name (str): 钩子函数的参数
+      data (Union[dict, str]): 该展示条目的数据标识，用户选中后data作为@predefined_procedure注解的函数参数传递
     """
-
-    name: str
 
 
 @dataclass
@@ -141,6 +139,9 @@ class PreselectionSpec(ListSpec, DataClassJsonMixin):
 class ChoiceItem(ListDataItem, DataClassJsonMixin):
     """
     选择列表条目
+
+    Attributes：
+      data (Union[dict, str]): 该展示条目的数据标识，用户选中后作为textReply的参数传递
     """
 
     pass

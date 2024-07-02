@@ -86,9 +86,7 @@ export interface PSInputItem extends ListDataItem {
   label: string;
 }
 
-export interface PSMessageItem extends ListDataItem {
-  name: string;
-}
+export type PSMessageItem = ListDataItem;
 
 export interface BaseSpec {
   callback?: (payload: { type: UserInputType; data: any }) => void;

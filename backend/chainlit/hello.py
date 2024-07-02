@@ -102,35 +102,10 @@ class AccountAndMobilePhoneRule(ClientRule):
 """
 
 
-@predefined_procedure("first")
-async def first(value: Union[dict, str]):
-    logger.info(f"first callback: {value}")
-    await Message(content="I'm first").send()
-
-
-@predefined_procedure("second")
-async def second(value: Union[dict, str]):
-    logger.info(f"second callback: {value}")
-    await Message(content="I'm second").send()
-
-
-@predefined_procedure("/action.do?id=4567890")
-async def action(value: Union[dict, str]):
-    logger.info(f"action.do: {value}")
-    await Message(content=f"I'm {value}").send()
-
-
-"""
-动态或运行时注册
-"""
-
-
-async def third(value: Union[dict, str]):
-    logger.info(f"third callback: {value}")
-    await Message(content="I'm third").send()
-
-
-predefined_procedure("third")(third)
+@predefined_procedure
+async def predefined_procedure_handler(value: Union[dict, str]):
+    logger.info(f"predefined_procedure: {value}")
+    await Message(content=f"{value}").send()
 
 
 @account_recognition
@@ -571,19 +546,16 @@ async def main(message: Message):
             psType="message",
             items=[
                 PSMessageItem(
-                    name="first",
                     data="开卡",
                     src='<div style="width: 100%;padding:8px">1. 开卡<div>',
                     display="create",
                 ),
                 PSMessageItem(
-                    name="second",
-                    data="转账",
+                    data={"tradeName": "转账"},
                     src='<div style="width: 100%;padding:8px">2. 转账<div>',
                     display="create",
                 ),
                 PSMessageItem(
-                    name="third",
                     data="挂失",
                     src='<div style="width: 100%;padding:8px">3. 挂失<div>',
                     display="create",
@@ -610,19 +582,16 @@ async def main(message: Message):
             ],
             items=[
                 PSMessageItem(
-                    name="first",
                     data="开卡",
                     src='<div style="width: 100%;padding:8px">1. 开卡<div>',
                     display="create",
                 ),
                 PSMessageItem(
-                    name="second",
-                    data="转账",
+                    data={"tradeName": "转账"},
                     src='<div style="width: 100%;padding:8px">2. 转账<div>',
                     display="create",
                 ),
                 PSMessageItem(
-                    name="third",
                     data="挂失",
                     src='<div style="width: 100%;padding:8px">3. 挂失<div>',
                     display="create",

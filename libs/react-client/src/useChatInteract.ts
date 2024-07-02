@@ -139,10 +139,10 @@ const useChatInteract = () => {
   );
 
   const callPredefinedProcedure = useCallback(
-    (name: string, data: any) => {
+    (data: any) => {
       const socket = session?.socket;
       if (!socket) return;
-      socket.emit('predefined_procedure_call', name, data);
+      socket.emit('predefined_procedure_call', data);
     },
     [session?.socket]
   );

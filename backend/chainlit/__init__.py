@@ -356,13 +356,11 @@ def action_callback(name: str) -> Callable:
     return decorator
 
 
-def predefined_procedure(name: str) -> Callable:
-
-    def decorator(func: Callable[[Union[dict, str]], None]):
-        config.code.on_predefined_procedure[name] = wrap_user_function(func)
-        return func
-
-    return decorator
+def predefined_procedure(
+    func: Callable[[Union[dict, str]], Any]
+) -> Callable[[Union[dict, str]], Any]:
+    config.code.on_predefined_procedure = wrap_user_function(func)
+    return func
 
 
 def on_settings_update(

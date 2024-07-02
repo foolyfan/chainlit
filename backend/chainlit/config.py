@@ -259,9 +259,7 @@ class CodeSettings:
     set_chat_profiles: Optional[Callable[[Optional["User"]], List["ChatProfile"]]] = (
         None
     )
-    on_predefined_procedure: Optional[Dict[str, Callable[[Union[dict, str]], None]]] = (
-        None
-    )
+    on_predefined_procedure: Optional[Callable[[Union[dict, str]], Any]] = None
 
 
 @dataclass()
@@ -412,7 +410,6 @@ def load_settings():
             "code": CodeSettings(
                 action_callbacks={},
                 on_recognation_input={},
-                on_predefined_procedure={},
             ),
         }
 

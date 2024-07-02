@@ -10,6 +10,7 @@ from chainlit.config import config
 from chainlit.context import context, local_steps
 from chainlit.data import get_data_layer
 from chainlit.element import Element
+from chainlit.extensions.types import MessageSpec
 from chainlit.logger import logger
 from chainlit.telemetry import trace_event
 from chainlit.types import FeedbackDict
@@ -330,7 +331,7 @@ class Step:
         if not config.features.prompt_playground and "generation" in step_dict:
             step_dict.pop("generation", None)
 
-        await context.emitter.send_step(step_dict)
+        await context.emitter.send_step(step_dict, MessageSpec())
 
         return self.id
 

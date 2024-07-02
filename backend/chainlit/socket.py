@@ -294,12 +294,12 @@ async def call_action(sid, action):
 
 
 @socket.on("predefined_procedure_call")
-async def call_preselection(sid, name, data):
+async def call_preselection(sid, data):
     init_ws_context(sid)
-    if name in config.code.on_predefined_procedure:
-        await config.code.on_predefined_procedure[name](data)
+    if config.code.on_predefined_procedure:
+        await config.code.on_predefined_procedure(data)
     else:
-        logger.warning("No predefined_procedure found for action %s", name)
+        logger.warning("No predefined_procedure found for action %o", data)
 
 
 @socket.on("chat_settings_change")
