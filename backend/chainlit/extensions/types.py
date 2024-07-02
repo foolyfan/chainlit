@@ -236,3 +236,17 @@ class BaseResponse(Generic[T], DataClassJsonMixin):
 
     type: Literal["keyboard", "speech", "touch"]
     data: Union[str, T]
+
+
+@dataclass
+class ChoiceWidget(DataClassJsonMixin):
+    type: Literal["button"]
+
+
+@dataclass
+class ButtonWidget(ChoiceWidget, DataClassJsonMixin):
+    label: str
+
+    def __init__(self, label: str):
+        self.type = "button"
+        self.label = label

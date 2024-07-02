@@ -31,6 +31,7 @@ from chainlit.extensions.message import (
 )
 from chainlit.extensions.types import (
     BrightnessModeOptions,
+    ButtonWidget,
     ChoiceItem,
     FontOptions,
     FontSizeOptions,
@@ -327,6 +328,7 @@ async def main(message: Message):
                     ),
                 ],
                 textReply=choiceFirst,
+                widgets=[ButtonWidget(label="新增")],
             ).send()
             await Message(content=res1).send()
         except AskTimeout:

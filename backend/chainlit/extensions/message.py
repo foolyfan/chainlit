@@ -1,5 +1,5 @@
 import asyncio
-from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
+from typing import Awaitable, Callable, List, Literal, Optional, TypeVar, Union, cast
 
 from chainlit.config import config
 from chainlit.context import context
@@ -9,6 +9,7 @@ from chainlit.extensions.types import (
     BaseResponse,
     ChoiceItem,
     ChoiceSpec,
+    ChoiceWidget,
     GatherCommandResponse,
     GatherCommandSpec,
     GatherCommandType,
@@ -22,6 +23,8 @@ from chainlit.message import AskMessageBase, MessageBase
 from chainlit.telemetry import trace_event
 from literalai.helper import utc_now
 from socketio.exceptions import TimeoutError
+
+CW = TypeVar("CW", bound="ChoiceWidget")
 
 
 class AskUserChoiceMessage(AskMessageBase):
@@ -40,6 +43,7 @@ class AskUserChoiceMessage(AskMessageBase):
         timeout=90,
         raise_on_timeout=False,
         speechContent: str = "",
+        widgets: Optional[List[CW]] = None,
     ):
         self.content = choiceContent
         self.author = author
@@ -50,6 +54,7 @@ class AskUserChoiceMessage(AskMessageBase):
         self.raise_on_timeout = raise_on_timeout
         self.items = items
         self.speechContent = speechContent
+        self.widgets = widgets
         super().__post_init__()
 
     async def send(self) -> Union[dict, str]:
