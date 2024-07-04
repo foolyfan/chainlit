@@ -19,6 +19,7 @@ import { ErrorBoundary } from 'components/atoms/ErrorBoundary';
 import SideView from 'components/atoms/element/sideView';
 import { Translator } from 'components/i18n';
 import { AgreementDrawer } from 'components/molecules/AgreementDrawer';
+import { PreviewDrawer } from 'components/molecules/PreviewDrawer';
 import ChatProfiles from 'components/molecules/chatProfiles';
 import { TaskList } from 'components/molecules/tasklist/TaskList';
 
@@ -162,9 +163,13 @@ const Chat = () => {
   const enableMultiModalUpload =
     !disabled && projectSettings?.features?.multi_modal?.enabled;
 
-  const { agreement, setAgreement } = useChatContext();
+  const { agreement, setAgreement, preview, setPreview } = useChatContext();
   const onAgreementDrawerClose = useCallback(() => {
     setAgreement(undefined);
+  }, []);
+
+  const onPreviewDrawerClose = useCallback(() => {
+    setPreview(undefined);
   }, []);
 
   return (
@@ -236,6 +241,13 @@ const Chat = () => {
               onClose={onAgreementDrawerClose}
               display={agreement.display}
               contentUrl={agreement.src}
+            />
+          )}
+          {preview && (
+            <PreviewDrawer
+              onClose={onPreviewDrawerClose}
+              display={preview.display}
+              contentUrl={preview.src}
             />
           )}
         </ErrorBoundary>

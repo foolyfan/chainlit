@@ -168,6 +168,7 @@ const useChatSession = () => {
           };
           return newMessages;
         });
+        setUserFutureMessage({ type: 'question' });
         if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({
             content: msg.speechContent!
@@ -431,7 +432,9 @@ const useChatSession = () => {
           setPreselection(spec);
         }
         if (spec.type == 'message') {
-          setMessages((oldMessages) => addMessage(oldMessages, msg));
+          setMessages((oldMessages) =>
+            addMessage(removeWaitingMessage(oldMessages), msg)
+          );
           setOperableMessages((oldMessages) => {
             const newMessages = { ...oldMessages };
             newMessages[msg.id] = {
@@ -443,6 +446,7 @@ const useChatSession = () => {
             };
             return newMessages;
           });
+          setUserFutureMessage({ type: 'question' });
         }
         if (!isEmpty(msg.speechContent)) {
           setSpeechPrompts({

@@ -76,10 +76,17 @@ export interface IUISettingsCommandOptions {
   spec: BrightnessModeOptions | FontOptions;
 }
 
-export interface ListDataItem {
-  data: any;
+export interface CustomizeHtmlContent {
   src: string;
   display: string;
+}
+
+export interface MdLink extends CustomizeHtmlContent {
+  data: string;
+}
+
+export interface ListDataItem extends CustomizeHtmlContent {
+  data: any;
 }
 
 export interface PSInputItem extends ListDataItem {
@@ -97,6 +104,7 @@ export interface BaseSpec {
     | 'InputSpec'
     | 'MessageSpec'
     | 'CheckSpec';
+  mdLinks?: Array<MdLink>;
 }
 
 export interface ListSpec<T extends ListDataItem> extends BaseSpec {
@@ -123,7 +131,7 @@ export interface AskSpec extends MessageSpec {
 }
 
 export interface CheckSpec extends AskSpec {
-  items: Array<ListDataItem>;
+  mdAgreementLinks: Array<MdLink>;
 }
 
 export interface InputSpec extends MessageSpec {

@@ -29,7 +29,7 @@ const TextElement = ({ element }: Props) => {
 
   return (
     <Box sx={{ fontFamily: (theme) => theme.typography.fontFamily }}>
-      <Markdown>{content}</Markdown>
+      <Markdown id={element.forId}>{content}</Markdown>
     </Box>
   );
 };

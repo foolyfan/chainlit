@@ -11,7 +11,7 @@ from chainlit.context import context
 from chainlit.data import get_data_layer
 from chainlit.element import ElementBased
 from chainlit.extensions.exceptions import AskTimeout
-from chainlit.extensions.types import AskSpec, BaseResponse, MessageSpec
+from chainlit.extensions.types import AskSpec, BaseResponse, MdLink, MessageSpec
 from chainlit.logger import logger
 from chainlit.step import StepDict
 from chainlit.telemetry import trace_event
@@ -39,6 +39,7 @@ class MessageBase(ABC):
     generation: Optional[BaseGeneration] = None
     speechContent: str = ""
     actions: Optional[List[Action]] = None
+    mdLinks: Optional[List[MdLink]] = None
 
     def __post_init__(self) -> None:
         trace_event(f"init {self.__class__.__name__}")
@@ -158,7 +159,7 @@ class MessageBase(ABC):
             self.streaming = False
 
         step_dict = await self._create()
-        spec = MessageSpec(actions=self.actions)
+        spec = MessageSpec(actions=self.actions, mdLinks=self.mdLinks)
         await context.emitter.send_step(step_dict, spec)
 
     async def stream_token(self, token: str, is_sequence=False):
@@ -209,6 +210,7 @@ class Message(MessageBase):
         id: Optional[str] = None,
         created_at: Union[str, None] = None,
         speechContent: str = "",
+        mdLinks: Optional[List[MdLink]] = None,
     ):
         time.sleep(0.001)
         self.language = language
@@ -238,6 +240,7 @@ class Message(MessageBase):
         self.actions = actions if actions is not None else []
         self.elements = elements if elements is not None else []
         self.disable_feedback = disable_feedback
+        self.mdLinks = mdLinks
 
         super().__post_init__()
 

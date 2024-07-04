@@ -1,5 +1,5 @@
 import ClearIcon from '@mui/icons-material/Clear';
-import { Box, Button, IconButton, styled } from '@mui/material';
+import { Box, IconButton, styled } from '@mui/material';
 import Drawer from '@mui/material/Drawer';
 
 import { ContentDrawer } from 'components/atoms/ContentDrawer';
@@ -10,18 +10,12 @@ interface Props {
   display: string;
 }
 
-const AgreementDrawer = ({ contentUrl, onClose, display }: Props) => {
+const PreviewDrawer = ({ contentUrl, onClose, display }: Props) => {
   const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
     padding: theme.spacing(1, 1)
-  }));
-  const DrawerFooter = styled('div')(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: theme.spacing(2, 1)
   }));
   return (
     <Drawer anchor="bottom" open={true} onClose={onClose}>
@@ -35,19 +29,14 @@ const AgreementDrawer = ({ contentUrl, onClose, display }: Props) => {
           padding: (theme) => theme.spacing(0, 1),
           maxHeight: '80vh',
           overflowY: 'auto',
-          overflowX: 'hidden'
+          overflowX: 'hidden',
+          marginBottom: '16px'
         }}
       >
         <ContentDrawer src={contentUrl} display={display} />
       </Box>
-
-      <DrawerFooter>
-        <Button variant="contained" sx={{ width: '100%' }} onClick={onClose}>
-          同意并签署
-        </Button>
-      </DrawerFooter>
     </Drawer>
   );
 };
 
-export { AgreementDrawer };
+export { PreviewDrawer };

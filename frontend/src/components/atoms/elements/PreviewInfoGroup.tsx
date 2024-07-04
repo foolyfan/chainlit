@@ -31,7 +31,7 @@ const PreviewInfoGroupElement = ({ element }: Props) => {
           ))}
         </Grid>
       ) : (
-        <Markdown>{content}</Markdown>
+        <Markdown id={element.forId}>{content}</Markdown>
       )}
     </Box>
   );

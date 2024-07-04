@@ -33,11 +33,11 @@ from chainlit.extensions.message import (
 from chainlit.extensions.types import (
     BrightnessModeOptions,
     ButtonWidget,
-    CheckItem,
     ChoiceItem,
     FontOptions,
     FontSizeOptions,
     JsInterfaceEnum,
+    MdLink,
     PSMessageItem,
     SubChoiceWidget,
 )
@@ -592,6 +592,74 @@ async def main(message: Message):
                     content="[打开百度](https://www.baidu.com/)",
                     display="inline",
                 ),
+                Text(
+                    name="simple_text",
+                    content=f"[洛神赋]({JsInterfaceEnum.PREVIEW_DRAWER.value})",
+                    display="inline",
+                ),
+            ],
+            mdLinks=[
+                MdLink(
+                    data="洛神赋",
+                    src="""
+              《洛神赋》是三国时期曹魏文学家曹植所作的一篇著名赋文。以下是《洛神赋》的全文：
+
+                黄初三年，余朝京师，还济洛川。古人有言，斯水之神，名曰宓妃。感宋玉对楚王神女之事，遂作斯赋。其辞曰：
+
+                余从京域，言归东藩。背伊阙，越轘辕。经通谷，陵景山。日既西倾，车殆马烦。尔乃税驾乎蘅皋，秣驷乎芝田。容与乎阳林，
+                
+                流眄乎洛川。于是精移神骇，忽焉思散。俯则末察，仰以殊观。睹一丽人，于岩之畔。乃援御者而告之曰：“翩若惊鸿，
+                
+                婉若游龙。荣曜秋菊，华茂春松。髣髴兮若轻云之蔽月，飘飖兮若流风之回雪。远而望之，皎若太阳升朝霞；迫而察之，
+                            
+                灼若芙蕖出渌波。纤腰约素，肩若削成。修短合度，肥瘠得中。肩若削成，腰如约素。延颈秀项，皓质呈露。芳泽无加，
+                            
+                铅华弗御。云髻峨峨，修眉联娟。丹唇外朗，皓齿内鲜。明眸善睐，靥辅承权。瓌姿艳逸，仪静体闲。柔情绰态，
+                            
+                媚于语言。奇服旷世，骨像应图。披罗衣之璀粲兮，珥瑶碧之华琚。戴金翠之首饰，缀明珠以耀躯。践远游之文履，曳雾
+                            
+                绡之轻裾。既含睇兮又宜笑，子慕予兮善窈窕。”
+
+                心凝形释，不能自己。回飚举兮浩宕，凌高衢兮迴壑。于时从轩后车，薄言归息。退超然奔东序，登长阶以四望。
+                            
+                临长津以延伫，忽怳若神，乃奄忽而逝。后汉武帝思念以致相见，莫能自已。遂曰：“惟魂兮归来！”
+
+                于是长州主夏，吾将千岁。衔忧以终老，诚所见耳。冀魂兮归来！遨游八极，沐浴焉能。去心结累，正兹眷顾。临长江以延伫，忽怳若神，乃奄忽而逝。
+
+                于是怀佳人兮不能忘，思绵绵而增感。怡颜远行兮目所望，俯神仙而悠哉。风翻兮眇瞩，沈思兮时望。悦兮意从，悟兮心安。乃若登高丘以望天，颓波兮失念。
+
+                《洛神赋》以其优美的语言和细腻的描写，被后人广为传颂，成为中国古代文学中的经典之作。
+                
+                《洛神赋》是三国时期曹魏文学家曹植所作的一篇著名赋文。以下是《洛神赋》的全文：
+
+                黄初三年，余朝京师，还济洛川。古人有言，斯水之神，名曰宓妃。感宋玉对楚王神女之事，遂作斯赋。其辞曰：
+
+                余从京域，言归东藩。背伊阙，越轘辕。经通谷，陵景山。日既西倾，车殆马烦。尔乃税驾乎蘅皋，秣驷乎芝田。容与乎阳林，
+                
+                流眄乎洛川。于是精移神骇，忽焉思散。俯则末察，仰以殊观。睹一丽人，于岩之畔。乃援御者而告之曰：“翩若惊鸿，
+                
+                婉若游龙。荣曜秋菊，华茂春松。髣髴兮若轻云之蔽月，飘飖兮若流风之回雪。远而望之，皎若太阳升朝霞；迫而察之，
+                            
+                灼若芙蕖出渌波。纤腰约素，肩若削成。修短合度，肥瘠得中。肩若削成，腰如约素。延颈秀项，皓质呈露。芳泽无加，
+                            
+                铅华弗御。云髻峨峨，修眉联娟。丹唇外朗，皓齿内鲜。明眸善睐，靥辅承权。瓌姿艳逸，仪静体闲。柔情绰态，
+                            
+                媚于语言。奇服旷世，骨像应图。披罗衣之璀粲兮，珥瑶碧之华琚。戴金翠之首饰，缀明珠以耀躯。践远游之文履，曳雾
+                            
+                绡之轻裾。既含睇兮又宜笑，子慕予兮善窈窕。”
+
+                心凝形释，不能自己。回飚举兮浩宕，凌高衢兮迴壑。于时从轩后车，薄言归息。退超然奔东序，登长阶以四望。
+                            
+                临长津以延伫，忽怳若神，乃奄忽而逝。后汉武帝思念以致相见，莫能自已。遂曰：“惟魂兮归来！”
+
+                于是长州主夏，吾将千岁。衔忧以终老，诚所见耳。冀魂兮归来！遨游八极，沐浴焉能。去心结累，正兹眷顾。临长江以延伫，忽怳若神，乃奄忽而逝。
+
+                于是怀佳人兮不能忘，思绵绵而增感。怡颜远行兮目所望，俯神仙而悠哉。风翻兮眇瞩，沈思兮时望。悦兮意从，悟兮心安。乃若登高丘以望天，颓波兮失念。
+
+                《洛神赋》以其优美的语言和细腻的描写，被后人广为传颂，成为中国古代文学中的经典之作。
+            """,
+                    display="",
+                )
             ],
             items=[
                 PSMessageItem(
@@ -623,26 +691,16 @@ async def main(message: Message):
                 )
             ],
         ).send()
-        await Message(
-            content="打开正常链接",
-            elements=[
-                Text(
-                    name="simple_text",
-                    content="[打开百度](https://www.baidu.com/)",
-                    display="inline",
-                )
-            ],
-        ).send()
     if message.content == "33":
         resCheck = await AskUserCheckAgreeement(
-            content=f"本人已阅读并同意签署[《“闪电贷”额度合同》]({JsInterfaceEnum.CONTENT_DRAWER.value})[《个人资信信息（含个人征信）授权书》]({JsInterfaceEnum.CONTENT_DRAWER.value})",
-            items=[
-                CheckItem(
+            content=f"本人已阅读并同意签署[《“闪电贷”额度合同》]({JsInterfaceEnum.AGREEMENT_DRAWER.value})[《个人资信信息（含个人征信）授权书》]({JsInterfaceEnum.AGREEMENT_DRAWER.value})",
+            mdAgreementLinks=[
+                MdLink(
                     data="《“闪电贷”额度合同》",
                     src="《“闪电贷”额度合同》内容",
                     display="",
                 ),
-                CheckItem(
+                MdLink(
                     data="《个人资信信息（含个人征信）授权书》",
                     src="《个人资信信息（含个人征信）授权书》内容",
                     display="",
@@ -653,3 +711,40 @@ async def main(message: Message):
         ).send()
 
         logger.info(f"客户签署协议 {resCheck}")
+    if message.content == "34":
+        await Message(
+            content=f"使用[详情]({JsInterfaceEnum.PREVIEW_DRAWER.value})打开预览窗口",
+            elements=[
+                Text(
+                    name="simple_text",
+                    content=f"[element详情]({JsInterfaceEnum.PREVIEW_DRAWER.value})",
+                    display="inline",
+                )
+            ],
+            mdLinks=[
+                MdLink(
+                    data="详情",
+                    src="""
+              如果你经常需要使用这个功能，可以为其设置一个快捷键：
+
+              打开 VS Code。
+              按 Ctrl+Shift+P (Windows/Linux) 或 Cmd+Shift+P (Mac) 打开命令面板。
+              输入 Preferences: Open Keyboard Shortcuts 并选择它。
+              搜索 Transform to Uppercase。
+              右键点击并选择 Change Keybinding，然后按下你想要设置的快捷键。
+              这将会使得你可以通过自定义的快捷键快速将选中的文本转换为大写。""",
+                    display="",
+                ),
+                MdLink(
+                    data="element详情",
+                    src="""
+              你也可以使用 VS Code 内置的命令来转换文本的大小写，虽然功能不如插件丰富：
+
+              选择你想转换为大写的文本。
+              按 Ctrl+Shift+P (Windows/Linux) 或 Cmd+Shift+P (Mac) 打开命令面板。
+              输入 Transform to Uppercase 并选择它。选中的文本将会被转换为大写。
+            """,
+                    display="",
+                ),
+            ],
+        ).send()

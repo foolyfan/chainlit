@@ -49,6 +49,7 @@ const MessageContent = memo(
         allowHtml={allowHtml}
         latex={latex}
         refElements={outputRefElements}
+        id={message.id}
       >
         {output}
       </Markdown>

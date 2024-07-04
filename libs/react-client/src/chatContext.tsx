@@ -35,6 +35,15 @@ interface ChatContextType {
         display: string;
       }
     | undefined;
+  setPreview: Dispatch<
+    SetStateAction<{ src: string; display: string } | undefined>
+  >;
+  preview:
+    | {
+        src: string;
+        display: string;
+      }
+    | undefined;
 }
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
@@ -103,8 +112,18 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
     | undefined
   >();
 
+  const [preview, setPreview] = useState<
+    | {
+        src: string;
+        display: string;
+      }
+    | undefined
+  >();
+
   return (
-    <ChatContext.Provider value={{ abortAudioTask, agreement, setAgreement }}>
+    <ChatContext.Provider
+      value={{ abortAudioTask, agreement, setAgreement, preview, setPreview }}
+    >
       {children}
     </ChatContext.Provider>
   );

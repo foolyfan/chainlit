@@ -8,13 +8,13 @@ from chainlit.element import ElementBased
 from chainlit.extensions.exceptions import AskTimeout
 from chainlit.extensions.types import (
     BaseResponse,
-    CheckItem,
     CheckSpec,
     ChoiceItem,
     ChoiceSpec,
     GatherCommandResponse,
     GatherCommandSpec,
     GatherCommandType,
+    MdLink,
     PreselectionSpec,
     PSInputItem,
     PSMessageItem,
@@ -181,6 +181,7 @@ class PreselectionMessage(MessageBase):
         content: str = "",
         elements: Optional[List[ElementBased]] = None,
         speechContent: str = "",
+        mdLinks: Optional[List[MdLink]] = None,
     ):
         self.items = items
         self.content = content
@@ -189,14 +190,17 @@ class PreselectionMessage(MessageBase):
         self.speechContent = speechContent
         self.elements = elements
         self.created_at = utc_now()
-        # TODO speechReply
+        self.speechContent = speechContent
+        self.mdLinks = mdLinks
         super().__post_init__()
 
     async def send(self):
         trace_event("advise_preselection")
 
         step_dict = await self._create()
-        spec = PreselectionSpec(type=self.psType, items=self.items)
+        spec = PreselectionSpec(
+            type=self.psType, items=self.items, mdLinks=self.mdLinks
+        )
         if self.elements:
             # Create tasks for elements
             tasks = [element.send(for_id=self.id) for element in self.elements]
@@ -217,10 +221,11 @@ class AskUserCheckAgreeement(AskMessageBase):
 
     def __init__(
         self,
-        items: List[CheckItem],
+        mdAgreementLinks: List[MdLink],
         textReply: Callable[[str], Awaitable[bool]],
         content: str,
         author=config.ui.name,
+        mdLinks: Optional[List[MdLink]] = None,
         disable_feedback=False,
         timeout=90,
         raise_on_timeout=False,
@@ -232,7 +237,8 @@ class AskUserCheckAgreeement(AskMessageBase):
         self.textReply = textReply
         self.timeout = timeout
         self.raise_on_timeout = raise_on_timeout
-        self.items = items
+        self.mdAgreementLinks = mdAgreementLinks
+        self.mdLinks = mdLinks
         self.speechContent = speechContent
         self.actions: List[Action] = [
             Action(label="确认", value="agree", name="agree", data="agree")
@@ -255,7 +261,12 @@ class AskUserCheckAgreeement(AskMessageBase):
 
         step_dict = await self._create()
 
-        spec = CheckSpec(timeout=self.timeout, actions=self.actions, items=self.items)
+        spec = CheckSpec(
+            timeout=self.timeout,
+            actions=self.actions,
+            mdAgreementLinks=self.mdAgreementLinks,
+            mdLinks=self.mdLinks,
+        )
 
         try:
             res = cast(

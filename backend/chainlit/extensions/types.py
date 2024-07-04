@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union
 
@@ -75,6 +75,51 @@ class ButtonWidget(ChoiceWidget, DataClassJsonMixin):
 
 
 @dataclass
+class CustomizeHtmlContent(DataClassJsonMixin):
+    """
+    定制的html内容
+
+    Attributes：
+      src (str): 内容或html链接
+      display (str): html内容使用的CSS文件内的类名标识
+    """
+
+    src: str
+    display: str
+
+
+@dataclass
+class MdLink(CustomizeHtmlContent, DataClassJsonMixin):
+    """
+    Md的link展示的内容
+
+    Attributes：
+      data (str): Md的link格式中，方括号包裹的内容；例子，[example](http://www.example1.com)，为example
+      src (str): html形式的协议内容
+      display (str)：html使用的CSS文件内的类名标识
+    """
+
+    data: str
+
+
+@dataclass
+class ListDataItem(CustomizeHtmlContent, DataClassJsonMixin):
+    """
+    通用列表的条目
+
+    Attributes：
+      data (Union[dict, str]): 该展示条目的数据标识，该条目被用户选中后会被作为上下文参数传递到后续处理逻辑
+      src (str): 该展示条目的内容或html链接
+      display (str): src内容使用的CSS文件内的类名标识
+    """
+
+    data: Union[dict, str]
+
+
+SubListDataItem = TypeVar("SubListDataItem", bound=ListDataItem)
+
+
+@dataclass
 class BaseSpec(DataClassJsonMixin):
     """
     消息特性基类
@@ -91,25 +136,7 @@ class BaseSpec(DataClassJsonMixin):
         "MessageSpec",
         "CheckSpec",
     ]
-
-
-@dataclass
-class ListDataItem(DataClassJsonMixin):
-    """
-    通用列表的条目
-
-    Attributes：
-      data (Union[dict, str]): 该展示条目的数据标识，该条目被用户选中后会被作为上下文参数传递到后续处理逻辑
-      src (str): 该展示条目的内容或html链接
-      display (str): src内容使用的CSS文件内的类名标识
-    """
-
-    data: Union[dict, str]
-    src: str
-    display: str
-
-
-SubListDataItem = TypeVar("SubListDataItem", bound=ListDataItem)
+    mdLinks: Optional[List[MdLink]]
 
 
 @dataclass
@@ -162,9 +189,11 @@ class PreselectionSpec(ListSpec, DataClassJsonMixin):
         self,
         type: Literal["message", "input"],
         items: Union[List[PSInputItem], List[PSMessageItem]],
+        mdLinks: Optional[List[MdLink]] = None,
     ):
         self.type = type
         self.items = items
+        self.mdLinks = mdLinks
         self.__type__ = "PreselectionSpec"
 
 
@@ -175,20 +204,6 @@ class ChoiceItem(ListDataItem, DataClassJsonMixin):
 
     Attributes：
       data (Union[dict, str]): 该展示条目的数据标识，用户选中后作为textReply的参数传递
-    """
-
-    pass
-
-
-@dataclass
-class CheckItem(ListDataItem, DataClassJsonMixin):
-    """
-    协议条目
-
-    Attributes：
-      name (str): 协议名称，用于消息内容展示、弹出窗协议预览的标题
-      src (str): html形式的协议内容
-      display (str)：src内容使用的CSS文件内的类名标识
     """
 
     pass
@@ -230,7 +245,12 @@ class MessageSpec(BaseSpec, DataClassJsonMixin):
 
     actions: Optional[List[Action]]
 
-    def __init__(self, actions: Optional[List[Action]] = None):
+    def __init__(
+        self,
+        actions: Optional[List[Action]] = None,
+        mdLinks: Optional[List[MdLink]] = None,
+    ):
+        self.mdLinks = mdLinks
         self.actions = actions
         self.__type__ = "MessageSpec"
 
@@ -273,7 +293,13 @@ class AskSpec(MessageSpec, DataClassJsonMixin):
 
     timeout: int
 
-    def __init__(self, timeout: int, actions: Optional[List[Action]] = None):
+    def __init__(
+        self,
+        timeout: int,
+        actions: Optional[List[Action]] = None,
+        mdLinks: Optional[List[MdLink]] = None,
+    ):
+        self.mdLinks = mdLinks
         self.timeout = timeout
         self.actions = actions
         self.__type__ = "AskSpec"
@@ -282,17 +308,19 @@ class AskSpec(MessageSpec, DataClassJsonMixin):
 @dataclass
 class CheckSpec(AskSpec, DataClassJsonMixin):
 
-    items: List[CheckItem]
+    mdAgreementLinks: List[MdLink]
 
     def __init__(
         self,
         timeout: int,
-        items: List[CheckItem],
+        mdAgreementLinks: List[MdLink],
         actions: Optional[List[Action]] = None,
+        mdLinks: Optional[List[MdLink]] = None,
     ):
         self.timeout = timeout
         self.actions = actions
-        self.items = items
+        self.mdAgreementLinks = mdAgreementLinks
+        self.mdLinks = mdLinks
         self.__type__ = "CheckSpec"
 
 
@@ -311,4 +339,5 @@ class BaseResponse(Generic[SubListDataItem], DataClassJsonMixin):
 
 
 class JsInterfaceEnum(Enum):
-    CONTENT_DRAWER = "/local/showContentDrawer"
+    AGREEMENT_DRAWER = "/local/showAgreementDrawer"
+    PREVIEW_DRAWER = "/local/showPreviewDrawer"

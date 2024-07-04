@@ -17,6 +17,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 
 import {
+  BaseSpec,
   CheckSpec,
   type IMessageElement,
   useChatContext,
@@ -33,9 +34,10 @@ interface Props {
   latex?: boolean;
   refElements?: IMessageElement[];
   children: string;
+  id?: string;
 }
 
-function Markdown({ refElements, allowHtml, latex, children }: Props) {
+function Markdown({ refElements, allowHtml, latex, children, id }: Props) {
   const rehypePlugins = useMemo(() => {
     let rehypePlugins: PluggableList = [];
     if (allowHtml) {
@@ -57,25 +59,29 @@ function Markdown({ refElements, allowHtml, latex, children }: Props) {
   }, [latex]);
 
   const { callPredefinedProcedure } = useChatInteract();
-  const { setAgreement } = useChatContext();
-  const { operableMessages, userFutureMessage } = useChatData();
+  const { setAgreement, setPreview } = useChatContext();
+  const { operableMessages } = useChatData();
 
   const handleClick = (event: MouseEvent, childProps: { href: string }) => {
-    if (childProps.href.startsWith('/')) {
+    const href = childProps.href;
+    if (id && href.startsWith('/')) {
       event.preventDefault();
-      if (childProps.href.startsWith('/local/showContentDrawer')) {
-        if (userFutureMessage.type == 'reply') {
-          // @ts-ignore
-          const name = event.target!.innerText;
-          const checkList = (
-            operableMessages[userFutureMessage.parent!].attach as CheckSpec
-          ).items;
-          const contentItem = checkList.filter((item) => item.data == name)[0];
-          if (contentItem) {
-            setAgreement({
-              ...contentItem
-            });
-          }
+      // @ts-ignore
+      const name = event.target!.innerText;
+      if (href.startsWith('/local/showAgreementDrawer')) {
+        const checkList = (operableMessages[id].attach as CheckSpec)
+          .mdAgreementLinks;
+        const contentItem = checkList.filter((item) => item.data == name)[0];
+        if (contentItem) {
+          setAgreement({
+            ...contentItem
+          });
+        }
+      } else if (href.startsWith('/local/showPreviewDrawer')) {
+        const mdLinks = (operableMessages[id].attach as BaseSpec).mdLinks;
+        const contentItem = mdLinks?.filter((item) => item.data == name)[0];
+        if (contentItem) {
+          setPreview({ ...contentItem });
         }
       } else {
         callPredefinedProcedure(childProps.href);
