@@ -707,7 +707,7 @@ async def main(message: Message):
                 ),
             ],
             textReply=agree,
-            timeout=180,
+            timeout=15,
         ).send()
 
         logger.info(f"客户签署协议 {resCheck}")

@@ -8,9 +8,10 @@ interface Props {
   contentUrl: string;
   onClose: () => void;
   display: string;
+  onSubmit: () => void;
 }
 
-const AgreementDrawer = ({ contentUrl, onClose, display }: Props) => {
+const AgreementDrawer = ({ contentUrl, onClose, display, onSubmit }: Props) => {
   const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
@@ -42,7 +43,14 @@ const AgreementDrawer = ({ contentUrl, onClose, display }: Props) => {
       </Box>
 
       <DrawerFooter>
-        <Button variant="contained" sx={{ width: '100%' }} onClick={onClose}>
+        <Button
+          variant="contained"
+          sx={{ width: '100%' }}
+          onClick={() => {
+            onClose();
+            onSubmit();
+          }}
+        >
           同意并签署
         </Button>
       </DrawerFooter>

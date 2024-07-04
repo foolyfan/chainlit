@@ -27,17 +27,20 @@ interface ChatProviderProps {
 interface ChatContextType {
   abortAudioTask: () => void;
   setAgreement: Dispatch<
-    SetStateAction<{ src: string; display: string } | undefined>
+    SetStateAction<{ src: string; display: string; data: string } | undefined>
   >;
   agreement:
     | {
         src: string;
         display: string;
+        data: string;
       }
     | undefined;
   setPreview: Dispatch<
     SetStateAction<{ src: string; display: string } | undefined>
   >;
+  checks: Array<string>;
+  setChecks: Dispatch<SetStateAction<Array<string>>>;
   preview:
     | {
         src: string;
@@ -108,6 +111,7 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
     | {
         src: string;
         display: string;
+        data: string;
       }
     | undefined
   >();
@@ -120,9 +124,19 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
     | undefined
   >();
 
+  const [checks, setChecks] = useState<Array<string>>([]);
+
   return (
     <ChatContext.Provider
-      value={{ abortAudioTask, agreement, setAgreement, preview, setPreview }}
+      value={{
+        abortAudioTask,
+        agreement,
+        setAgreement,
+        preview,
+        setPreview,
+        checks,
+        setChecks
+      }}
     >
       {children}
     </ChatContext.Provider>

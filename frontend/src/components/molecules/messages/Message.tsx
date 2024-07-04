@@ -12,6 +12,7 @@ import {
   type IStep,
   MessageSpec,
   PreselectionSpec,
+  useChatContext,
   useChatData
 } from '@chainlit/react-client';
 
@@ -138,10 +139,14 @@ const Message = memo(
       }
     }, [operableMessages[message.id]]);
 
-    // 可操作消息是否在活动，超时后不活动
+    // 可操作消息是否在活动，超时后禁用按钮，清空已核对项
+    const { setChecks } = useChatContext();
     useEffect(() => {
       if (operableMessages[message.id]) {
         setHistory(!operableMessages[message.id].active);
+        if (!operableMessages[message.id].active) {
+          setChecks([]);
+        }
       }
     }, [operableMessages[message.id]]);
 

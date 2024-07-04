@@ -41,7 +41,7 @@ const Chat = () => {
   const apiClient = useRecoilValue(apiClientState);
 
   const [autoScroll, setAutoScroll] = useState(true);
-  const { error, disabled } = useChatData();
+  const { error, disabled, userFutureMessage } = useChatData();
   const { uploadFile } = useChatInteract();
   const uploadFileRef = useRef(uploadFile);
 
@@ -163,7 +163,8 @@ const Chat = () => {
   const enableMultiModalUpload =
     !disabled && projectSettings?.features?.multi_modal?.enabled;
 
-  const { agreement, setAgreement, preview, setPreview } = useChatContext();
+  const { agreement, setAgreement, preview, setPreview, checks, setChecks } =
+    useChatContext();
   const onAgreementDrawerClose = useCallback(() => {
     setAgreement(undefined);
   }, []);
@@ -171,6 +172,16 @@ const Chat = () => {
   const onPreviewDrawerClose = useCallback(() => {
     setPreview(undefined);
   }, []);
+
+  const onAgreementSubmit = useCallback(() => {
+    if (
+      userFutureMessage.type == 'reply' &&
+      agreement &&
+      checks.findIndex((item) => item == agreement.data) < 0
+    ) {
+      setChecks((old) => [...old, agreement.data]);
+    }
+  }, [agreement, checks, setChecks]);
 
   return (
     <Box
@@ -241,6 +252,7 @@ const Chat = () => {
               onClose={onAgreementDrawerClose}
               display={agreement.display}
               contentUrl={agreement.src}
+              onSubmit={onAgreementSubmit}
             />
           )}
           {preview && (

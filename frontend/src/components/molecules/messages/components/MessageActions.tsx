@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
 import {
+  CheckSpec,
   type IAction,
   type IStep,
   MessageSpec,
@@ -29,12 +30,13 @@ const MessageActions = ({ message, attach, disabled }: Props) => {
   const [innerActions, setInnerActions] = useState<IAction[]>([]);
   const [innerDrawerActions, setInnerDrawerActions] = useState<IAction[]>([]);
 
-  const { abortAudioTask } = useChatContext();
+  const { abortAudioTask, setChecks, checks } = useChatContext();
   const { addWaitingMessage, replyAskMessage, callAction } = useChatInteract();
-  const { userFutureMessage } = useChatData();
+  const { userFutureMessage, operableMessages } = useChatData();
   const projectSettings = useRecoilValue(projectSettingsState);
 
   const { createUserMessage } = useMessageContext();
+
   const handleClick = useCallback((item: IAction) => {
     abortAudioTask();
     if (userFutureMessage.type == 'question') {
@@ -47,6 +49,7 @@ const MessageActions = ({ message, attach, disabled }: Props) => {
         'touch',
         item.data
       );
+      setChecks([]);
       addWaitingMessage(projectSettings!.ui.name);
     }
   }, []);
@@ -57,6 +60,21 @@ const MessageActions = ({ message, attach, disabled }: Props) => {
       setInnerDrawerActions(attach.actions.filter((a) => a.collapsed));
     }
   }, [attach]);
+
+  const [innerDisabled, setInnerDisabled] = useState<boolean>(false);
+  useEffect(() => {
+    if (operableMessages[message.id].attach?.__type__ == 'CheckSpec') {
+      if (
+        checks.length ==
+        (operableMessages[message.id].attach as CheckSpec).mdAgreementLinks
+          .length
+      ) {
+        setInnerDisabled(false);
+      } else {
+        setInnerDisabled(true);
+      }
+    }
+  }, [operableMessages[message.id].attach, checks]);
 
   return (
     <Stack
@@ -73,13 +91,13 @@ const MessageActions = ({ message, attach, disabled }: Props) => {
             action={action}
             margin={'2px 8px 6px 0'}
             onClick={() => handleClick(action)}
-            disabled={disabled}
+            disabled={disabled || innerDisabled}
           />
         ))}
         {innerDrawerActions.length ? (
           <ActionDrawerButton
             actions={innerDrawerActions}
-            disabled={disabled}
+            disabled={disabled || innerDisabled}
           />
         ) : null}
       </Box>
