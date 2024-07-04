@@ -461,9 +461,35 @@ async def main(message: Message):
         ).send()
     if message.content == "17":
         res17 = await AskUserMessage(
-            content="你好，请录入你的姓名!",
+            content=f"验证mdLinks功能，[快捷键]({JsInterfaceEnum.PREVIEW_DRAWER.value}), [内置命令]({JsInterfaceEnum.PREVIEW_DRAWER.value})",
             timeout=30,
             speechContent="长亭外，古道边，芳草碧连天。晚风拂柳笛声残，夕阳山外山。天之涯，地之角，知交半零落",
+            mdLinks=[
+                MdLink(
+                    data="快捷键",
+                    src="""
+              如果你经常需要使用这个功能，可以为其设置一个快捷键：
+
+              打开 VS Code。
+              按 Ctrl+Shift+P (Windows/Linux) 或 Cmd+Shift+P (Mac) 打开命令面板。
+              输入 Preferences: Open Keyboard Shortcuts 并选择它。
+              搜索 Transform to Uppercase。
+              右键点击并选择 Change Keybinding，然后按下你想要设置的快捷键。
+              这将会使得你可以通过自定义的快捷键快速将选中的文本转换为大写。""",
+                    display="",
+                ),
+                MdLink(
+                    data="内置命令",
+                    src="""
+              你也可以使用 VS Code 内置的命令来转换文本的大小写，虽然功能不如插件丰富：
+
+              选择你想转换为大写的文本。
+              按 Ctrl+Shift+P (Windows/Linux) 或 Cmd+Shift+P (Mac) 打开命令面板。
+              输入 Transform to Uppercase 并选择它。选中的文本将会被转换为大写。
+            """,
+                    display="",
+                ),
+            ],
         ).send()
         await Message(content=res17).send()
     if message.content == "18":

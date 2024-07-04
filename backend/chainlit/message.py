@@ -328,6 +328,7 @@ class AskUserMessage(AskMessageBase):
         timeout: int = 60,
         raise_on_timeout: bool = False,
         speechContent: str = "",
+        mdLinks: Optional[List[MdLink]] = None,
     ):
         self.content = content
         self.author = author
@@ -336,6 +337,7 @@ class AskUserMessage(AskMessageBase):
         self.disable_feedback = disable_feedback
         self.raise_on_timeout = raise_on_timeout
         self.speechContent = speechContent
+        self.mdLinks = mdLinks
         super().__post_init__()
 
     async def send(self) -> str:
@@ -354,7 +356,7 @@ class AskUserMessage(AskMessageBase):
 
         step_dict = await self._create()
 
-        spec = AskSpec(timeout=self.timeout)
+        spec = AskSpec(timeout=self.timeout, mdLinks=self.mdLinks)
 
         try:
             # 只会返回keyboard或语音的文本信息
@@ -475,6 +477,7 @@ class AskActionMessage(AskMessageBase):
         timeout=90,
         raise_on_timeout=False,
         speechContent: str = "",
+        mdLinks: Optional[List[MdLink]] = None,
     ):
         self.content = content
         self.actions = actions
@@ -485,6 +488,7 @@ class AskActionMessage(AskMessageBase):
         self.raise_on_timeout = raise_on_timeout
         self.timeoutContent = timeoutContent
         self.speechContent = speechContent
+        self.mdLinks = mdLinks
 
         super().__post_init__()
 
@@ -505,10 +509,7 @@ class AskActionMessage(AskMessageBase):
 
         step_dict = await self._create()
 
-        spec = AskSpec(
-            actions=self.actions,
-            timeout=self.timeout,
-        )
+        spec = AskSpec(actions=self.actions, timeout=self.timeout, mdLinks=self.mdLinks)
 
         try:
             res = cast(
