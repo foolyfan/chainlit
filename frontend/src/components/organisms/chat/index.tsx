@@ -9,6 +9,7 @@ import { Alert, Box } from '@mui/material';
 
 import {
   threadHistoryState,
+  useChatContext,
   useChatData,
   useChatInteract,
   useChatSession
@@ -17,6 +18,7 @@ import {
 import { ErrorBoundary } from 'components/atoms/ErrorBoundary';
 import SideView from 'components/atoms/element/sideView';
 import { Translator } from 'components/i18n';
+import { AgreementDrawer } from 'components/molecules/AgreementDrawer';
 import ChatProfiles from 'components/molecules/chatProfiles';
 import { TaskList } from 'components/molecules/tasklist/TaskList';
 
@@ -160,6 +162,11 @@ const Chat = () => {
   const enableMultiModalUpload =
     !disabled && projectSettings?.features?.multi_modal?.enabled;
 
+  const { agreement, setAgreement } = useChatContext();
+  const onAgreementDrawerClose = useCallback(() => {
+    setAgreement(undefined);
+  }, []);
+
   return (
     <Box
       {...(enableMultiModalUpload
@@ -224,6 +231,13 @@ const Chat = () => {
             setAutoScroll={setAutoScroll}
             projectSettings={projectSettings}
           />
+          {agreement && (
+            <AgreementDrawer
+              onClose={onAgreementDrawerClose}
+              display={agreement.display}
+              contentUrl={agreement.src}
+            />
+          )}
         </ErrorBoundary>
       </SideView>
       {sideViewElement ? null : <TaskList isMobile={false} />}

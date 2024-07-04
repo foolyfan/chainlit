@@ -1,15 +1,17 @@
 import asyncio
-from typing import Awaitable, Callable, List, Literal, Optional, TypeVar, Union, cast
+from typing import Awaitable, Callable, List, Literal, Optional, Union, cast
 
+from chainlit.action import Action
 from chainlit.config import config
 from chainlit.context import context
 from chainlit.element import ElementBased
 from chainlit.extensions.exceptions import AskTimeout
 from chainlit.extensions.types import (
     BaseResponse,
+    CheckItem,
+    CheckSpec,
     ChoiceItem,
     ChoiceSpec,
-    ChoiceWidget,
     GatherCommandResponse,
     GatherCommandSpec,
     GatherCommandType,
@@ -28,7 +30,7 @@ from socketio.exceptions import TimeoutError
 
 class AskUserChoiceMessage(AskMessageBase):
     """
-    textReply的返回值类型为ChoiceItem的data类型
+    textReply的返回值类型为ChoiceItem和SubChoiceWidget的data类型
     """
 
     def __init__(
@@ -209,3 +211,64 @@ class PreselectionMessage(MessageBase):
         if self.psType != "message":
             return
         await context.emitter.clear("clear_input_advise")
+
+
+class AskUserCheckAgreeement(AskMessageBase):
+
+    def __init__(
+        self,
+        items: List[CheckItem],
+        textReply: Callable[[str], Awaitable[bool]],
+        content: str,
+        author=config.ui.name,
+        disable_feedback=False,
+        timeout=90,
+        raise_on_timeout=False,
+        speechContent: str = "",
+    ):
+        self.content = content
+        self.author = author
+        self.disable_feedback = disable_feedback
+        self.textReply = textReply
+        self.timeout = timeout
+        self.raise_on_timeout = raise_on_timeout
+        self.items = items
+        self.speechContent = speechContent
+        self.actions: List[Action] = [
+            Action(label="确认", value="agree", name="agree", data="agree")
+        ]
+        super().__post_init__()
+
+    async def send(self) -> bool:
+        """
+        Sends the question to ask to the UI and waits for the reply.
+        """
+        trace_event("ask_user")
+        if not self.created_at:
+            self.created_at = utc_now()
+
+        if config.code.author_rename:
+            self.author = await config.code.author_rename(self.author)
+
+        if self.streaming:
+            self.streaming = False
+
+        step_dict = await self._create()
+
+        spec = CheckSpec(timeout=self.timeout, actions=self.actions, items=self.items)
+
+        try:
+            res = cast(
+                BaseResponse,
+                await context.emitter.ask_user(step_dict, spec, self.timeout),
+            )
+
+            if res.type == "keyboard" or res.type == "speech":
+                return await self.textReply(res.data)
+            elif res.type == "touch":
+                return True
+        except TimeoutError as e:
+            raise AskTimeout() from None
+        except Exception as e:
+            logger.error(f"Unknow Error: {e}")
+            raise e

@@ -129,6 +129,7 @@ const Message = memo(
       if (
         attach.__type__ == 'AskSpec' ||
         attach.__type__ == 'MessageSpec' ||
+        attach.__type__ == 'CheckSpec' ||
         (attach.__type__ == 'InputSpec' && (attach as MessageSpec).actions)
       ) {
         setActionAttach({

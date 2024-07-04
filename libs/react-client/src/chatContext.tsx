@@ -1,6 +1,8 @@
 import { isEmpty } from 'lodash';
 import {
+  Dispatch,
   ReactNode,
+  SetStateAction,
   createContext,
   useCallback,
   useContext,
@@ -24,6 +26,15 @@ interface ChatProviderProps {
 }
 interface ChatContextType {
   abortAudioTask: () => void;
+  setAgreement: Dispatch<
+    SetStateAction<{ src: string; display: string } | undefined>
+  >;
+  agreement:
+    | {
+        src: string;
+        display: string;
+      }
+    | undefined;
 }
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
@@ -84,8 +95,16 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
     }
   }, [ttsRuning, ttsAbortRef]);
 
+  const [agreement, setAgreement] = useState<
+    | {
+        src: string;
+        display: string;
+      }
+    | undefined
+  >();
+
   return (
-    <ChatContext.Provider value={{ abortAudioTask }}>
+    <ChatContext.Provider value={{ abortAudioTask, agreement, setAgreement }}>
       {children}
     </ChatContext.Provider>
   );

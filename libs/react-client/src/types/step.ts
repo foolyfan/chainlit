@@ -1,6 +1,7 @@
 import { IFeedback } from './feedback';
 import {
   AskSpec,
+  CheckSpec,
   ChoiceSpec,
   InputSpec,
   MessageSpec,
@@ -53,5 +54,11 @@ export interface ISpeechPromptMessage {
 export interface OperableMessage {
   active: boolean;
   step: IStep;
-  attach?: PreselectionSpec | ChoiceSpec | AskSpec | InputSpec | MessageSpec;
+  attach?:
+    | PreselectionSpec
+    | ChoiceSpec
+    | AskSpec
+    | InputSpec
+    | MessageSpec
+    | CheckSpec;
 }

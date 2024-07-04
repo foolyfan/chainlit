@@ -16,7 +16,13 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 
-import { type IMessageElement, useChatInteract } from '@chainlit/react-client';
+import {
+  CheckSpec,
+  type IMessageElement,
+  useChatContext,
+  useChatData,
+  useChatInteract
+} from '@chainlit/react-client';
 
 import { InlineCode } from 'components/atoms/InlineCode';
 import { Code } from 'components/molecules/Code';
@@ -51,11 +57,29 @@ function Markdown({ refElements, allowHtml, latex, children }: Props) {
   }, [latex]);
 
   const { callPredefinedProcedure } = useChatInteract();
+  const { setAgreement } = useChatContext();
+  const { operableMessages, userFutureMessage } = useChatData();
 
   const handleClick = (event: MouseEvent, childProps: { href: string }) => {
     if (childProps.href.startsWith('/')) {
       event.preventDefault();
-      callPredefinedProcedure(childProps.href);
+      if (childProps.href.startsWith('/local/showContentDrawer')) {
+        if (userFutureMessage.type == 'reply') {
+          // @ts-ignore
+          const name = event.target!.innerText;
+          const checkList = (
+            operableMessages[userFutureMessage.parent!].attach as CheckSpec
+          ).items;
+          const contentItem = checkList.filter((item) => item.data == name)[0];
+          if (contentItem) {
+            setAgreement({
+              ...contentItem
+            });
+          }
+        }
+      } else {
+        callPredefinedProcedure(childProps.href);
+      }
     }
   };
 
@@ -76,6 +100,7 @@ function Markdown({ refElements, allowHtml, latex, children }: Props) {
               // @ts-ignore
               <Link
                 {...props}
+                style={{ textDecoration: 'none' }}
                 target="_blank"
                 // @ts-ignore
                 onClick={(event) => handleClick(event, props)}

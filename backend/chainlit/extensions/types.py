@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union
 
 from chainlit.action import Action
@@ -83,7 +84,12 @@ class BaseSpec(DataClassJsonMixin):
     """
 
     __type__: Literal[
-        "ChoiceSpec", "PreselectionSpec", "AskSpec", "InputSpec", "MessageSpec"
+        "ChoiceSpec",
+        "PreselectionSpec",
+        "AskSpec",
+        "InputSpec",
+        "MessageSpec",
+        "CheckSpec",
     ]
 
 
@@ -175,6 +181,20 @@ class ChoiceItem(ListDataItem, DataClassJsonMixin):
 
 
 @dataclass
+class CheckItem(ListDataItem, DataClassJsonMixin):
+    """
+    协议条目
+
+    Attributes：
+      name (str): 协议名称，用于消息内容展示、弹出窗协议预览的标题
+      src (str): html形式的协议内容
+      display (str)：src内容使用的CSS文件内的类名标识
+    """
+
+    pass
+
+
+@dataclass
 class ChoiceSpec(ListSpec, DataClassJsonMixin):
     """
     选择列表
@@ -260,6 +280,23 @@ class AskSpec(MessageSpec, DataClassJsonMixin):
 
 
 @dataclass
+class CheckSpec(AskSpec, DataClassJsonMixin):
+
+    items: List[CheckItem]
+
+    def __init__(
+        self,
+        timeout: int,
+        items: List[CheckItem],
+        actions: Optional[List[Action]] = None,
+    ):
+        self.timeout = timeout
+        self.actions = actions
+        self.items = items
+        self.__type__ = "CheckSpec"
+
+
+@dataclass
 class BaseResponse(Generic[SubListDataItem], DataClassJsonMixin):
     """
     通用返回，包括用户语音输入、文本输入、触摸或点击输入
@@ -271,3 +308,7 @@ class BaseResponse(Generic[SubListDataItem], DataClassJsonMixin):
 
     type: Literal["keyboard", "speech", "touch"]
     data: Union[str, SubListDataItem]
+
+
+class JsInterfaceEnum(Enum):
+    CONTENT_DRAWER = "/local/showContentDrawer"

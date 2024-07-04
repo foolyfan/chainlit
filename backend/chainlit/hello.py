@@ -23,6 +23,7 @@ from chainlit.extensions.input import (
     ValueType,
 )
 from chainlit.extensions.message import (
+    AskUserCheckAgreeement,
     AskUserChoiceMessage,
     GatherCommand,
     PreselectionMessage,
@@ -32,9 +33,11 @@ from chainlit.extensions.message import (
 from chainlit.extensions.types import (
     BrightnessModeOptions,
     ButtonWidget,
+    CheckItem,
     ChoiceItem,
     FontOptions,
     FontSizeOptions,
+    JsInterfaceEnum,
     PSMessageItem,
     SubChoiceWidget,
 )
@@ -98,6 +101,10 @@ class AccountAndMobilePhoneRule(ClientRule):
       return '必须是有效的11位手机号或19位银行账号';
     }
 """
+
+
+async def agree(value: str):
+    return True
 
 
 """
@@ -335,10 +342,13 @@ async def main(message: Message):
         await Message(content=res4).send()
     if message.content == "5":
         text_content = "Hello, this is a text element."
-        elements = [Text(name="simple_text", content=text_content, display="inline")]
+        elements = [
+            Text(name="simple_text1", content=text_content, display="inline"),
+            Text(name="simple_text2", content=text_content, display="inline"),
+        ]
 
         await Message(
-            content="Check out this text element!",
+            content="Check out this text element!simple_text1，simple_text2",
             elements=elements,
             actions=[
                 Action(
@@ -623,3 +633,23 @@ async def main(message: Message):
                 )
             ],
         ).send()
+    if message.content == "33":
+        resCheck = await AskUserCheckAgreeement(
+            content=f"本人已阅读并同意签署[《“闪电贷”额度合同》]({JsInterfaceEnum.CONTENT_DRAWER.value})[《个人资信信息（含个人征信）授权书》]({JsInterfaceEnum.CONTENT_DRAWER.value})",
+            items=[
+                CheckItem(
+                    data="《“闪电贷”额度合同》",
+                    src="《“闪电贷”额度合同》内容",
+                    display="",
+                ),
+                CheckItem(
+                    data="《个人资信信息（含个人征信）授权书》",
+                    src="《个人资信信息（含个人征信）授权书》内容",
+                    display="",
+                ),
+            ],
+            textReply=agree,
+            timeout=180,
+        ).send()
+
+        logger.info(f"客户签署协议 {resCheck}")

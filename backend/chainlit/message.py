@@ -339,7 +339,7 @@ class AskUserMessage(AskMessageBase):
         """
         Sends the question to ask to the UI and waits for the reply.
         """
-        trace_event("send_ask_user")
+        trace_event("ask_user")
         if not self.created_at:
             self.created_at = utc_now()
 

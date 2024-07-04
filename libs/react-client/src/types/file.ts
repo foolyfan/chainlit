@@ -95,7 +95,8 @@ export interface BaseSpec {
     | 'ChoiceSpec'
     | 'AskSpec'
     | 'InputSpec'
-    | 'MessageSpec';
+    | 'MessageSpec'
+    | 'CheckSpec';
 }
 
 export interface ListSpec<T extends ListDataItem> extends BaseSpec {
@@ -119,6 +120,10 @@ export interface MessageSpec extends BaseSpec {
 
 export interface AskSpec extends MessageSpec {
   timeout: number;
+}
+
+export interface CheckSpec extends AskSpec {
+  items: Array<ListDataItem>;
 }
 
 export interface InputSpec extends MessageSpec {
