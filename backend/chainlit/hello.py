@@ -26,16 +26,13 @@ from chainlit.extensions.message import (
     AskUserCheckAgreeement,
     AskUserChoiceMessage,
     GatherCommand,
+    JsFunctionCommand,
     PreselectionMessage,
     PSInputItem,
-    UISettingsCommand,
 )
 from chainlit.extensions.types import (
-    BrightnessModeOptions,
     ButtonWidget,
     ChoiceItem,
-    FontOptions,
-    FontSizeOptions,
     JsInterfaceEnum,
     MdLink,
     PSMessageItem,
@@ -538,16 +535,23 @@ async def main(message: Message):
         await asyncio.sleep(10)
         gatherCommand.cancel()
     if message.content == "24":
-        await UISettingsCommand(options=BrightnessModeOptions(mode="dark")).send()
+        await JsFunctionCommand(
+            commands=[{"name": "dark_style", "parameters": {}}]
+        ).send()
     if message.content == "25":
-        await UISettingsCommand(options=BrightnessModeOptions(mode="light")).send()
+        await JsFunctionCommand(
+            commands=[{"name": "light_style", "parameters": {}}]
+        ).send()
     if message.content == "26":
-        await UISettingsCommand(
-            options=FontOptions(fontSize=FontSizeOptions(type="add", offset=4))
+        await JsFunctionCommand(
+            commands=[
+                {"name": "dark_style", "parameters": {}},
+                {"name": "add_font_size", "parameters": {"offset": 4}},
+            ]
         ).send()
     if message.content == "27":
-        await UISettingsCommand(
-            options=FontOptions(fontSize=FontSizeOptions(type="reduce", offset=4))
+        await JsFunctionCommand(
+            commands=[{"name": "reduce_font_size", "parameters": {"offset": 4}}]
         ).send()
     if message.content == "28":
         p = PreselectionMessage(

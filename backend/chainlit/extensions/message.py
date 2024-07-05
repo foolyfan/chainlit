@@ -14,12 +14,12 @@ from chainlit.extensions.types import (
     GatherCommandResponse,
     GatherCommandSpec,
     GatherCommandType,
+    JsFunction,
     MdLink,
     PreselectionSpec,
     PSInputItem,
     PSMessageItem,
     SubChoiceWidget,
-    UISettingsCommandOptions,
 )
 from chainlit.logger import logger
 from chainlit.message import AskMessageBase, MessageBase
@@ -153,23 +153,23 @@ class GatherCommand(MessageBase):
         self._task is not None and self._task.cancel()
 
 
-class UISettingsCommand(MessageBase):
+class JsFunctionCommand(MessageBase):
 
     def __init__(
         self,
-        options: UISettingsCommandOptions,
+        commands: List[JsFunction],
     ):
-        self.options = options
+        self.commands = commands
         self.author = config.ui.name
         self.created_at = utc_now()
         super().__post_init__()
 
     async def send(self):
-        trace_event("change_theme")
+        trace_event("call_jsfunction")
 
         step_dict = await self._create()
-        spec = self.options
-        await context.emitter.change_theme(step_dict, spec)
+        spec = self.commands
+        await context.emitter.call_js_function(step_dict, spec)
 
 
 class PreselectionMessage(MessageBase):
@@ -212,7 +212,7 @@ class PreselectionMessage(MessageBase):
         await context.emitter.task_end()
 
     async def clear_input(self):
-        if self.psType != "message":
+        if self.psType != "input":
             return
         await context.emitter.clear("clear_input_advise")
 

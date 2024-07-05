@@ -54,26 +54,23 @@ export interface IGatherCommandResponse extends GatherCommandSpec {
   data: any;
 }
 
-export interface UISettingsCommandOptions {
-  type: string;
+export interface FontSizeParameters {
+  offset: number;
 }
 
-export interface BrightnessModeOptions extends UISettingsCommandOptions {
-  mode: 'light' | 'dark';
-  type: 'mode';
+export interface WebBehaviorHandler {
+  name: 'dark_style' | 'light_style' | 'add_font_size' | 'reduce_font_size';
+  parameters?: FontSizeParameters;
 }
 
-export interface FontOptions extends UISettingsCommandOptions {
-  fontSize?: {
-    type: 'add' | 'reduce';
-    offset: number;
-  };
-  fontFamily?: string;
-  type: 'font';
-}
+export type LightStyle = WebBehaviorHandler;
+export type DarkStyle = WebBehaviorHandler;
 
-export interface IUISettingsCommandOptions {
-  spec: BrightnessModeOptions | FontOptions;
+export interface AddFontSize extends WebBehaviorHandler {
+  parameters: FontSizeParameters;
+}
+export interface ReduceFontSize extends WebBehaviorHandler {
+  parameters: FontSizeParameters;
 }
 
 export interface CustomizeHtmlContent {

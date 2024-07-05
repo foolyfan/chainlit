@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from typing import Any, Dict, Literal, Optional, Type, TypeVar, cast
+from typing import Any, Dict, List, Literal, Optional, TypeVar, cast
 
 from chainlit.data import get_data_layer
 from chainlit.extensions.types import (
@@ -9,9 +9,9 @@ from chainlit.extensions.types import (
     GatherCommandResponse,
     GatherCommandSpec,
     InputSpec,
+    JsFunction,
     MessageSpec,
     PreselectionSpec,
-    UISettingsCommandOptions,
 )
 from chainlit.logger import logger
 from chainlit.message import Message
@@ -140,7 +140,7 @@ class BaseChainlitEmitter:
     ):
         pass
 
-    async def change_theme(self, step_dict: StepDict, spec: UISettingsCommandOptions):
+    async def call_js_function(self, step_dict: StepDict, spec: List[JsFunction]):
         pass
 
     async def advise(self, step_dict: StepDict, spec: PreselectionSpec):
@@ -407,10 +407,10 @@ class ChainlitEmitter(BaseChainlitEmitter):
             "list_action_response", {"id": id, "status": status, "response": response}
         )
 
-    def change_theme(self, step_dict: StepDict, spec: UISettingsCommandOptions):
+    def call_js_function(self, step_dict: StepDict, spec: List[JsFunction]):
         return self.emit(
-            "change_theme",
-            {"msg": step_dict, "spec": spec.to_dict()},
+            "call_js_function",
+            {"msg": step_dict, "spec": spec},
         )
 
     def advise(self, step_dict: StepDict, spec: PreselectionSpec):

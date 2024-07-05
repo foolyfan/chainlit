@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union
+from typing import Dict, Generic, List, Literal, Optional, TypedDict, TypeVar, Union
 
 from chainlit.action import Action
 from dataclasses_json import DataClassJsonMixin
@@ -23,28 +23,13 @@ class GatherCommandResponse(GatherCommandSpec, DataClassJsonMixin):
     data: Dict
 
 
-@dataclass
-class UISettingsCommandOptions(DataClassJsonMixin):
-    type: str
-
-
-@dataclass
-class BrightnessModeOptions(UISettingsCommandOptions, DataClassJsonMixin):
-    mode: Literal["light", "dark"] = "light"
-    type: str = "mode"
-
-
-@dataclass
-class FontSizeOptions(DataClassJsonMixin):
-    type: Literal["add", "reduce"]
+class FontSizeParameters(TypedDict):
     offset: int
 
 
-@dataclass
-class FontOptions(UISettingsCommandOptions, DataClassJsonMixin):
-    type: str = "font"
-    fontSize: Optional[FontSizeOptions] = None
-    fontFamily: Optional[str] = None
+class JsFunction(TypedDict):
+    name: Literal["dark_style", "light_style", "add_font_size", "reduce_font_size"]
+    parameters: Optional[Union[FontSizeParameters, Dict]]
 
 
 @dataclass
@@ -278,6 +263,7 @@ class InputSpec(MessageSpec, DataClassJsonMixin):
         self.placeholder = placeholder
         self.rules = rules
         self.actions = actions
+        self.mdLinks = None
         self.__type__ = "InputSpec"
 
 

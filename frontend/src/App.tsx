@@ -9,12 +9,7 @@ import { makeTheme } from 'theme';
 import { Box, GlobalStyles } from '@mui/material';
 import { Theme, ThemeProvider } from '@mui/material/styles';
 
-import {
-  BrightnessModeOptions,
-  FontOptions,
-  useChatData,
-  useChatSession
-} from '@chainlit/react-client';
+import { useChatData, useChatSession } from '@chainlit/react-client';
 
 import Hotkeys from 'components/Hotkeys';
 import SettingsModal from 'components/molecules/settingsModal';
@@ -72,25 +67,8 @@ export function overrideTheme(theme: Theme) {
 }
 
 function App() {
-  // debug tool
-  // const snapshot = useRecoilSnapshot();
-  // useEffect(() => {
-  //   for (const node of snapshot.getNodes_UNSTABLE({ isModified: true })) {
-  //     if (node.key == 'OperableMessage') {
-  //       console.log(node.key, snapshot.getLoadable(node));
-  //     }
-  //   }
-  // }, [snapshot]);
-
   const [settings, setSettings] = useRecoilState(settingsState);
   const pSettings = useRecoilValue(projectSettingsState);
-  // @ts-expect-error custom property
-  const fontFamily = window.theme?.font_family;
-  const [theme, setTheme] = useState<Theme>();
-  useEffect(() => {
-    switchTheme(settings.theme);
-    setTheme(() => overrideTheme(makeTheme(settings.theme, fontFamily)));
-  }, [settings.theme]);
 
   const { isAuthenticated, accessToken } = useAuth();
   const userEnv = useRecoilValue(userEnvState);
@@ -105,7 +83,19 @@ function App() {
       : true
     : false;
 
-  const { uiSettingsCommand } = useChatData();
+  // @ts-expect-error custom property
+  const fontFamily = window.theme?.font_family;
+  const [theme, setTheme] = useState<Theme>();
+  useEffect(() => {
+    switchTheme(settings.theme);
+    setTheme((oldTheme) =>
+      overrideTheme(
+        makeTheme(settings.theme, fontFamily, oldTheme?.typography.fontSize)
+      )
+    );
+  }, [settings.theme]);
+
+  const { behaviorHandlers } = useChatData();
 
   const switchTheme = useCallback((mode?: ThemeVariant) => {
     const rootElement: HTMLDivElement | null = document.querySelector(
@@ -125,36 +115,62 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!uiSettingsCommand) {
+    if (!behaviorHandlers.length) {
       return;
     }
 
-    if (uiSettingsCommand.spec.type == 'mode') {
-      const mode = (uiSettingsCommand.spec as BrightnessModeOptions).mode;
+    behaviorHandlers.forEach((handler) => {
+      if (handler.name == 'light_style') {
+        const mode = 'light';
 
-      switchTheme(mode);
-      setSettings((old) => ({
-        ...old,
-        theme: mode
-      }));
-    }
-    if (uiSettingsCommand.spec.type == 'font' && theme) {
-      const font = uiSettingsCommand.spec as FontOptions;
-      const curFontSize = theme.typography.fontSize;
-      let newFontSize = curFontSize;
-      if (font.fontSize?.type == 'add') {
-        newFontSize = curFontSize + font.fontSize.offset;
+        switchTheme(mode);
+        setSettings((old) => ({
+          ...old,
+          theme: mode
+        }));
       }
-      if (font.fontSize?.type == 'reduce') {
-        newFontSize = curFontSize - font.fontSize.offset;
+      if (handler.name == 'dark_style') {
+        const mode = 'dark';
+
+        switchTheme(mode);
+        setSettings((old) => ({
+          ...old,
+          theme: mode
+        }));
       }
-      if (newFontSize > 0) {
-        setTheme(() =>
-          overrideTheme(makeTheme(settings.theme, font.fontFamily, newFontSize))
-        );
+
+      const offset = handler.parameters?.offset;
+      if (!offset) {
+        return;
       }
-    }
-  }, [uiSettingsCommand]);
+      if (handler.name == 'add_font_size') {
+        setTheme((oldTheme) => {
+          return overrideTheme(
+            makeTheme(
+              settings.theme,
+              oldTheme?.typography.fontFamily,
+              oldTheme!.typography.fontSize + offset
+            )
+          );
+        });
+      }
+      if (handler.name == 'reduce_font_size') {
+        setTheme((oldTheme) => {
+          const newFontSize = oldTheme!.typography.fontSize - offset;
+          if (newFontSize > 0) {
+            return overrideTheme(
+              makeTheme(
+                settings.theme,
+                oldTheme?.typography.fontFamily,
+                newFontSize
+              )
+            );
+          }
+          return oldTheme;
+        });
+      }
+    });
+  }, [behaviorHandlers]);
 
   useEffect(() => {
     if (!isAuthenticated) {

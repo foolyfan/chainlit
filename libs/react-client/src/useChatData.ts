@@ -2,6 +2,7 @@ import { useRecoilValue } from 'recoil';
 
 import {
   avatarState,
+  behaviorHandlersState,
   chatSettingsDefaultValueSelector,
   chatSettingsInputsState,
   chatSettingsValueState,
@@ -12,7 +13,6 @@ import {
   preselectionState,
   sessionState,
   tasklistState,
-  uiSettingsCommandState,
   userFutureMessageState
 } from './state';
 
@@ -34,7 +34,7 @@ const useChatData = () => {
   const chatSettingsDefaultValue = useRecoilValue(
     chatSettingsDefaultValueSelector
   );
-  const uiSettingsCommand = useRecoilValue(uiSettingsCommandState);
+  const behaviorHandlers = useRecoilValue(behaviorHandlersState);
   const preselection = useRecoilValue(preselectionState);
   const operableMessages = useRecoilValue(operableMessagesState);
   const userFutureMessage = useRecoilValue(userFutureMessageState);
@@ -54,7 +54,7 @@ const useChatData = () => {
     loading,
     tasklists,
     gatherCommand,
-    uiSettingsCommand,
+    behaviorHandlers,
     preselection,
     operableMessages,
     userFutureMessage

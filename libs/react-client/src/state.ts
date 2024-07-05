@@ -11,11 +11,11 @@ import {
   ISpeechPromptMessage,
   IStep,
   ITasklistElement,
-  IUISettingsCommandOptions,
   IUser,
   OperableMessage,
   PreselectionSpec,
-  ThreadHistory
+  ThreadHistory,
+  WebBehaviorHandler
 } from './types';
 import { groupByDate } from './utils/group';
 
@@ -174,11 +174,9 @@ export const preselectionState = atom<PreselectionSpec | undefined>({
   default: undefined
 });
 
-export const uiSettingsCommandState = atom<
-  IUISettingsCommandOptions | undefined
->({
-  key: 'UISettingsCommand',
-  default: undefined
+export const behaviorHandlersState = atom<Array<WebBehaviorHandler>>({
+  key: 'BehaviorHandlers',
+  default: []
 });
 
 export const operableMessagesState = atom<{ [key: string]: OperableMessage }>({

@@ -42,9 +42,9 @@ import {
 } from 'src/utils/message';
 
 import {
+  behaviorHandlersState,
   operableMessagesState,
   preselectionState,
-  uiSettingsCommandState,
   userFutureMessageState
 } from '.';
 import { ChainlitAPI } from './api';
@@ -67,7 +67,7 @@ const useChatSession = () => {
   const setTasklists = useSetRecoilState(tasklistState);
   const setChatSettingsInputs = useSetRecoilState(chatSettingsInputsState);
   const setTokenCount = useSetRecoilState(tokenCountState);
-  const setUISettings = useSetRecoilState(uiSettingsCommandState);
+  const setBehaviorHandlers = useSetRecoilState(behaviorHandlersState);
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
   const idToResume = useRecoilValue(threadIdToResumeState);
   const setSpeechPrompts = useSetRecoilState(speechPromptsState);
@@ -421,9 +421,9 @@ const useChatSession = () => {
         setTokenCount((old) => old + count);
       });
 
-      socket.on('change_theme', ({ spec }) => {
-        console.log('change_theme');
-        setUISettings({ spec });
+      socket.on('call_js_function', ({ spec }) => {
+        console.log('call_js_function', spec);
+        setBehaviorHandlers([...spec]);
       });
 
       socket.on('advise', ({ msg, spec }) => {
