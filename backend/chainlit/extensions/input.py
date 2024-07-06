@@ -57,21 +57,21 @@ class Rule(DataClassJsonMixin, ABC):
 
 TriggerType = Literal["onChange", "onSubmit"]
 
-"""
-自定义函数校验，仅包括函数体内容，参数为输入域的值，返回值为校验结果；示例如下：
-(value) => {
-  return {
-    value: false,
-    errMsg: '校验失败'
-  }
-}
-"""
-
 
 @dataclass
 class ClientRule(Rule, DataClassJsonMixin):
+    """
+    web端校验规则，用户自定义在window.__chainlit__rules__对象上定义，以下ClientRule的name属性为example的校验函数，示例：
+    window.__chainlit__.rules[example] = (value) => {
+        return {
+          value: false,
+          errMsg: '校验失败'
+        }
+      }
+    """
+
     condition: TriggerType
-    body: str
+    name: str
 
 
 """
@@ -389,10 +389,7 @@ class AccountInput(TextInput):
 
 ChinesePhoneNumberRule = ClientRule(
     condition="onChange",
-    body="""
-  const regex = /^1[3-9]\d{9}$/;
-  return regex.test(value) || '手机号码格式不正确';
-""",
+    name="ChinesePhoneNumberRule",
 )
 
 
@@ -423,10 +420,7 @@ class MobilePhoneInput(TextInput):
 
 DecimalPlaces = ClientRule(
     condition="onChange",
-    body="""
-const regex = /^\d*\.?\d{0,2}$/;
-return regex.test(value) || '金额只可保留两位小数';
-""",
+    name="DecimalPlaces",
 )
 
 

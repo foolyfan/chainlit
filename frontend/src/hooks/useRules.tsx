@@ -2,23 +2,21 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { IRule } from '@chainlit/react-client';
 
-type RuleFunction = (value: string) => boolean | string;
-
 const useRules = (value: string, rules?: Array<IRule>) => {
-  const [submitRules, setSubmitRules] = useState<Array<RuleFunction>>([]);
-  const [changeRules, setChangeRules] = useState<Array<RuleFunction>>([]);
+  const [submitRules, setSubmitRules] = useState<Array<string>>([]);
+  const [changeRules, setChangeRules] = useState<Array<string>>([]);
   const [error, setError] = useState(false);
   const [helperText, setHelperText] = useState('');
   useEffect(() => {
     if (rules && rules.length) {
-      const sr: Array<RuleFunction> = [];
-      const cr: Array<RuleFunction> = [];
+      const sr: Array<string> = [];
+      const cr: Array<string> = [];
       rules.forEach((rule) => {
         if (rule.condition == 'onSubmit') {
-          sr.push(new Function('value', rule.body) as RuleFunction);
+          sr.push(rule.name);
         }
         if (rule.condition == 'onChange') {
-          cr.push(new Function('value', rule.body) as RuleFunction);
+          cr.push(rule.name);
         }
       });
       setSubmitRules(sr);
@@ -38,12 +36,15 @@ const useRules = (value: string, rules?: Array<IRule>) => {
       const innerValue = value.replace(/[\n\r]/g, '');
 
       const result = submitRules.find(
-        (rule) => typeof rule(innerValue) === 'string'
+        (name) =>
+          typeof window.__chainlit__.__rules__[name](innerValue) === 'string'
       );
 
       if (result) {
         setError(true);
-        setHelperText(result(innerValue) as string);
+        setHelperText(
+          window.__chainlit__.__rules__[result](innerValue) as string
+        );
         return false;
       } else {
         setError(false);
@@ -58,11 +59,14 @@ const useRules = (value: string, rules?: Array<IRule>) => {
       const innerValue = value.replace(/[\n\r]/g, '');
 
       const result = changeRules.find(
-        (rule) => typeof rule(innerValue) === 'string'
+        (name) =>
+          typeof window.__chainlit__.__rules__[name](innerValue) === 'string'
       );
       if (result) {
         setError(true);
-        setHelperText(result(innerValue) as string);
+        setHelperText(
+          window.__chainlit__.__rules__[result](innerValue) as string
+        );
         return false;
       } else {
         setError(false);

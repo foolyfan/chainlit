@@ -1,3 +1,5 @@
+export * from './utils/chainlit';
+
 export * from './useChatData';
 export * from './useChatInteract';
 export * from './useChatMessages';

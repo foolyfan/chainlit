@@ -86,18 +86,7 @@ class AccountAndMobilePhoneRule(ClientRule):
 
     def __init__(self):
         self.condition = "onChange"
-        self.body = """
-    const length = value.length;
-    if (length === 11) {
-      const phoneRegex = /^1[3-9]\d{9}$/;
-      return phoneRegex.test(value) || '必须是有效的11位手机号';
-    } else if (length === 19) {
-      const startsWith622 = /^622/;
-      return startsWith622.test(value) || '必须是有效的19位银行账号';
-    } else {
-      return '必须是有效的11位手机号或19位银行账号';
-    }
-"""
+        self.name = "AccountAndMobilePhoneRule"
 
 
 async def agree(value: str):
@@ -280,9 +269,7 @@ class SizeCompare(ServerRule):
 class StartWithRule(ClientRule):
     def __init__(self):
         self.condition = "onSubmit"
-        self.body = """
-      return value.startsWith('185') || '手机号码必须以185开头';
-    """
+        self.name = "StartWithRule"
 
 
 @action_callback(name="5continue")
@@ -508,6 +495,31 @@ async def main(message: Message):
             await Message(content="{:.2f}".format(float(res19))).send()
     if message.content == "20":
         # 必须实现 @modilephone_recognition
+        """
+        扩展自定义输入场规则js文件，chainlit_ready事件触发后使用installRules函数注册，内容示例
+
+        const rules = {
+          AccountAndMobilePhoneRule: (value) => {
+            const length = value.length;
+            if (length === 11) {
+              const phoneRegex = /^1[3-9]\d{9}$/;
+              return phoneRegex.test(value) || '必须是有效的11位手机号';
+            } else if (length === 19) {
+              const startsWith622 = /^622/;
+              return startsWith622.test(value) || '必须是有效的19位银行账号';
+            } else {
+              return '必须是有效的11位手机号或19位银行账号';
+            }
+          },
+          StartWithRule: (value) => {
+            return value.startsWith('185') || '手机号码必须以185开头';
+          }
+        };
+        window.addEventListener('chainlit_ready', () => {
+          window.__chainlit__.installRules(rules);
+        });
+
+        """
         res20 = await MobilePhoneInput(timeout=600, rules=[StartWithRule()]).send()
         if res20:
             await Message(content=str(res20)).send()

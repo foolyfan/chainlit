@@ -1,3 +1,5 @@
+import { Chainlit } from '@chainlit/react-client';
+
 export {};
 
 /**
@@ -9,5 +11,8 @@ declare global {
       predicate: (value: T, index: number, array: T[]) => unknown,
       thisArg?: any
     ): T | undefined;
+  }
+  interface Window {
+    __chainlit__: Chainlit;
   }
 }

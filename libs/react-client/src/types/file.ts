@@ -14,7 +14,7 @@ export type UserInputType = 'keyboard' | 'speech' | 'touch';
 
 export interface IRule {
   condition: 'onSubmit' | 'onChange';
-  body: string;
+  name: string;
 }
 
 export interface IInput {
