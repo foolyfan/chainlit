@@ -12,5 +12,6 @@ export * from './chatContext';
 export * from './useSpeechRecognition';
 export * from './usePassword';
 export * from './useScan';
+export * from './useAlbum';
 
 export { Socket } from 'socket.io-client';
