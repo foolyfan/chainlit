@@ -737,8 +737,14 @@ async def tts_method(
         if not session.user or session.user.identifier != current_user.identifier:
             raise HTTPException(
                 status_code=401,
-                detail="You are not authorized to upload files for this session",
+                detail="You are not authorized",
             )
+    if config.features.text_to_speech.enabled:
+        raise HTTPException(
+            status_code=501,
+            detail="Not implemented or enabled tts",
+        )
+
     try:
 
         streamResponse = await config.code.tts_method(
@@ -746,7 +752,6 @@ async def tts_method(
         )
         return streamResponse
     except Exception as e:
-        logger.info(f"流式响应异常 {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=str(e),
@@ -773,6 +778,47 @@ async def get_file(
         return FileResponse(file["path"], media_type=file["type"])
     else:
         raise HTTPException(status_code=404, detail="File not found")
+
+
+@app.get("/project/aigc/image")
+async def aigc_image_method(
+    session_id: str,
+    content: str,
+    current_user: Annotated[
+        Union[None, User, PersistedUser], Depends(get_current_user)
+    ],
+):
+    from chainlit.session import WebsocketSession
+
+    session = WebsocketSession.get_by_id(session_id)
+
+    if not session:
+        raise HTTPException(
+            status_code=404,
+            detail="Session not found",
+        )
+
+    if current_user:
+        if not session.user or session.user.identifier != current_user.identifier:
+            raise HTTPException(
+                status_code=401,
+                detail="You are not authorized",
+            )
+    if not config.features.aigc_image.enabled:
+        raise HTTPException(
+            status_code=501,
+            detail="Not implemented or enabled Aigc-Image",
+        )
+    try:
+        streamResponse = await config.code.aigc_image_method(
+            content, config.features.aigc_image.params
+        )
+        return streamResponse
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
 
 
 @app.get("/files/{filename:path}")

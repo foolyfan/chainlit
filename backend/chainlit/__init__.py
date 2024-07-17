@@ -286,6 +286,15 @@ def tts_method(
 
 
 @trace
+def aigc_image_method(
+    func: Callable[[str, Dict], Union[StreamingResponse, str]]
+) -> Callable[[str, Dict], Union[StreamingResponse, str]]:
+    config.code.aigc_image_method = wrap_user_function(func)
+    config.features.aigc_image.enabled = True
+    return func
+
+
+@trace
 def amount_recognition(
     func: Callable[[str], Optional[Union[str, GatherCommand]]]
 ) -> Callable[[str], Optional[Union[str, GatherCommand]]]:

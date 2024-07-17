@@ -6,6 +6,8 @@ import {
   faRotateRight
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { apiClient } from 'api';
+import { useAuth } from 'api/auth';
 import html2canvas from 'html2canvas';
 import {
   ChangeEvent,
@@ -20,8 +22,10 @@ import { isAndroid } from 'utils/tools';
 import { Telegram } from '@mui/icons-material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {
+  Backdrop,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -33,7 +37,7 @@ import {
   styled
 } from '@mui/material';
 
-import { useAlbum } from 'client-types/*';
+import { useAlbum, useChatSession } from 'client-types/*';
 
 interface Props {}
 
@@ -142,7 +146,7 @@ const CustomCardPanel: FC<Props> = () => {
     }
   }, [status]);
 
-  const [disabled, setDisabled] = useState<boolean>(true);
+  const [editDisabled, setEditDisabled] = useState<boolean>(true);
   // 图片
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [imageSrc, setImageSrc] = useState<string>('');
@@ -157,7 +161,7 @@ const CustomCardPanel: FC<Props> = () => {
         }
         return imgURL;
       });
-      setDisabled(false);
+      setEditDisabled(false);
     }
   }, [localFile]);
 
@@ -225,11 +229,11 @@ const CustomCardPanel: FC<Props> = () => {
   }, [imageOriginSize]);
 
   // 预览窗口
-  const [open, setOpen] = useState<boolean>(false);
+  const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [previewImageSrc, setPreviewImageSrc] = useState<string>('');
   const previewImageRef = useRef<HTMLImageElement | null>(null);
   const handleClose = useCallback(() => {
-    setOpen(false);
+    setPreviewOpen(false);
   }, []);
   // 销毁函数
   const destoryBlob = useCallback(() => {
@@ -238,13 +242,13 @@ const CustomCardPanel: FC<Props> = () => {
   }, [imageSrc, previewImageSrc]);
   const handleSubmit = useCallback(() => {
     destoryBlob();
-    setOpen(false);
+    setPreviewOpen(false);
   }, [destoryBlob]);
 
   // 预览
   const cropContainerRef = useRef<HTMLDivElement | null>(null);
   const onPreview = useCallback(() => {
-    setOpen(true);
+    setPreviewOpen(true);
     html2canvas(containerRef.current!, {
       x: cropContainerRef.current!.offsetLeft,
       y: cropContainerRef.current!.offsetTop,
@@ -266,6 +270,34 @@ const CustomCardPanel: FC<Props> = () => {
     });
   }, []);
 
+  // 文生图
+  const [value, setValue] = useState<string>('');
+  const { accessToken } = useAuth();
+  const { sessionId } = useChatSession();
+  const [aigcDisabled, setAigcDisabled] = useState<boolean>(true);
+  const [aigcLoading, setAigcLoading] = useState<boolean>(false);
+  const onGetAigcImage = useCallback(() => {
+    setAigcLoading(true);
+    apiClient
+      .aigcImageMethod(value, sessionId, undefined, accessToken)
+      .then((response) => response.blob())
+      .then((blob) => {
+        const imageUrl = URL.createObjectURL(blob);
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
+        setImageSrc((oldUrl) => {
+          if (oldUrl) {
+            URL.revokeObjectURL(oldUrl);
+          }
+          return imageUrl;
+        });
+        setEditDisabled(false);
+      })
+      .finally(() => {
+        setAigcLoading(false);
+      });
+  }, [apiClient, value, sessionId, accessToken]);
+
   const maskColor = '#d7d7d7';
   return (
     <Box
@@ -276,6 +308,19 @@ const CustomCardPanel: FC<Props> = () => {
         flexDirection: 'column'
       }}
     >
+      <Backdrop
+        sx={{
+          color: '#fff',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+        open={aigcLoading}
+        onClick={handleClose}
+      >
+        <CircularProgress color="inherit" />
+        <Box sx={{ marginTop: '10px' }}>AI生成中 ...</Box>
+      </Backdrop>
       <Typography variant="h6" gutterBottom>
         图像编辑
       </Typography>
@@ -367,7 +412,7 @@ const CustomCardPanel: FC<Props> = () => {
           variant="outlined"
           tabIndex={-1}
           onClick={onTransformToLarge}
-          disabled={disabled}
+          disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faMagnifyingGlassPlus} size="xl" />
         </Button>
@@ -378,7 +423,7 @@ const CustomCardPanel: FC<Props> = () => {
           variant="outlined"
           tabIndex={-1}
           onClick={onTransformToSmall}
-          disabled={disabled}
+          disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faMagnifyingGlassMinus} size="xl" />
         </Button>
@@ -388,7 +433,7 @@ const CustomCardPanel: FC<Props> = () => {
           variant="outlined"
           tabIndex={-1}
           onClick={onCenter}
-          disabled={disabled}
+          disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faLocationDot} size="xl" />
         </Button>
@@ -398,7 +443,7 @@ const CustomCardPanel: FC<Props> = () => {
           variant="outlined"
           tabIndex={-1}
           onClick={onReset}
-          disabled={disabled}
+          disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faRotateRight} size="xl" />
         </Button>
@@ -408,7 +453,7 @@ const CustomCardPanel: FC<Props> = () => {
           variant="outlined"
           tabIndex={-1}
           onClick={onPreview}
-          disabled={disabled}
+          disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faFloppyDisk} size="xl" />
         </Button>
@@ -436,6 +481,16 @@ const CustomCardPanel: FC<Props> = () => {
             variant="outlined"
             placeholder="AI绘图提示文本"
             autoComplete="false"
+            value={value}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value && value.length) {
+                setAigcDisabled(false);
+              } else {
+                setAigcDisabled(true);
+              }
+              setValue(e.target.value);
+            }}
             InputProps={{
               sx: {
                 padding: (theme) => theme.spacing(1)
@@ -447,7 +502,11 @@ const CustomCardPanel: FC<Props> = () => {
                 />
               ),
               endAdornment: (
-                <IconButton disabled={disabled} color="inherit">
+                <IconButton
+                  disabled={aigcDisabled}
+                  color="inherit"
+                  onClick={onGetAigcImage}
+                >
                   <Telegram />
                 </IconButton>
               )
@@ -479,7 +538,7 @@ const CustomCardPanel: FC<Props> = () => {
           )}
         </Button>
       </Box>
-      <BootstrapDialog onClose={handleClose} open={open}>
+      <BootstrapDialog onClose={handleClose} open={previewOpen}>
         <DialogTitle sx={{ m: 0, p: 2 }}>预览</DialogTitle>
         <DialogContent dividers>
           <img

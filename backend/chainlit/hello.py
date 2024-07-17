@@ -51,12 +51,14 @@ from chainlit import (
     account_mobilephone_recognition,
     account_recognition,
     action_callback,
+    aigc_image_method,
     amount_recognition,
     asr_method,
     image_account_recognition,
     mobilephone_recognition,
     on_message,
     predefined_procedure,
+    sleep,
     tts_method,
 )
 
@@ -252,6 +254,33 @@ async def ttsHook(content, params):
         )
     else:
         return ""
+
+
+@aigc_image_method
+async def aigc_image(content, params):
+    logger.info(f"文生图文本： {content}")
+    file_path = "./voucher.png"
+    await sleep(5)
+
+    async def file_iterator(file_path):
+        try:
+            async with aiofiles.open(file_path, "rb") as f:
+                # 模拟加载资源慢
+                # bufferSize = 1024
+                bufferSize = 1024 * 1024
+                while True:
+                    chunk = await f.read(bufferSize)
+                    if not chunk:
+                        break
+                    yield chunk
+        except GeneratorExit:
+            logger.info("客户端断开连接")
+
+    return StreamingResponse(
+        file_iterator(file_path),
+        media_type="image/jpeg",
+        headers={"X-File-ID": str(uuid.uuid4())},
+    )
 
 
 class SizeCompare(ServerRule):

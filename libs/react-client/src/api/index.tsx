@@ -357,4 +357,15 @@ export class ChainlitAPI extends APIBase {
 
     return await this.get(`/project/tts${queryParams}`, token, signal);
   }
+
+  async aigcImageMethod(
+    content: string,
+    sessionId: string,
+    signal?: AbortSignal,
+    token?: string
+  ) {
+    const queryParams = `?session_id=${sessionId}&content=${content}`;
+
+    return await this.get(`/project/aigc/image${queryParams}`, token, signal);
+  }
 }

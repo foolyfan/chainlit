@@ -193,7 +193,12 @@ class SpeechToTextFeature:
 @dataclass
 class TextToSpeechFeature:
     enabled: Optional[bool] = None
-    streaming: Optional[bool] = None
+    params: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class AigcImageFeature:
+    enabled: Optional[bool] = None
     params: Optional[Dict[str, Any]] = None
 
 
@@ -213,6 +218,7 @@ class FeaturesSettings(DataClassJsonMixin):
     unsafe_allow_html: bool = False
     speech_to_text: Optional[SpeechToTextFeature] = None
     text_to_speech: Optional[TextToSpeechFeature] = None
+    aigc_image: Optional[AigcImageFeature] = None
 
 
 @dataclass()
@@ -253,6 +259,9 @@ class CodeSettings:
     on_message: Optional[Callable[[str], Any]] = None
     asr_method: Optional[Callable[[str], str]] = None
     tts_method: Optional[Callable[[str, Dict], Union[StreamingResponse, str]]] = None
+    aigc_image_method: Optional[
+        Callable[[str, Dict], Union[StreamingResponse, str]]
+    ] = None
     on_recognation_input: Optional[Dict[str, Callable]] = None
     author_rename: Optional[Callable[[str], str]] = None
     on_settings_update: Optional[Callable[[Dict[str, Any]], Any]] = None
