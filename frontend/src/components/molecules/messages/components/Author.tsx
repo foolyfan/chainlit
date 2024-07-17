@@ -73,7 +73,7 @@ const Author = ({ message, show, children }: Props) => {
       <Stack
         gap={1}
         width={isUser ? '100%' : `calc(100% - 24px)`}
-        sx={{ 'align-items': isUser ? 'end' : 'start' }}
+        sx={{ alignItems: isUser ? 'end' : 'start' }}
       >
         {name}
         {children}

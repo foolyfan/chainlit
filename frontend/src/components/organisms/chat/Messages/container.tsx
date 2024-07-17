@@ -19,8 +19,11 @@ import { MessageContainer as CMessageContainer } from 'components/molecules/mess
 
 import { apiClientState } from 'state/apiClient';
 import { playgroundState } from 'state/playground';
-import { highlightMessage, sideViewState } from 'state/project';
-import { projectSettingsState } from 'state/project';
+import {
+  highlightMessage,
+  projectSettingsState,
+  sideViewState
+} from 'state/project';
 import { settingsState } from 'state/settings';
 
 interface Props {
@@ -35,7 +38,6 @@ interface Props {
     feedback: IFeedback
   ) => void;
   setAutoScroll?: (autoScroll: boolean) => void;
-  hidden?: boolean;
 }
 
 const MessageContainer = memo(
@@ -46,8 +48,7 @@ const MessageContainer = memo(
     elements,
     messages,
     onFeedbackUpdated,
-    setAutoScroll,
-    hidden
+    setAutoScroll
   }: Props) => {
     const appSettings = useRecoilValue(settingsState);
     const projectSettings = useRecoilValue(projectSettingsState);
@@ -180,7 +181,6 @@ const MessageContainer = memo(
         autoScroll={autoScroll}
         setAutoScroll={setAutoScroll}
         context={memoizedContext}
-        hidden={hidden}
       />
     );
   }

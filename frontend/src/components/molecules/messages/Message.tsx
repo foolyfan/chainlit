@@ -197,7 +197,7 @@ const Message = memo(
                   background: isUser
                     ? 'linear-gradient(270deg,#6485ff 0.95%,#849ffe 100%)'
                     : 'white',
-                  'border-radius': isUser
+                  borderRadius: isUser
                     ? '16px 16px 4px 16px'
                     : '4px 16px 16px 16px',
                   padding: '10px',

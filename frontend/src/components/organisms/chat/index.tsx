@@ -12,7 +12,9 @@ import {
   useChatContext,
   useChatData,
   useChatInteract,
-  useChatSession
+  useChatSession,
+  usePassword,
+  useScan
 } from '@chainlit/react-client';
 
 import { ErrorBoundary } from 'components/atoms/ErrorBoundary';
@@ -21,6 +23,7 @@ import { Translator } from 'components/i18n';
 import { AgreementDrawer } from 'components/molecules/AgreementDrawer';
 import { PreviewDrawer } from 'components/molecules/PreviewDrawer';
 import ChatProfiles from 'components/molecules/chatProfiles';
+import { CommandContainer } from 'components/molecules/command/CommandContainer';
 import { TaskList } from 'components/molecules/tasklist/TaskList';
 
 import { apiClientState } from 'state/apiClient';
@@ -183,6 +186,95 @@ const Chat = () => {
     }
   }, [agreement, checks, setChecks]);
 
+  // 切换显示
+  // 启动函数
+  const { gatherCommand } = useChatData();
+  useEffect(() => {
+    if (gatherCommand?.spec.type == 'password') {
+      invokeKeyboard();
+    }
+    if (gatherCommand?.spec.type == 'scan') {
+      takePhoto();
+    }
+  }, [gatherCommand]);
+
+  // 输入密码
+  const {
+    invokeKeyboard,
+    text,
+    status: passwordStatus
+  } = usePassword('请输入密码', false);
+
+  const { replyCmdMessage } = useChatInteract();
+
+  useEffect(() => {
+    if (!gatherCommand || gatherCommand.spec.type != 'password') {
+      return;
+    }
+    if (passwordStatus == 'finish') {
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '00',
+        msg: '',
+        data: { value: text }
+      });
+    }
+    if (passwordStatus == 'cancel') {
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '01',
+        msg: '客户取消输入',
+        data: {}
+      });
+    }
+  }, [passwordStatus, text]);
+
+  // 扫一扫
+  const { sessionId } = useChatSession();
+  const { imageFile, clearImage, takePhoto, status: scanStatus } = useScan();
+
+  useEffect(() => {
+    if (!gatherCommand || gatherCommand.spec.type != 'scan') {
+      return;
+    }
+    if (gatherCommand && scanStatus == 'finish' && imageFile) {
+      const { promise } = apiClient.uploadFile(
+        imageFile as File,
+        () => {},
+        sessionId
+      );
+      promise
+        .then((res) => {
+          replyCmdMessage({
+            ...gatherCommand!.spec,
+            code: '00',
+            msg: '客户扫描成功',
+            data: {
+              value: res.id
+            }
+          });
+        })
+        .catch((error) => {
+          console.error(error);
+
+          toast.error(error.toString());
+        })
+        .finally(() => {
+          clearImage();
+        });
+
+      clearImage();
+    }
+    if (scanStatus == 'cancel') {
+      replyCmdMessage({
+        ...gatherCommand!.spec,
+        code: '01',
+        msg: '客户取消扫描',
+        data: {}
+      });
+    }
+  }, [scanStatus, imageFile]);
+
   return (
     <Box
       {...(enableMultiModalUpload
@@ -235,18 +327,26 @@ const Chat = () => {
         <TaskList isMobile={true} />
         <ErrorBoundary>
           <ChatProfiles />
-          <Messages
-            autoScroll={autoScroll}
-            projectSettings={projectSettings}
-            setAutoScroll={setAutoScroll}
-          />
-          <InputBox
-            onFileUpload={onFileUpload}
-            onFileUploadError={onFileUploadError}
-            autoScroll={autoScroll}
-            setAutoScroll={setAutoScroll}
-            projectSettings={projectSettings}
-          />
+          <CommandContainer gatherCommand={gatherCommand} />
+          {(!gatherCommand ||
+            gatherCommand.spec.type == 'password' ||
+            gatherCommand.spec.type == 'scan') && (
+            <>
+              <Messages
+                autoScroll={autoScroll}
+                projectSettings={projectSettings}
+                setAutoScroll={setAutoScroll}
+              />
+              <InputBox
+                onFileUpload={onFileUpload}
+                onFileUploadError={onFileUploadError}
+                autoScroll={autoScroll}
+                setAutoScroll={setAutoScroll}
+                projectSettings={projectSettings}
+              />
+            </>
+          )}
+
           {agreement && (
             <AgreementDrawer
               onClose={onAgreementDrawerClose}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { toast } from 'sonner';
@@ -11,14 +11,9 @@ import {
   messagesState,
   updateMessageById,
   useChatData,
-  useChatInteract,
   useChatMessages,
-  useChatSession,
-  usePassword,
-  useScan
+  useChatSession
 } from '@chainlit/react-client';
-
-import { CommandContainer } from 'components/molecules/command/CommandContainer';
 
 import { apiClientState } from 'state/apiClient';
 
@@ -43,7 +38,6 @@ const Messages = ({
   const accessToken = useRecoilValue(accessTokenState);
   const setMessages = useSetRecoilState(messagesState);
   const apiClient = useRecoilValue(apiClientState);
-  const { gatherCommand } = useChatData();
 
   const { t } = useTranslation();
 
@@ -78,93 +72,6 @@ const Messages = ({
     []
   );
 
-  // 启动函数
-  useEffect(() => {
-    if (gatherCommand?.spec.type == 'password') {
-      invokeKeyboard();
-    }
-    if (gatherCommand?.spec.type == 'scan') {
-      takePhoto();
-    }
-  }, [gatherCommand]);
-
-  // 输入密码
-  const {
-    invokeKeyboard,
-    text,
-    status: passwordStatus
-  } = usePassword('请输入密码', false);
-
-  const { replyCmdMessage } = useChatInteract();
-
-  useEffect(() => {
-    if (!gatherCommand || gatherCommand.spec.type != 'password') {
-      return;
-    }
-    if (passwordStatus == 'finish') {
-      replyCmdMessage({
-        ...gatherCommand!.spec,
-        code: '00',
-        msg: '',
-        data: { value: text }
-      });
-    }
-    if (passwordStatus == 'cancel') {
-      replyCmdMessage({
-        ...gatherCommand!.spec,
-        code: '01',
-        msg: '客户取消输入',
-        data: {}
-      });
-    }
-  }, [passwordStatus, text]);
-
-  // 扫一扫
-  const { sessionId } = useChatSession();
-  const { imageFile, clearImage, takePhoto, status: scanStatus } = useScan();
-
-  useEffect(() => {
-    if (!gatherCommand || gatherCommand.spec.type != 'scan') {
-      return;
-    }
-    if (gatherCommand && scanStatus == 'finish' && imageFile) {
-      const { promise } = apiClient.uploadFile(
-        imageFile as File,
-        () => {},
-        sessionId
-      );
-      promise
-        .then((res) => {
-          replyCmdMessage({
-            ...gatherCommand!.spec,
-            code: '00',
-            msg: '客户扫描成功',
-            data: {
-              value: res.id
-            }
-          });
-        })
-        .catch((error) => {
-          console.error(error);
-
-          toast.error(error.toString());
-        })
-        .finally(() => {
-          clearImage();
-        });
-
-      clearImage();
-    }
-    if (scanStatus == 'cancel') {
-      replyCmdMessage({
-        ...gatherCommand!.spec,
-        code: '01',
-        msg: '客户取消扫描',
-        data: {}
-      });
-    }
-  }, [scanStatus, imageFile]);
-
   return !idToResume &&
     !messages.length &&
     projectSettings?.ui.show_readme_as_default ? (
@@ -175,27 +82,15 @@ const Messages = ({
       latex={projectSettings?.features?.latex}
     />
   ) : (
-    <>
-      {gatherCommand &&
-        gatherCommand.spec.type !== 'password' &&
-        gatherCommand.spec.type !== 'scan' && (
-          <CommandContainer gatherCommand={gatherCommand} />
-        )}
-      <MessageContainer
-        avatars={avatars}
-        loading={loading}
-        elements={elements}
-        messages={messages}
-        autoScroll={autoScroll}
-        onFeedbackUpdated={onFeedbackUpdated}
-        setAutoScroll={setAutoScroll}
-        hidden={Boolean(
-          gatherCommand &&
-            gatherCommand.spec.type !== 'password' &&
-            gatherCommand.spec.type !== 'scan'
-        )}
-      />
-    </>
+    <MessageContainer
+      avatars={avatars}
+      loading={loading}
+      elements={elements}
+      messages={messages}
+      autoScroll={autoScroll}
+      onFeedbackUpdated={onFeedbackUpdated}
+      setAutoScroll={setAutoScroll}
+    />
   );
 };
 

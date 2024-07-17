@@ -3,8 +3,7 @@ import {
   faLocationDot,
   faMagnifyingGlassMinus,
   faMagnifyingGlassPlus,
-  faRotateRight,
-  faXmark
+  faRotateRight
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import html2canvas from 'html2canvas';
@@ -59,7 +58,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   }
 }));
 
-const CustomCard: FC<Props> = () => {
+const CustomCardPanel: FC<Props> = () => {
   // 银行卡图片尺寸
   const cardSize = { width: 299, height: 187 };
   // 缩放
@@ -267,17 +266,12 @@ const CustomCard: FC<Props> = () => {
     });
   }, []);
 
-  // 取消定制
-  const onCancel = useCallback(() => {
-    destoryBlob();
-    console.log('取消定制');
-  }, []);
   const maskColor = '#d7d7d7';
   return (
     <Box
       sx={{
-        padding: (theme) => theme.spacing(2),
         height: '100%',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column'
       }}
@@ -443,7 +437,6 @@ const CustomCard: FC<Props> = () => {
             placeholder="AI绘图提示文本"
             autoComplete="false"
             InputProps={{
-              disableUnderline: true,
               sx: {
                 padding: (theme) => theme.spacing(1)
               },
@@ -485,20 +478,6 @@ const CustomCard: FC<Props> = () => {
             />
           )}
         </Button>
-        <Button
-          component="label"
-          role={undefined}
-          variant="outlined"
-          tabIndex={-1}
-          startIcon={<FontAwesomeIcon icon={faXmark} size="xl" />}
-          sx={{
-            width: '100%',
-            marginTop: '10px'
-          }}
-          onClick={onCancel}
-        >
-          取消定制
-        </Button>
       </Box>
       <BootstrapDialog onClose={handleClose} open={open}>
         <DialogTitle sx={{ m: 0, p: 2 }}>预览</DialogTitle>
@@ -521,4 +500,4 @@ const CustomCard: FC<Props> = () => {
   );
 };
 
-export { CustomCard };
+export { CustomCardPanel };

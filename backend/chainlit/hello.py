@@ -399,7 +399,7 @@ async def main(message: Message):
         res9 = await GatherCommand(action="face_recognition", timeout=10).send()
         logger.info(f"人脸识别 {res9}")
     if message.content == "10":
-        res10 = await GatherCommand(action="custom_card", timeout=10).send()
+        res10 = await GatherCommand(action="custom_card", timeout=180).send()
         logger.info(f"定制卡面 {res10}")
     if message.content == "11":
         res11 = await GatherCommand(action="password", timeout=10).send()

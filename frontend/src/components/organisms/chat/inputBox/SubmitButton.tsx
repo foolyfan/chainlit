@@ -1,12 +1,9 @@
 import StopCircle from '@mui/icons-material/StopCircle';
 import Telegram from '@mui/icons-material/Telegram';
-import { Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 
 import { useChatData, useChatInteract } from '@chainlit/react-client';
-
-import { Translator } from 'components/i18n';
 
 interface SubmitButtonProps {
   disabled?: boolean;
@@ -14,20 +11,10 @@ interface SubmitButtonProps {
 }
 
 const SubmitButton = ({ disabled, onSubmit }: SubmitButtonProps) => {
-  const { loading, gatherCommand } = useChatData();
+  const { loading } = useChatData();
   const { stopTask } = useChatInteract();
-  const { replyCmdMessage } = useChatInteract();
 
   const handleClick = () => {
-    if (gatherCommand) {
-      replyCmdMessage({
-        ...gatherCommand!.spec,
-        code: '00',
-        msg: '客户操作成功',
-        data: {}
-      });
-      return;
-    }
     stopTask();
   };
 
@@ -39,25 +26,13 @@ const SubmitButton = ({ disabled, onSubmit }: SubmitButtonProps) => {
       }}
     >
       {!loading ? (
-        <Tooltip
-          title={
-            <Translator path="components.organisms.chat.inputBox.SubmitButton.sendMessage" />
-          }
-        >
-          <IconButton disabled={disabled} color="inherit" onClick={onSubmit}>
-            <Telegram />
-          </IconButton>
-        </Tooltip>
+        <IconButton disabled={disabled} color="inherit" onClick={onSubmit}>
+          <Telegram />
+        </IconButton>
       ) : (
-        <Tooltip
-          title={
-            <Translator path="components.organisms.chat.inputBox.SubmitButton.stopTask" />
-          }
-        >
-          <IconButton id="stop-button" onClick={handleClick}>
-            <StopCircle />
-          </IconButton>
-        </Tooltip>
+        <IconButton id="stop-button" onClick={handleClick}>
+          <StopCircle />
+        </IconButton>
       )}
     </Box>
   );
