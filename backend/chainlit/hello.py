@@ -10,7 +10,7 @@ import aiofiles
 import httpx
 from chainlit.element import Image, Text
 from chainlit.extensions.element import DataItem, PreviewInfoGroup
-from chainlit.extensions.exceptions import AskTimeout
+from chainlit.extensions.exceptions import AskTimeoutError, ManualCancelError
 from chainlit.extensions.input import (
     AccountAndMobilePhoneInput,
     AccountInput,
@@ -308,6 +308,12 @@ async def continueActionCallback(data: dict):
     logger.info(f"执行5continue后台任务 {data}")
 
 
+async def mananlCancel(gatherCommand: GatherCommand):
+    await asyncio.sleep(5)
+    logger.info("开发者取消任务")
+    gatherCommand.cancel()
+
+
 @on_message
 async def main(message: Message):
     logger.info(f"收到消息 {message.content}")
@@ -331,7 +337,7 @@ async def main(message: Message):
                 widgets=[ButtonWidget(label="新增", data="新增")],
             ).send()
             await Message(content=res1).send()
-        except AskTimeout:
+        except AskTimeoutError:
             await Message(content="收款人选择已超时").send()
 
     if message.content == "2":
@@ -585,10 +591,15 @@ async def main(message: Message):
         await asyncio.sleep(5)
         await accountInput.cancel()
     if message.content == "23":
-        gatherCommand = GatherCommand(action="scan", timeout=90, speechContent="扫一扫")
-        asyncio.create_task(gatherCommand.send())
-        await asyncio.sleep(5)
-        gatherCommand.cancel()
+        try:
+            gatherCommand = GatherCommand(
+                action="capture_idcard", timeout=90, speechContent="身份证正反面"
+            )
+            asyncio.create_task(mananlCancel(gatherCommand))
+            logger.info("开发者启动任务")
+            await gatherCommand.send()
+        except ManualCancelError:
+            logger.info("开发者捕获取消异常")
     if message.content == "24":
         await JsFunctionCommand(
             commands=[{"name": "dark_style", "parameters": {}}]

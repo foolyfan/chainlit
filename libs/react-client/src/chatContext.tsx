@@ -11,7 +11,7 @@ import {
   useState
 } from 'react';
 import { useRecoilValue } from 'recoil';
-import { accessTokenState } from 'src/state';
+import { accessTokenState, gatherCommandState } from 'src/state';
 
 import { IProjectSettings } from './types/config';
 
@@ -60,6 +60,8 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
   const [ttsRuning, setTtsRuning] = useState<boolean>(false);
   const ttsAbortRef = useRef<AbortController | undefined>(undefined);
   const accessToken = useRecoilValue(accessTokenState);
+  const gatherCommand = useRecoilValue(gatherCommandState);
+
   useEffect(() => {
     if (
       chatSettings?.features.text_to_speech?.enabled &&
@@ -125,6 +127,12 @@ const ChatProvider: React.FC<ChatProviderProps> = ({
   >();
 
   const [checks, setChecks] = useState<Array<string>>([]);
+
+  useEffect(() => {
+    if (!gatherCommand) {
+      abortAudioTask();
+    }
+  }, [gatherCommand]);
 
   return (
     <ChatContext.Provider

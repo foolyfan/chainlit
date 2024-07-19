@@ -5,7 +5,7 @@ from chainlit.action import Action
 from chainlit.config import config
 from chainlit.context import context
 from chainlit.element import ElementBased
-from chainlit.extensions.exceptions import AskTimeout
+from chainlit.extensions.exceptions import AskTimeoutError, ManualCancelError
 from chainlit.extensions.types import (
     BaseResponse,
     CheckSpec,
@@ -91,7 +91,7 @@ class AskUserChoiceMessage(AskMessageBase):
             elif res.type == "touch":
                 return res.data
         except TimeoutError as e:
-            raise AskTimeout() from None
+            raise AskTimeoutError() from None
         except Exception as e:
             logger.error(f"Unknow Error: {e}")
             raise e
@@ -142,10 +142,9 @@ class GatherCommand(MessageBase):
             self._task = None
             return GatherCommandResponse.from_dict(res)
         except asyncio.CancelledError:
-            await context.emitter.clear("clear_gather_command")
-            return None
+            raise ManualCancelError() from None
         except TimeoutError:
-            raise AskTimeout() from None
+            raise AskTimeoutError() from None
 
     def cancel(self):
         self._task is not None and self._task.cancel()
@@ -277,7 +276,7 @@ class AskUserCheckAgreeement(AskMessageBase):
             elif res.type == "touch":
                 return True
         except TimeoutError as e:
-            raise AskTimeout() from None
+            raise AskTimeoutError() from None
         except Exception as e:
             logger.error(f"Unknow Error: {e}")
             raise e

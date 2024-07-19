@@ -10,7 +10,7 @@ from chainlit.config import config
 from chainlit.context import context
 from chainlit.data import get_data_layer
 from chainlit.element import ElementBased
-from chainlit.extensions.exceptions import AskTimeout
+from chainlit.extensions.exceptions import AskTimeoutError
 from chainlit.extensions.types import AskSpec, BaseResponse, MdLink, MessageSpec
 from chainlit.logger import logger
 from chainlit.step import StepDict
@@ -365,7 +365,7 @@ class AskUserMessage(AskMessageBase):
                 await context.emitter.ask_user(step_dict, spec, self.timeout),
             ).data
         except TimeoutError as e:
-            raise AskTimeout() from None
+            raise AskTimeoutError() from None
         except Exception as e:
             logger.error(f"Unknow Error: {e}")
             raise e
@@ -521,7 +521,7 @@ class AskActionMessage(AskMessageBase):
             elif res.type == "touch":
                 return res.data
         except TimeoutError as e:
-            raise AskTimeout() from None
+            raise AskTimeoutError() from None
         except Exception as e:
             logger.error(f"Unknow Error: {e}")
             raise e

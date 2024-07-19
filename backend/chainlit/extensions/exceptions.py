@@ -1,2 +1,6 @@
-class AskTimeout(Exception):
+class AskTimeoutError(Exception):
+    pass
+
+
+class ManualCancelError(Exception):
     pass

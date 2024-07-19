@@ -8,7 +8,7 @@ from typing import List, Literal, Optional, Union, cast
 from chainlit.action import Action
 from chainlit.config import config
 from chainlit.context import context
-from chainlit.extensions.exceptions import AskTimeout
+from chainlit.extensions.exceptions import AskTimeoutError, ManualCancelError
 from chainlit.extensions.message import GatherCommand
 from chainlit.extensions.types import (
     BaseResponse,
@@ -309,7 +309,7 @@ class InputBase(AskMessageBase, ABC):
                 )
                 res = cast(Optional[BaseResponse], await self._task)
         except asyncio.CancelledError:
-            pass
+            raise ManualCancelError() from None
         finally:
             await context.emitter.clear("clear_input", {"msg": step_dict})
         return processRes
