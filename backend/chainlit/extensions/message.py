@@ -134,20 +134,18 @@ class GatherCommand(MessageBase):
             type=self.action,
             timeout=self.timeout,
         )
-        res = None
         try:
             self._task = asyncio.create_task(
-                context.emitter.gather_command(step_dict, spec, False)
+                context.emitter.gather_command(step_dict, spec)
             )
             res = await self._task
             self._task = None
+            return GatherCommandResponse.from_dict(res)
         except asyncio.CancelledError:
             await context.emitter.clear("clear_gather_command")
-
-        if res is not None:
-            res = GatherCommandResponse.from_dict(res)
-
-        return res
+            return None
+        except TimeoutError:
+            raise AskTimeout() from None
 
     def cancel(self):
         self._task is not None and self._task.cancel()

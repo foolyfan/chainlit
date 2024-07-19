@@ -739,7 +739,7 @@ async def tts_method(
                 status_code=401,
                 detail="You are not authorized",
             )
-    if config.features.text_to_speech.enabled:
+    if not config.features.text_to_speech.enabled:
         raise HTTPException(
             status_code=501,
             detail="Not implemented or enabled tts",

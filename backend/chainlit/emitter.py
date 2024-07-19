@@ -135,9 +135,7 @@ class BaseChainlitEmitter:
         """Stub method to set chat settings."""
         pass
 
-    async def gather_command(
-        self, step_dict: StepDict, spec: GatherCommandSpec, raise_on_timeout=False
-    ):
+    async def gather_command(self, step_dict: StepDict, spec: GatherCommandSpec):
         pass
 
     async def call_js_function(self, step_dict: StepDict, spec: List[JsFunction]):
@@ -345,9 +343,7 @@ class ChainlitEmitter(BaseChainlitEmitter):
 
         return self.emit("token_usage", count)
 
-    async def gather_command(
-        self, step_dict: StepDict, spec: GatherCommandSpec, raise_on_timeout=False
-    ):
+    async def gather_command(self, step_dict: StepDict, spec: GatherCommandSpec):
         try:
             # Send the prompt to the UI
             user_res = await self.emit_call(
@@ -357,15 +353,13 @@ class ChainlitEmitter(BaseChainlitEmitter):
             )
             await self.task_end()
             final_res = cast(GatherCommandResponse, user_res)
-            await self.clear("clear_gather_command")
             return final_res
         except TimeoutError as e:
-            await self.send_timeout("gather_command_timeout")
-
-            if raise_on_timeout:
-                raise e
+            raise e
         except asyncio.CancelledError as e:
             raise e
+        finally:
+            await self.clear("clear_gather_command")
 
     def task_start(self):
         """

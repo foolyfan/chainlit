@@ -44,23 +44,25 @@ const CommandContainer: FC<Props> = ({ gatherCommand }: Props) => {
           />
         );
       case 'custom_card':
-        return <CustomCardPanel />;
+        return <CustomCardPanel gatherCommand={gatherCommand} />;
       case 'scan':
         return <DocumentScannerIcon sx={{ fontSize: 200 }} color="primary" />;
       default:
         return null;
     }
   };
-  // 关闭面板，默认成功
+  // 关闭面板，默认取消
   const { replyCmdMessage } = useChatInteract();
+
   const onCancel = useCallback(() => {
     replyCmdMessage({
       ...gatherCommand!.spec,
-      code: '00',
-      msg: '客户操作成功',
+      code: '01',
+      msg: '客户取消操作',
       data: {}
     });
   }, [gatherCommand]);
+
   return gatherCommand ? (
     <Box
       position="relative"

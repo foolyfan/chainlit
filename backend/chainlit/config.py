@@ -80,6 +80,12 @@ latex = false
     # See all languages here https://github.com/JamesBrill/react-speech-recognition/blob/HEAD/docs/API.md#language-string
     # language = "en-US"
 
+[features.text_to_speech]
+    enabled = false
+
+[features.aigc_image]
+    enabled = false
+    
 [UI]
 # Name of the app and chatbot.
 name = "Chatbot"

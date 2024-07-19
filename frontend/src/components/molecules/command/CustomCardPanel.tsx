@@ -1,4 +1,5 @@
 import {
+  faExpand,
   faFloppyDisk,
   faLocationDot,
   faMagnifyingGlassMinus,
@@ -18,6 +19,7 @@ import {
   useState
 } from 'react';
 import { isAndroid } from 'utils/tools';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Telegram } from '@mui/icons-material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -37,9 +39,16 @@ import {
   styled
 } from '@mui/material';
 
-import { useAlbum, useChatSession } from 'client-types/*';
+import {
+  IGatherCommand,
+  useAlbum,
+  useChatInteract,
+  useChatSession
+} from '@chainlit/react-client';
 
-interface Props {}
+interface Props {
+  gatherCommand: IGatherCommand;
+}
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -62,9 +71,14 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   }
 }));
 
-const CustomCardPanel: FC<Props> = () => {
+const CustomCardPanel: FC<Props> = ({ gatherCommand }) => {
   // 银行卡图片尺寸
   const cardSize = { width: 299, height: 187 };
+  // 遮罩层
+  const [loading, setLoading] = useState<{
+    value: boolean;
+    content?: string;
+  }>({ value: false });
   // 缩放
   const [scale, setScale] = useState<number>(1);
   const onTransformToLarge = useCallback(() => {
@@ -240,9 +254,63 @@ const CustomCardPanel: FC<Props> = () => {
     imageSrc && URL.revokeObjectURL(imageSrc);
     previewImageSrc && URL.revokeObjectURL(previewImageSrc);
   }, [imageSrc, previewImageSrc]);
-  const handleSubmit = useCallback(() => {
-    destoryBlob();
-    setPreviewOpen(false);
+
+  // 生成
+  const { replyCmdMessage, uploadFile } = useChatInteract();
+  const onSubmit = useCallback(() => {
+    setLoading({ value: true, content: '保存中' });
+    setTimeout(() => {
+      // 使用canvas获取用户裁剪的图片
+      html2canvas(containerRef.current!, {
+        x: cropContainerRef.current!.offsetLeft,
+        y: cropContainerRef.current!.offsetTop,
+        width: cardSize.width,
+        height: cardSize.height,
+        ignoreElements: (element) => {
+          return element.id == 'mask';
+        }
+      })
+        .then((canvas) => {
+          // canvas图片转换为文件对象
+          const filePromise = new Promise<File>((resolve, reject) => {
+            const mime = 'image/jpeg';
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(
+                  new File([blob], `${uuidv4()}.jpeg`, {
+                    type: mime,
+                    lastModified: Date.now()
+                  })
+                );
+              } else {
+                reject(new Error('使用canvas保存图片失败'));
+              }
+            }, mime);
+          });
+          // 上传文件对象到用户会话并获得文件标识id
+          return filePromise.then((file) => {
+            return uploadFile(apiClient, file, () => {}).promise;
+          });
+        })
+        .then(({ id }) => {
+          // 响应信息
+          replyCmdMessage({
+            ...gatherCommand!.spec,
+            code: '00',
+            msg: '客户操作成功',
+            data: {
+              id
+            }
+          });
+        })
+        .catch((e) => {
+          console.log(e);
+        })
+        .finally(() => {
+          setLoading({ value: false, content: '' });
+          destoryBlob();
+        });
+    });
   }, [destoryBlob]);
 
   // 预览
@@ -275,9 +343,8 @@ const CustomCardPanel: FC<Props> = () => {
   const { accessToken } = useAuth();
   const { sessionId } = useChatSession();
   const [aigcDisabled, setAigcDisabled] = useState<boolean>(true);
-  const [aigcLoading, setAigcLoading] = useState<boolean>(false);
   const onGetAigcImage = useCallback(() => {
-    setAigcLoading(true);
+    setLoading({ value: true, content: 'AI处理中' });
     apiClient
       .aigcImageMethod(value, sessionId, undefined, accessToken)
       .then((response) => response.blob())
@@ -294,7 +361,7 @@ const CustomCardPanel: FC<Props> = () => {
         setEditDisabled(false);
       })
       .finally(() => {
-        setAigcLoading(false);
+        setLoading({ value: false });
       });
   }, [apiClient, value, sessionId, accessToken]);
 
@@ -315,11 +382,13 @@ const CustomCardPanel: FC<Props> = () => {
           display: 'flex',
           flexDirection: 'column'
         }}
-        open={aigcLoading}
+        open={loading.value}
         onClick={handleClose}
       >
         <CircularProgress color="inherit" />
-        <Box sx={{ marginTop: '10px' }}>AI生成中 ...</Box>
+        {loading.content && (
+          <Box sx={{ marginTop: '10px' }}>{loading.content} ...</Box>
+        )}
       </Backdrop>
       <Typography variant="h6" gutterBottom>
         图像编辑
@@ -402,7 +471,7 @@ const CustomCardPanel: FC<Props> = () => {
           padding: (theme) => theme.spacing(1, 0, 2, 1),
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '10px',
+          gap: '5px',
           justifyContent: 'end'
         }}
       >
@@ -415,6 +484,9 @@ const CustomCardPanel: FC<Props> = () => {
           disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faMagnifyingGlassPlus} size="xl" />
+          <Box marginLeft={1} fontSize={14}>
+            放大
+          </Box>
         </Button>
 
         <Button
@@ -426,6 +498,9 @@ const CustomCardPanel: FC<Props> = () => {
           disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faMagnifyingGlassMinus} size="xl" />
+          <Box marginLeft={1} fontSize={14}>
+            缩小
+          </Box>
         </Button>
         <Button
           component="label"
@@ -436,6 +511,9 @@ const CustomCardPanel: FC<Props> = () => {
           disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faLocationDot} size="xl" />
+          <Box marginLeft={1} fontSize={14}>
+            居中
+          </Box>
         </Button>
         <Button
           component="label"
@@ -446,6 +524,9 @@ const CustomCardPanel: FC<Props> = () => {
           disabled={editDisabled}
         >
           <FontAwesomeIcon icon={faRotateRight} size="xl" />
+          <Box marginLeft={1} fontSize={14}>
+            重置
+          </Box>
         </Button>
         <Button
           component="label"
@@ -455,7 +536,23 @@ const CustomCardPanel: FC<Props> = () => {
           onClick={onPreview}
           disabled={editDisabled}
         >
+          <FontAwesomeIcon icon={faExpand} size="xl" />
+          <Box marginLeft={1} fontSize={14}>
+            预览
+          </Box>
+        </Button>
+        <Button
+          component="label"
+          role={undefined}
+          variant="outlined"
+          tabIndex={-1}
+          onClick={onSubmit}
+          disabled={editDisabled}
+        >
           <FontAwesomeIcon icon={faFloppyDisk} size="xl" />
+          <Box marginLeft={1} fontSize={14}>
+            保存并关闭
+          </Box>
         </Button>
       </Box>
       <Box
@@ -549,10 +646,7 @@ const CustomCardPanel: FC<Props> = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>取消</Button>
-          <Button type="submit" onClick={handleSubmit}>
-            确定
-          </Button>
+          <Button onClick={handleClose}>关闭</Button>
         </DialogActions>
       </BootstrapDialog>
     </Box>

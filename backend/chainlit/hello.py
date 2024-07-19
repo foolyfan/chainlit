@@ -39,6 +39,7 @@ from chainlit.extensions.types import (
     SubChoiceWidget,
 )
 from chainlit.logger import logger
+from chainlit.session import WebsocketSession
 from chainlit.types import AskUserResponse
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
@@ -54,6 +55,7 @@ from chainlit import (
     aigc_image_method,
     amount_recognition,
     asr_method,
+    context,
     image_account_recognition,
     mobilephone_recognition,
     on_message,
@@ -312,7 +314,7 @@ async def main(message: Message):
     if message.content == "1":
         try:
             res1 = await AskUserChoiceMessage(
-                timeout=180,
+                timeout=15,
                 choiceContent="请在以下收款人数据中做出选择：",
                 items=[
                     ChoiceItem(
@@ -331,7 +333,6 @@ async def main(message: Message):
             await Message(content=res1).send()
         except AskTimeout:
             await Message(content="收款人选择已超时").send()
-            return
 
     if message.content == "2":
         res2 = await AskActionMessage(
@@ -428,30 +429,43 @@ async def main(message: Message):
         res9 = await GatherCommand(action="face_recognition", timeout=10).send()
         logger.info(f"人脸识别 {res9}")
     if message.content == "10":
-        res10 = await GatherCommand(action="custom_card", timeout=180).send()
+        res10 = await GatherCommand(action="custom_card", timeout=10).send()
         logger.info(f"定制卡面 {res10}")
+        if not res10:
+            return
+        if res10.code == "00":
+            file = WebsocketSession.get_by_id(context.session.id).files[
+                res10.data["id"]
+            ]
+            logger.info(f"客户定制卡面的图片文件存储路径 {file['path']}")
+            image1 = Image(path=str(file["path"]), name="image1", display="inline")
+            await Message(
+                content="预览编辑后的图片",
+                elements=[image1],
+            ).send()
+        else:
+            logger.info("客户取消操作")
     if message.content == "11":
         res11 = await GatherCommand(action="password", timeout=10).send()
         logger.info(f"密码 {res11}")
-        if res11:
-            if res11.code == "00":
-                logger.info(f"客户输入成功 {res11.data['value']}")
-            else:
-                logger.info("客户取消输入")
+        if not res11:
+            return
+        if res11.code == "00":
+            logger.info(f"客户输入成功 {res11.data['value']}")
         else:
-            logger.info(f"客户输入超时")
+            logger.info("客户取消输入")
 
     if message.content == "12":
         res12 = await GatherCommand(
             action="scan", timeout=90, speechContent="扫一扫"
         ).send()
-        if res12:
-            if res12.code == "00":
-                logger.info(f"客户扫描成功 {res12}")
-            else:
-                logger.info("客户取消扫描")
+        logger.info(f"扫一扫 {res12}")
+        if not res12:
+            return
+        if res12.code == "00":
+            logger.info(f"客户扫描成功 {res12}")
         else:
-            logger.info(f"客户输入超时")
+            logger.info("客户取消扫描")
         logger.info(f"扫一扫 {res12}")
     if message.content == "14":
         speechContent = "程序意外终止"
@@ -573,7 +587,7 @@ async def main(message: Message):
     if message.content == "23":
         gatherCommand = GatherCommand(action="scan", timeout=90, speechContent="扫一扫")
         asyncio.create_task(gatherCommand.send())
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
         gatherCommand.cancel()
     if message.content == "24":
         await JsFunctionCommand(

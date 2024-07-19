@@ -24,8 +24,8 @@ const PreviewInfoGroupElement = ({ element }: Props) => {
     <Box sx={{ fontFamily: (theme) => theme.typography.fontFamily }}>
       {data && data.items ? (
         <Grid container spacing={2}>
-          {data.items.map((item: any) => (
-            <Grid item xs={item.width == 'half' ? 6 : 12}>
+          {data.items.map((item: any, index: number) => (
+            <Grid item xs={item.width == 'half' ? 6 : 12} key={index}>
               <Box>{item.label + '：' + item.value}</Box>
             </Grid>
           ))}

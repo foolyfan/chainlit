@@ -327,7 +327,12 @@ const Chat = () => {
         <TaskList isMobile={true} />
         <ErrorBoundary>
           <ChatProfiles />
-          <CommandContainer gatherCommand={gatherCommand} />
+          {gatherCommand &&
+            gatherCommand.spec.type != 'password' &&
+            gatherCommand.spec.type != 'scan' && (
+              <CommandContainer gatherCommand={gatherCommand} />
+            )}
+
           {(!gatherCommand ||
             gatherCommand.spec.type == 'password' ||
             gatherCommand.spec.type == 'scan') && (

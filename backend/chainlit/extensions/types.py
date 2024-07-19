@@ -216,6 +216,7 @@ class ChoiceSpec(ListSpec, DataClassJsonMixin):
         self.timeout = timeout
         self.items = items
         self.widgets = widgets
+        self.mdLinks = None
         self.__type__ = "ChoiceSpec"
 
 

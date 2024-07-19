@@ -320,10 +320,6 @@ const useChatSession = () => {
         setUserFutureMessage({ type: 'question' });
       });
 
-      socket.on('gather_command_timeout', () => {
-        setGatherCommand(undefined);
-      });
-
       socket.on('gather_command', ({ msg, spec }, callback) => {
         console.log('gather_command', msg, spec, callback);
         setMessages((oldMessages) => removeWaitingMessage(oldMessages));
