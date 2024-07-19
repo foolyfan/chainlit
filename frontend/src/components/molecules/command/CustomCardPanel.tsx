@@ -316,23 +316,27 @@ const CustomCardPanel: FC<Props> = ({ gatherCommand }) => {
   // 预览
   const cropContainerRef = useRef<HTMLDivElement | null>(null);
   const onPreview = useCallback(() => {
-    setPreviewOpen(true);
-    html2canvas(containerRef.current!, {
-      x: cropContainerRef.current!.offsetLeft,
-      y: cropContainerRef.current!.offsetTop,
-      width: cardSize.width,
-      height: cardSize.height,
-      ignoreElements: (element) => {
-        return element.id == 'mask';
-      }
-    }).then((canvas) => {
-      canvas.toBlob((data) => {
-        const previewUrl = URL.createObjectURL(data!);
-        setPreviewImageSrc((oldUrl) => {
-          if (oldUrl) {
-            URL.revokeObjectURL(oldUrl);
-          }
-          return previewUrl;
+    setLoading({ value: true, content: '生成中' });
+    setTimeout(() => {
+      html2canvas(containerRef.current!, {
+        x: cropContainerRef.current!.offsetLeft,
+        y: cropContainerRef.current!.offsetTop,
+        width: cardSize.width,
+        height: cardSize.height,
+        ignoreElements: (element) => {
+          return element.id == 'mask';
+        }
+      }).then((canvas) => {
+        canvas.toBlob((data) => {
+          const previewUrl = URL.createObjectURL(data!);
+          setPreviewImageSrc((oldUrl) => {
+            if (oldUrl) {
+              URL.revokeObjectURL(oldUrl);
+            }
+            return previewUrl;
+          });
+          setLoading({ value: false, content: '' });
+          setPreviewOpen(true);
         });
       });
     });
